@@ -36,15 +36,15 @@
 
         <div class="form-wrapper">
 
-                {foreach from=$legal_options item=legal_option}
+                {foreach from=$legal_options key=key_parent item=legal_option}
                     <div class="form-group">
                         <label class="control-label col-lg-3">
                             {$legal_option}
                         </label>
 
                         <div class="col-lg-9">
-                            <select class="form-control fixed-width-xxl " name="LEGAL_CMS_ID_LEGAL" id="LEGAL_CMS_ID_LEGAL">
-                            {foreach from=$cms_pages key=key item=cms_page}
+                            <select class="form-control fixed-width-xxl " name="{$key_parent}" id="{$key_parent}">
+                            {foreach from=$cms_pages key=key_child item=cms_page}
                                 <option value="{$cms_page['id_cms']}">{$cms_page['meta_title']}</option>
                             {/foreach}
                             </select>
@@ -57,8 +57,9 @@
             <button type="submit" value="1" id="module_form_submit_btn_1" name="submitAEUC_legalContentManager_btn" class="btn btn-default pull-right">
                 <i class="process-icon-save"></i>  {l s='Save' mod='advancedeucompliance'}
             </button>
-            <button type="submit" class="btn btn-default" name="submitAEUC_addCMS">
-                <i class="process-icon-plus"></i> {l s='Add new CMS Page' mod='advancedeucompliance'}</button>
+            <a href="{$add_cms_link|escape:'html':'UTF-8'}" class="btn btn-default" name="submitAEUC_addCMS">
+                <i class="process-icon-plus"></i> {l s='Add new CMS Page' mod='advancedeucompliance'}
+            </a>
         </div>
 
     </div>

@@ -33,6 +33,7 @@ class Advancedeucompliance extends Module
 	protected $config_form = false;
 
 	/* Constants used for LEGAL/CMS Management */
+	// TODO: Remove this once in DB
 	const LEGAL_NO_ASSOC		= 'NO_ASSOC';
 	const LEGAL_NOTICE			= 'LEGAL_NOTICE';
 	const LEGAL_CONDITIONS 		= 'LEGAL_CONDITIONS';
@@ -67,45 +68,76 @@ class Advancedeucompliance extends Module
 	{
 		return parent::install() &&
 				$this->createTables() &&
-				$this->loadConfigFromShopLocalization();
+				$this->createConfig();
 	}
 
 	public function uninstall()
 	{
 		return parent::uninstall() &&
 				$this->dropTables() &&
-				$this->removeConfig();
+				$this->dropConfig();
 	}
 
-	public function loadConfigFromShopLocalization()
+	public function createConfig()
 	{
 		// @TODO: Create config from localization pack ? (ATM everythings goeas to TRUE)
-		return Configuration::updateValue('ADVANCEDEUCOMPLIANCE_TELL_A_FRIEND_OPT', true) &&
-				Configuration::updateValue('ADVANCEDEUCOMPLIANCE_REORDER_OPT', true) &&
-				Configuration::updateValue('ADVANCEDEUCOMPLIANCE_DELIVERY_TIME_LABEL_OPT', true) &&
-				Configuration::updateValue('ADVANCEDEUCOMPLIANCE_SPECIFIC_PRICE_LABEL_OPT', true) &&
-				Configuration::updateValue('ADVANCEDEUCOMPLIANCE_TAX_INC_EXC_LABEL_OPT', true) &&
-				Configuration::updateValue('ADVANCEDEUCOMPLIANCE_WEIGHT_LABEL_OPT', true);
+		return Configuration::updateValue('AEUC_FEAT_TELL_A_FRIEND', true) &&
+				Configuration::updateValue('AEUC_FEAT_REORDER', true) &&
+				Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME', true) &&
+				Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', true) &&
+				Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', true) &&
+				Configuration::updateValue('AEUC_LABEL_WEIGHT', true);
 	}
 
 	public function createTables()
 	{
-		return true;
+		$db_results = true;
+		// Create legal_opt table
+		$db_results &= Db::getInstance()->execute('
+				CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'aeuc_legal_opt` (
+				`id_legal_opt` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+				`name` VARCHAR(50) NOT NULL,
+				PRIMARY KEY (`id_legal_opt`)
+			) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8 ;'
+		);
+		// Create legal_opt_cms table
+		$db_results &= Db::getInstance()->execute('
+				CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'aeuc_legal_opt_cms` (
+				`id_legal_opt` int(11) NOT NULL,
+				`id_cms` int(11) NOT NULL,
+				KEY `id_legal_opt` (`id_legal_opt`),
+				KEY `id_cms` (`id_cms`)
+			) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8 ;'
+		);
+		// Create mails_attachments table
+		$db_results &= Db::getInstance()->execute('
+				CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'aeuc_mail_attachment` (
+				`id_mail_attachment` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  				`mail_tpl_name` varchar(100) NOT NULL,
+  				`id_legal_opt` int(11) NOT NULL,
+				PRIMARY KEY (`id_mail_attachment`),
+  				KEY `id_legal_opt` (`id_legal_opt`)
+			) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8 ;'
+		);
+
+		return (bool)$db_results;
 	}
 
-	public function removeConfig()
+	public function dropConfig()
 	{
-		return Configuration::deleteByName('ADVANCEDEUCOMPLIANCE_TELL_A_FRIEND_OPT') &&
-				Configuration::deleteByName('ADVANCEDEUCOMPLIANCE_REORDER_OPT') &&
-				Configuration::deleteByName('ADVANCEDEUCOMPLIANCE_DELIVERY_TIME_LABEL_OPT') &&
-				Configuration::deleteByName('ADVANCEDEUCOMPLIANCE_SPECIFIC_PRICE_LABEL_OPT') &&
-				Configuration::deleteByName('ADVANCEDEUCOMPLIANCE_TAX_INC_EXC_LABEL_OPT') &&
-				Configuration::deleteByName('ADVANCEDEUCOMPLIANCE_WEIGHT_LABEL_OPT');
+		return Configuration::deleteByName('AEUC_FEAT_TELL_A_FRIEND') &&
+				Configuration::deleteByName('AEUC_FEAT_REORDER') &&
+				Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME') &&
+				Configuration::deleteByName('AEUC_LABEL_SPECIFIC_PRICE') &&
+				Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
+				Configuration::deleteByName('AEUC_LABEL_WEIGHT');
 	}
 
 	public function dropTables()
 	{
-		return true;
+		return (bool)Db::getInstance()->execute('
+			DROP TABLE IF EXISTS `'._DB_PREFIX_.'aeuc_legal_opt`, `'._DB_PREFIX_.'aeuc_legal_opt_cms`, `'._DB_PREFIX_.'aeuc_mail_attachment`;
+		');
 	}
 
 	/**
@@ -116,7 +148,7 @@ class Advancedeucompliance extends Module
 		/**
 		 * If values have been submitted in the form, process.
 		 */
-		$this->_postProcess();
+		$success_band = $this->_postProcess();
 		$this->context->smarty->assign('module_dir', $this->_path);
 
 		// Render all required form for each 'part'
@@ -125,7 +157,8 @@ class Advancedeucompliance extends Module
 		$formLegalContentManager = $this->renderFormLegalContentManager();
 		$formEmailAttachmentsManager = $this->renderFormEmailAttachmentsManager();
 
-		return $formLabelsManager.
+		return 	$success_band.
+				$formLabelsManager.
 				$formFeaturesManager.
 				$formLegalContentManager.
 				$formEmailAttachmentsManager;
@@ -137,10 +170,78 @@ class Advancedeucompliance extends Module
 	protected function _postProcess()
 	{
 		$form_values = $this->getConfigFormLabelsManagerValues();
+		$has_processed_something = false;
 
-		foreach (array_keys($form_values) as $key)
-			Configuration::updateValue($key, Tools::getValue($key));
+		if (Tools::isSubmit('submitAEUC_labelsManager')) {
+			$this->_postProcessLabelsManager();
+			$has_processed_something = true;
+		}
+
+		if (Tools::isSubmit('submitAEUC_featuresManager')) {
+			$this->_postProcessFeaturesManager();
+			$has_processed_something = true;
+		}
+
+		if (Tools::isSubmit('submitAEUC_legalContentManager')) {
+			$this->_postProcessLegalContentManager();
+			$has_processed_something = true;
+		}
+
+		if ($has_processed_something)
+			return $this->displayConfirmation($this->l('Settings saved successfully!'));
+		else
+			return '';
 	}
+
+	protected function _postProcessLabelsManager()
+	{
+		$post_keys = array_keys($this->getConfigFormLabelsManagerValues());
+
+		foreach ($post_keys as $key)
+		{
+			if (Tools::isSubmit($key))
+				Configuration::updateValue($key, Tools::getValue($key));
+		}
+	}
+
+	protected function _postProcessFeaturesManager()
+	{
+		$post_keys = array_keys($this->getConfigFormFeaturesManagerValues());
+
+		foreach ($post_keys as $key)
+		{
+			if (Tools::isSubmit($key))
+				Configuration::updateValue($key, Tools::getValue($key));
+		}
+	}
+
+	protected function _postProcessLegalContentManager()
+	{
+
+		var_dump($_POST);die('end');
+		$post_keys = array_keys($this->getLegalOptions());
+
+		foreach ($post_keys as $key)
+		{
+			// TODO: Move legal option from array to DB (DB ready)
+		}
+	}
+
+
+	// @TODO: To be moved to the core ?
+	protected function getLegalOptions()
+	{
+		return array(
+			Advancedeucompliance::LEGAL_NOTICE 			=> $this->l('Legal notice'),
+			Advancedeucompliance::LEGAL_CONDITIONS 		=> $this->l('Conditions'),
+			Advancedeucompliance::LEGAL_REVOCATION 		=> $this->l('Revocation'),
+			Advancedeucompliance::LEGAL_REVOCATION_FORM => $this->l('Revocation Form'),
+			Advancedeucompliance::LEGAL_PRIVACY 		=> $this->l('Privacy'),
+			Advancedeucompliance::LEGAL_ENVIRONMENTAL 	=> $this->l('Environmental'),
+			Advancedeucompliance::LEGAL_SHIP_PAY		=> $this->l('Shipping and payment')
+		);
+	}
+
 
 	/**
 	 * Create the form that will let user choose all the wording options
@@ -185,7 +286,7 @@ class Advancedeucompliance extends Module
 					array(
 						'type' => 'switch',
 						'label' => $this->l('Display delivery time label'),
-						'name' => 'ADVANCEDEUCOMPLIANCE_DELIVERY_TIME_LABEL_OPT',
+						'name' => 'AEUC_LABEL_DELIVERY_TIME',
 						'is_bool' => true,
 						'desc' => $this->l('Whether to display estimated delivery time on products'),
 						'values' => array(
@@ -204,7 +305,7 @@ class Advancedeucompliance extends Module
 					array(
 						'type' => 'switch',
 						'label' => $this->l('Display specific price label'),
-						'name' => 'ADVANCEDEUCOMPLIANCE_SPECIFIC_PRICE_LABEL_OPT',
+						'name' => 'AEUC_LABEL_SPECIFIC_PRICE',
 						'is_bool' => true,
 						'desc' => $this->l('Whether to display a label before products with specific price'),
 						'values' => array(
@@ -223,7 +324,7 @@ class Advancedeucompliance extends Module
 					array(
 						'type' => 'switch',
 						'label' => $this->l('Display Tax "Inc./Excl." label'),
-						'name' => 'ADVANCEDEUCOMPLIANCE_TAX_INC_EXC_LABEL_OPT',
+						'name' => 'AEUC_LABEL_TAX_INC_EXC',
 						'is_bool' => true,
 						'desc' => $this->l('Whether to display tax included/excluded label next to product\'s price'),
 						'values' => array(
@@ -242,7 +343,7 @@ class Advancedeucompliance extends Module
 					array(
 						'type' => 'switch',
 						'label' => $this->l('Display product weight label'),
-						'name' => 'ADVANCEDEUCOMPLIANCE_WEIGHT_LABEL_OPT',
+						'name' => 'AEUC_LABEL_WEIGHT',
 						'is_bool' => true,
 						'desc' => $this->l('Whether to display product\'s weight on product\'s sheet (when available)'),
 						'values' => array(
@@ -272,10 +373,10 @@ class Advancedeucompliance extends Module
 	protected function getConfigFormLabelsManagerValues()
 	{
 		return array(
-			'ADVANCEDEUCOMPLIANCE_DELIVERY_TIME_LABEL_OPT' => Configuration::get('ADVANCEDEUCOMPLIANCE_DELIVERY_TIME_LABEL_OPT', true),
-			'ADVANCEDEUCOMPLIANCE_SPECIFIC_PRICE_LABEL_OPT' => Configuration::get('ADVANCEDEUCOMPLIANCE_SPECIFIC_PRICE_LABEL_OPT', true),
-			'ADVANCEDEUCOMPLIANCE_TAX_INC_EXC_LABEL_OPT' => Configuration::get('ADVANCEDEUCOMPLIANCE_TAX_INC_EXC_LABEL_OPT', true),
-			'ADVANCEDEUCOMPLIANCE_WEIGHT_LABEL_OPT' => Configuration::get('ADVANCEDEUCOMPLIANCE_WEIGHT_LABEL_OPT', true),
+			'AEUC_LABEL_DELIVERY_TIME' => Configuration::get('AEUC_LABEL_DELIVERY_TIME'),
+			'AEUC_LABEL_SPECIFIC_PRICE' => Configuration::get('AEUC_LABEL_SPECIFIC_PRICE'),
+			'AEUC_LABEL_TAX_INC_EXC' => Configuration::get('AEUC_LABEL_TAX_INC_EXC'),
+			'AEUC_LABEL_WEIGHT' => Configuration::get('AEUC_LABEL_WEIGHT'),
 		);
 	}
 
@@ -322,7 +423,7 @@ class Advancedeucompliance extends Module
 					array(
 						'type' => 'switch',
 						'label' => $this->l('Enable/Disable "Tell A Friend" feature'),
-						'name' => 'ADVANCEDEUCOMPLIANCE_TELL_A_FRIEND_OPT',
+						'name' => 'AEUC_FEAT_TELL_A_FRIEND',
 						'is_bool' => true,
 						'desc' => $this->l('Whether to enable "Tell A Friend" feature'),
 						'values' => array(
@@ -341,7 +442,7 @@ class Advancedeucompliance extends Module
 					array(
 						'type' => 'switch',
 						'label' => $this->l('Enable/Disable "Reorder" feature'),
-						'name' => 'ADVANCEDEUCOMPLIANCE_REORDER_OPT',
+						'name' => 'AEUC_FEAT_REORDER',
 						'is_bool' => true,
 						'desc' => $this->l('Whether to enable "Reorder" feature'),
 						'values' => array(
@@ -371,8 +472,8 @@ class Advancedeucompliance extends Module
 	protected function getConfigFormFeaturesManagerValues()
 	{
 		return array(
-			'ADVANCEDEUCOMPLIANCE_TELL_A_FRIEND_OPT' => Configuration::get('ADVANCEDEUCOMPLIANCE_TELL_A_FRIEND_OPT', true),
-			'ADVANCEDEUCOMPLIANCE_REORDER_OPT' => Configuration::get('ADVANCEDEUCOMPLIANCE_REORDER_OPT', true),
+			'AEUC_FEAT_TELL_A_FRIEND' => Configuration::get('AEUC_FEAT_TELL_A_FRIEND'),
+			'AEUC_FEAT_REORDER' => Configuration::get('AEUC_FEAT_REORDER'),
 		);
 	}
 
@@ -389,6 +490,7 @@ class Advancedeucompliance extends Module
 			'cms_pages' => $cms_pages,
 			'legal_options' => $legal_options,
 			'form_action' => '#',
+			'add_cms_link' => $this->context->link->getAdminLink('AdminCMS')
 		));
 		$content = $this->context->smarty->fetch($this->local_path.'views/templates/admin/legal_cms_manager_form.tpl');
 		return $content;
@@ -480,19 +582,7 @@ class Advancedeucompliance extends Module
 		return $content_list;
 	}
 
-	// @TODO: To be moved to the core ?
-	protected function getLegalOptions()
-	{
-		return array(
-			Advancedeucompliance::LEGAL_NOTICE 			=> $this->l('Legal notice'),
-			Advancedeucompliance::LEGAL_CONDITIONS 		=> $this->l('Conditions'),
-			Advancedeucompliance::LEGAL_REVOCATION 		=> $this->l('Revocation'),
-			Advancedeucompliance::LEGAL_REVOCATION_FORM => $this->l('Revocation Form'),
-			Advancedeucompliance::LEGAL_PRIVACY 		=> $this->l('Privacy'),
-			Advancedeucompliance::LEGAL_ENVIRONMENTAL 	=> $this->l('Environmental'),
-			Advancedeucompliance::LEGAL_SHIP_PAY		=> $this->l('Shipping and payment')
-		);
-	}
+
 
 
 }
