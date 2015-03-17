@@ -42,21 +42,31 @@
             <table class="table accesses">
                 <thead>
                 <tr>
-                    <th><span class="title_box">{l s='Email templates'}</span></th>
+                    <th>
+                        <span class="title_box">{l s='Email templates'}</span>
+                    </th>
 
                     {* @TODO: Loop over legal content mapped to a cms page *}
-                    <th class="center fixed-width-xs"><span class="title_box">{l s='A legal content'}</span></th>
+{*  {$mails_available|var_dump}*}
+                    {foreach from=$legal_options item=option}
+                        <th class="center fixed-width-xs"><span class="title_box">{$option}</span></th>
+                    {/foreach}
 
 
                 </tr>
                 </thead>
                 <tbody>
-                <tr>
-                    <th></th>
-                    <th class="center"><input type="checkbox" class="all_get get " /></th>
+                {foreach from=$mails_available item=mail}
+                    <tr>
+                        <td>{$mail}</td>
+                        {foreach from=$legal_options item=option}
+                        <td class="center">
+                            <input type="checkbox"/></th>
+                        </td>
+                        {/foreach}
+                    </tr>
 
-                </tr>
-
+                {/foreach}
 
                 </tbody>
             </table>

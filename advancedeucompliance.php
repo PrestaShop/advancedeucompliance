@@ -360,6 +360,91 @@ class Advancedeucompliance extends Module
 	}
 
 
+
+
+	protected function renderFormEmailAttachmentsManager()
+	{
+		$this->context->smarty->assign(array(
+			'mails_available' => $this->getAvailableMails(),
+			'legal_options' => $this->getLegalOptions()
+		));
+		$content = $this->context->smarty->fetch($this->local_path.'views/templates/admin/email_attachments_form.tpl');
+		return $content;
+	}
+
+
+
+	/**
+	 * THIS SECTION CONTAINS ALL THE METHODS THAT SHOULD BE MOVED INTO THE CORE OF PRESTASHOP. BUT LATER ! :)
+	 */
+
+	// @TODO: Dont know yet where to copy/past this one, any idea ?
+	public function getAvailableMails($lang = null, $dir = null)
+	{
+		if (is_null($lang))
+			$iso_lang = Language::getIsoById((int)Configuration::get('PS_LANG_DEFAULT'));
+		else
+			$iso_lang = $lang;
+
+		if (is_null($dir))
+			$mail_directory = _PS_MAIL_DIR_.$iso_lang.DIRECTORY_SEPARATOR;
+		else
+			$mail_directory = $dir;
+
+		if (!file_exists($mail_directory))
+			return null;
+
+		// @TODO: Make scanned directory dynamic ?
+		$mail_directory = $this->getDirContentRecursive(_PS_MAIL_DIR_.$iso_lang.DIRECTORY_SEPARATOR);
+		// Prestashop Mail should only be at root level
+		$mail_directory = $mail_directory['root'];
+		$clean_mail_list = array();
+
+		// Remove duplicate .html / .txt / .tpl
+		foreach ($mail_directory as $mail) {
+			$exploded_filename = explode('.', $mail, 3);
+			// Avoid badly named mail templates
+			if (is_array($exploded_filename) && count($exploded_filename) == 2) {
+				$clean_filename = (string)$exploded_filename[0];
+				if (!in_array($clean_filename, $clean_mail_list)) {
+					$clean_mail_list[] = $clean_filename;
+				}
+			}
+		}
+		return $clean_mail_list;
+	}
+
+	// @TODO: To put into Tools (return content of current)
+	public function getDirContentRecursive($dir, $is_iterating = false)
+	{
+		if (!file_exists($dir) || !is_dir($dir))
+			return false;
+
+		$content_dir_scanned = scandir($dir);
+		$content_list = array();
+
+		if (!$content_dir_scanned)
+			return false;
+
+		foreach ($content_dir_scanned as $entry)
+		{
+			if ($entry != '.' && $entry != '..') {
+				if (is_dir($dir . DIRECTORY_SEPARATOR . $entry)) {
+					$recurse_iteration = $this->getDirContentRecursive($dir . DIRECTORY_SEPARATOR . $entry, true);
+					if ($recurse_iteration)
+						$content_list[$entry] = $recurse_iteration;
+				} else {
+					if ($is_iterating)
+						$content_list[] = $entry;
+					else
+						$content_list['root'][] = $entry;
+				}
+			}
+		}
+
+		return $content_list;
+	}
+
 	// @TODO: To be moved to the core ?
 	protected function getLegalOptions()
 	{
@@ -372,62 +457,6 @@ class Advancedeucompliance extends Module
 			Advancedeucompliance::LEGAL_ENVIRONMENTAL 	=> $this->l('Environmental'),
 			Advancedeucompliance::LEGAL_SHIP_PAY		=> $this->l('Shipping and payment')
 		);
-	}
-
-	protected function renderFormEmailAttachmentsManager()
-	{
-		die(var_dump($this->getAvailableMails()));
-		$content = $this->context->smarty->fetch($this->local_path.'views/templates/admin/email_attachments_form.tpl');
-		return $content;
-	}
-
-
-
-	/**
-	 * THIS SECTION CONTAINS ALL THE METHODS THAT SHOULD BE MOVED INTO THE CORE OF PRESTASHOP. BUT LATER ! :)
-	 */
-
-	// Dont know yet where to copy/past this one, any idea ?
-	public function getAvailableMails($lang = null, $dir = null)
-	{
-		if (is_null($iso_lang))
-			$iso_lang = Language::getIsoById((int)Configuration::get('PS_LANG_DEFAULT'));
-		else
-			$iso_lang = $lang;
-
-		if (is_null($dir))
-			$mail_directory = _PS_MAIL_DIR_.$default_shop_iso_lang.DIRECTORY_SEPARATOR;
-		else
-			$mail_directory = $dir;
-
-		if (!file_exists($mail_directory))
-			return null;
-
-
-		return $mail_directory;
-	}
-
-
-	// To put into Tools (return content of current
-	public function getDirContent($dir)
-	{
-		if (!file_exists($dir) || !is_dir($dir))
-			return null;
-
-		$dir_content_array = scandir($dir);
-
-		return $dir_content_array;
-	}
-
-	// To put into Tools (return content of current
-	public function getDirContentRecursive($dir, $content_list)
-	{
-		if (!file_exists($dir) || !is_dir($dir))
-			return null;
-
-		$dir_content_array = array_map()scandir($dir);
-
-		return $content_list;
 	}
 
 
