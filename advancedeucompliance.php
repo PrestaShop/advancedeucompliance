@@ -65,12 +65,47 @@ class Advancedeucompliance extends Module
 	 */
 	public function install()
 	{
-		return parent::install();
+		return parent::install() &&
+				$this->createTables() &&
+				$this->loadConfigFromShopLocalization();
 	}
 
 	public function uninstall()
 	{
-		return parent::uninstall();
+		return parent::uninstall() &&
+				$this->dropTables() &&
+				$this->removeConfig();
+	}
+
+	public function loadConfigFromShopLocalization()
+	{
+		// @TODO: Create config from localization pack ? (ATM everythings goeas to TRUE)
+		return Configuration::updateValue('ADVANCEDEUCOMPLIANCE_TELL_A_FRIEND_OPT', true) &&
+				Configuration::updateValue('ADVANCEDEUCOMPLIANCE_REORDER_OPT', true) &&
+				Configuration::updateValue('ADVANCEDEUCOMPLIANCE_DELIVERY_TIME_LABEL_OPT', true) &&
+				Configuration::updateValue('ADVANCEDEUCOMPLIANCE_SPECIFIC_PRICE_LABEL_OPT', true) &&
+				Configuration::updateValue('ADVANCEDEUCOMPLIANCE_TAX_INC_EXC_LABEL_OPT', true) &&
+				Configuration::updateValue('ADVANCEDEUCOMPLIANCE_WEIGHT_LABEL_OPT', true);
+	}
+
+	public function createTables()
+	{
+		return true;
+	}
+
+	public function removeConfig()
+	{
+		return Configuration::deleteByName('ADVANCEDEUCOMPLIANCE_TELL_A_FRIEND_OPT') &&
+				Configuration::deleteByName('ADVANCEDEUCOMPLIANCE_REORDER_OPT') &&
+				Configuration::deleteByName('ADVANCEDEUCOMPLIANCE_DELIVERY_TIME_LABEL_OPT') &&
+				Configuration::deleteByName('ADVANCEDEUCOMPLIANCE_SPECIFIC_PRICE_LABEL_OPT') &&
+				Configuration::deleteByName('ADVANCEDEUCOMPLIANCE_TAX_INC_EXC_LABEL_OPT') &&
+				Configuration::deleteByName('ADVANCEDEUCOMPLIANCE_WEIGHT_LABEL_OPT');
+	}
+
+	public function dropTables()
+	{
+		return true;
 	}
 
 	/**
@@ -414,7 +449,7 @@ class Advancedeucompliance extends Module
 		return $clean_mail_list;
 	}
 
-	// @TODO: To put into Tools (return content of current)
+	// @TODO: To put into Tools (return content of current) ?
 	public function getDirContentRecursive($dir, $is_iterating = false)
 	{
 		if (!file_exists($dir) || !is_dir($dir))
