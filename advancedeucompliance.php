@@ -68,6 +68,7 @@ class Advancedeucompliance extends Module
 	{
 		return parent::install() &&
 				$this->createTables() &&
+				$this->loadTables() &&
 				$this->createConfig();
 	}
 
@@ -89,34 +90,44 @@ class Advancedeucompliance extends Module
 				Configuration::updateValue('AEUC_LABEL_WEIGHT', true);
 	}
 
+	public function loadTables()
+	{
+		// Fillin CMS ROLE, temporary hard values (should be parsed from localization pack later)
+		$roles = array_keys($this->getCMSRoles());
+		$tabled_loaded = true;
+
+		foreach ($roles as $role)
+		{
+			$tabled_loaded &= Db::getInstance()->execute('
+				INSERT INTO `ps_cms_role` (`name`, `id_cms`) VALUES ("'.pSQL($role).'", 0);
+			');
+		}
+
+		return true;
+	}
+
 	public function createTables()
 	{
+
+		// Todo: Move these table to Prestashop SQL upgrade file
 		$db_results = true;
-		// Create legal_opt table
+		// Create CMS ROLE table
 		$db_results &= Db::getInstance()->execute('
-				CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'aeuc_legal_opt` (
-				`id_legal_opt` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-				`name` VARCHAR(50) NOT NULL,
-				PRIMARY KEY (`id_legal_opt`)
+				CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'cms_role` (
+				`id_cms_role` int(11) unsigned NOT NULL AUTO_INCREMENT,
+				`name` varchar(50) NOT NULL,
+				`id_cms` int(11) unsigned NOT NULL,
+				PRIMARY KEY (`id_cms_role`, `id_cms`),
+				UNIQUE KEY `name` (`name`)
 			) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8 ;'
 		);
-		// Create legal_opt_cms table
+		// Create CMS ROLE LANG table
 		$db_results &= Db::getInstance()->execute('
-				CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'aeuc_legal_opt_cms` (
-				`id_legal_opt` int(11) NOT NULL,
-				`id_cms` int(11) NOT NULL,
-				KEY `id_legal_opt` (`id_legal_opt`),
-				KEY `id_cms` (`id_cms`)
-			) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8 ;'
-		);
-		// Create mails_attachments table
-		$db_results &= Db::getInstance()->execute('
-				CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'aeuc_mail_attachment` (
-				`id_mail_attachment` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  				`mail_tpl_name` varchar(100) NOT NULL,
-  				`id_legal_opt` int(11) NOT NULL,
-				PRIMARY KEY (`id_mail_attachment`),
-  				KEY `id_legal_opt` (`id_legal_opt`)
+				CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'cms_role_lang` (
+				`id_cms_role` int(11) unsigned NOT NULL,
+				`id_lang` int(11) unsigned NOT NULL,
+				`name` varchar(128) DEFAULT NULL,
+  				PRIMARY KEY (`id_cms_role`,`id_lang`)
 			) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8 ;'
 		);
 
@@ -135,9 +146,9 @@ class Advancedeucompliance extends Module
 
 	public function dropTables()
 	{
-		return (bool)Db::getInstance()->execute('
-			DROP TABLE IF EXISTS `'._DB_PREFIX_.'aeuc_legal_opt`, `'._DB_PREFIX_.'aeuc_legal_opt_cms`, `'._DB_PREFIX_.'aeuc_mail_attachment`;
-		');
+		return (bool)Db::getInstance()->execute(
+			'DROP TABLE IF EXISTS `'._DB_PREFIX_.'cms_role`, `'._DB_PREFIX_.'cms_role_lang`;'
+		);
 	}
 
 	/**
@@ -169,7 +180,6 @@ class Advancedeucompliance extends Module
 	 */
 	protected function _postProcess()
 	{
-		$form_values = $this->getConfigFormLabelsManagerValues();
 		$has_processed_something = false;
 
 		if (Tools::isSubmit('submitAEUC_labelsManager')) {
@@ -218,8 +228,7 @@ class Advancedeucompliance extends Module
 	protected function _postProcessLegalContentManager()
 	{
 
-		var_dump($_POST);die('end');
-		$post_keys = array_keys($this->getLegalOptions());
+		$post_keys = array_keys($this->getCMSRoles());
 
 		foreach ($post_keys as $key)
 		{
@@ -229,7 +238,7 @@ class Advancedeucompliance extends Module
 
 
 	// @TODO: To be moved to the core ?
-	protected function getLegalOptions()
+	protected function getCMSRoles()
 	{
 		return array(
 			Advancedeucompliance::LEGAL_NOTICE 			=> $this->l('Legal notice'),
@@ -482,7 +491,7 @@ class Advancedeucompliance extends Module
 	 */
 	protected function renderFormLegalContentManager()
 	{
-		$legal_options = $this->getLegalOptions();
+		$legal_options = $this->getCMSRoles();
 		// @TODO: Check for empty result on static call and check if result is array before unshifting
 		$cms_pages = CMS::listCms();
 		array_unshift($cms_pages, array('id_cms' => -1, 'meta_title' => $this->l('No association (means disabled)')));
@@ -503,7 +512,7 @@ class Advancedeucompliance extends Module
 	{
 		$this->context->smarty->assign(array(
 			'mails_available' => $this->getAvailableMails(),
-			'legal_options' => $this->getLegalOptions()
+			'legal_options' => $this->getCMSRoles()
 		));
 		$content = $this->context->smarty->fetch($this->local_path.'views/templates/admin/email_attachments_form.tpl');
 		return $content;
