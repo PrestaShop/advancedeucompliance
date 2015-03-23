@@ -31,6 +31,7 @@ class Advancedeucompliance extends Module
 {
 	/* Class members */
 	protected $config_form = false;
+	private $repository_manager;
 
 	/* Constants used for LEGAL/CMS Management */
 	// TODO: Remove this once in DB
@@ -44,7 +45,7 @@ class Advancedeucompliance extends Module
 	const LEGAL_SHIP_PAY 		= 'LEGAL_SHIP_PAY';
 	/* End of LEGAL/CMS Constants declarations */
 
-	public function __construct()
+	public function __construct(RepositoryManager $repository_manager)
 	{
 		$this->name = 'advancedeucompliance';
 		$this->tab = 'administration';
@@ -54,6 +55,8 @@ class Advancedeucompliance extends Module
 		$this->bootstrap = true;
 
 		parent::__construct();
+
+		$this->repository_manager = $repository_manager;
 
 		$this->displayName = $this->l('Advanced EU Compliance');
 		$this->description = $this->l('This module will help European merchants to get compliant with their countries e-commerce laws');
@@ -91,19 +94,25 @@ class Advancedeucompliance extends Module
 	public function loadTables()
 	{
 		// Fillin CMS ROLE, temporary hard values (should be parsed from localization pack later)
-		$roles = array_keys($this->getCMSRoles());
-		$tabled_loaded = true;
+		$roles_array = $this->getCMSRoles();
+		$roles = array_keys($roles_array);
+		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
 
 		foreach ($roles as $role)
 		{
-			$tabled_loaded &= Db::getInstance()->execute('
-				INSERT INTO `ps_cms_role` (`name`, `id_cms`) VALUES ("'.pSQL($role).'", 0);
-			');
+
+			if (!$cms_role_repository->getRoleByName($role))
+			{
+				$cms_role = $cms_role_repository->createNewRecord();
+				$cms_role->id_cms = 0; // No assoc at this time
+				$cms_role->name = $role;
+				$cms_role->save();
+			}
 		}
+
 
 		return true;
 	}
-
 
 
 	public function dropConfig()
