@@ -67,7 +67,6 @@ class Advancedeucompliance extends Module
 	public function install()
 	{
 		return parent::install() &&
-				$this->createTables() &&
 				$this->loadTables() &&
 				$this->createConfig();
 	}
@@ -75,7 +74,6 @@ class Advancedeucompliance extends Module
 	public function uninstall()
 	{
 		return parent::uninstall() &&
-				$this->dropTables() &&
 				$this->dropConfig();
 	}
 
@@ -106,33 +104,7 @@ class Advancedeucompliance extends Module
 		return true;
 	}
 
-	public function createTables()
-	{
 
-		// Todo: Move these table to Prestashop SQL upgrade file
-		$db_results = true;
-		// Create CMS ROLE table
-		$db_results &= Db::getInstance()->execute('
-				CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'cms_role` (
-				`id_cms_role` int(11) unsigned NOT NULL AUTO_INCREMENT,
-				`name` varchar(50) NOT NULL,
-				`id_cms` int(11) unsigned NOT NULL,
-				PRIMARY KEY (`id_cms_role`, `id_cms`),
-				UNIQUE KEY `name` (`name`)
-			) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8 ;'
-		);
-		// Create CMS ROLE LANG table
-		$db_results &= Db::getInstance()->execute('
-				CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'cms_role_lang` (
-				`id_cms_role` int(11) unsigned NOT NULL,
-				`id_lang` int(11) unsigned NOT NULL,
-				`name` varchar(128) DEFAULT NULL,
-  				PRIMARY KEY (`id_cms_role`,`id_lang`)
-			) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8 ;'
-		);
-
-		return (bool)$db_results;
-	}
 
 	public function dropConfig()
 	{
@@ -142,13 +114,6 @@ class Advancedeucompliance extends Module
 				Configuration::deleteByName('AEUC_LABEL_SPECIFIC_PRICE') &&
 				Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
 				Configuration::deleteByName('AEUC_LABEL_WEIGHT');
-	}
-
-	public function dropTables()
-	{
-		return (bool)Db::getInstance()->execute(
-			'DROP TABLE IF EXISTS `'._DB_PREFIX_.'cms_role`, `'._DB_PREFIX_.'cms_role_lang`;'
-		);
 	}
 
 	/**
