@@ -36,16 +36,17 @@
 
         <div class="form-wrapper">
 
-                {foreach from=$legal_options key=key_parent item=legal_option}
+                {foreach from=$cms_roles_assoc key=id_cms_role item=cms_role_assoc}
                     <div class="form-group">
                         <label class="control-label col-lg-3">
-                            {$legal_option}
+                            {$cms_role_assoc['role_title']} - {$cms_role_assoc['id_cms']}
                         </label>
 
                         <div class="col-lg-9">
-                            <select class="form-control fixed-width-xxl " name="{$key_parent}" id="{$key_parent}">
-                            {foreach from=$cms_pages key=key_child item=cms_page}
-                                <option value="{$cms_page['id_cms']}">{$cms_page['meta_title']}</option>
+                            <select class="form-control fixed-width-xxl" name="CMSROLE_{$id_cms_role}" id="CMSROLE_{$id_cms_role}">
+                            {foreach from=$cms_pages item=cms_page}
+
+                                <option value="{$cms_page['id_cms']}" {if $cms_role_assoc['id_cms'] == $cms_page['id_cms']}selected{/if}>{$cms_page['id_cms']} - {$cms_page['meta_title']}</option>
                             {/foreach}
                             </select>
                         </div>
@@ -54,10 +55,10 @@
         </div>
 
         <div class="panel-footer">
-            <button type="submit" value="1" id="module_form_submit_btn_1" name="submitAEUC_legalContentManager_btn" class="btn btn-default pull-right">
+            <button type="submit" value="1" id="module_form_submit_btn_1" class="btn btn-default pull-right">
                 <i class="process-icon-save"></i>  {l s='Save' mod='advancedeucompliance'}
             </button>
-            <a href="{$add_cms_link|escape:'html':'UTF-8'}" class="btn btn-default" name="submitAEUC_addCMS">
+            <a href="{$add_cms_link|escape:'html':'UTF-8'}" class="btn btn-default">
                 <i class="process-icon-plus"></i> {l s='Add new CMS Page' mod='advancedeucompliance'}
             </a>
         </div>

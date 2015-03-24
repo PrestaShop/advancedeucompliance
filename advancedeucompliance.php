@@ -202,12 +202,20 @@ class Advancedeucompliance extends Module
 	protected function _postProcessLegalContentManager()
 	{
 
-		$post_keys = array_keys($this->getCMSRoles());
+		$posted_values = Tools::getAllValues();
+		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
 
-		foreach ($post_keys as $key)
+		foreach ($posted_values as $key_name => $assoc_cms_id)
 		{
-			// TODO: Move legal option from array to DB (DB ready)
+			if (strpos($key_name, 'CMSROLE_') !== false)
+			{
+				$exploded_key_name = explode('_', $key_name);
+				$cms_role = $cms_role_repository->getRecordById((int)$exploded_key_name[1]);
+				$cms_role->id_cms = (int)$assoc_cms_id;
+				$cms_role->update();
+			}
 		}
+		unset($cms_role);
 	}
 
 
@@ -465,13 +473,32 @@ class Advancedeucompliance extends Module
 	 */
 	protected function renderFormLegalContentManager()
 	{
-		$legal_options = $this->getCMSRoles();
-		// @TODO: Check for empty result on static call and check if result is array before unshifting
-		$cms_pages = CMS::listCms();
-		array_unshift($cms_pages, array('id_cms' => -1, 'meta_title' => $this->l('No association (means disabled)')));
+		$cms_repository = $this->repository_manager->getRepository('CMS');
+		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
+		$cms_roles = $cms_role_repository->getCMSRolesWhereNamesIn(array_keys($this->getCMSRoles()));
+		$cms_roles_assoc = array();
+
+		foreach ($cms_roles as $cms_role)
+		{
+			if ((int)$cms_role['id_cms'] != 0)
+			{
+				$cms_entity = $cms_repository->getRecordById((int)$cms_role['id_cms'], true);
+				$assoc_cms_name = $cms_entity->name;
+			}
+			else
+				$assoc_cms_name = $this->l('No association (means disabled)');
+
+			$cms_roles_assoc[(int)$cms_role['id_cms_role']] = array('id_cms' => (int)$cms_role['id_cms'],
+																	'page_title' => (string)$assoc_cms_name,
+																	'role_title' => (string)$cms_role['name']);
+		}
+
+		$cms_pages = $cms_repository->getCMSPagesList();
+		array_unshift($cms_pages, array('id_cms' => 0, 'meta_title' => $this->l('No association (means disabled)')));
+
 		$this->context->smarty->assign(array(
+			'cms_roles_assoc' => $cms_roles_assoc,
 			'cms_pages' => $cms_pages,
-			'legal_options' => $legal_options,
 			'form_action' => '#',
 			'add_cms_link' => $this->context->link->getAdminLink('AdminCMS')
 		));
