@@ -24,8 +24,8 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
-if (!defined('_PS_VERSION_'))
-	exit;
+/*if (!defined('_PS_VERSION_'))
+	exit;*/
 
 class Advancedeucompliance extends Module
 {
@@ -71,6 +71,7 @@ class Advancedeucompliance extends Module
 	{
 		return parent::install() &&
 				$this->loadTables() &&
+				$this->registerHook('displayProductPriceBlock') &&
 				$this->createConfig();
 	}
 
@@ -110,7 +111,6 @@ class Advancedeucompliance extends Module
 			}
 		}
 
-
 		return true;
 	}
 
@@ -123,6 +123,22 @@ class Advancedeucompliance extends Module
 				Configuration::deleteByName('AEUC_LABEL_SPECIFIC_PRICE') &&
 				Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
 				Configuration::deleteByName('AEUC_LABEL_WEIGHT');
+	}
+
+	public function hookDisplayProductPriceBlock($param)
+	{
+		if ((bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true &&
+			isset($param['type']) &&
+			$param['type'] == 'price')
+		{
+
+			// @Todo: REfactor with templates
+			if ((bool)Configuration::get('PS_TAX') === true)
+				return '<br/>'.$this->l('Tax included');
+			else
+				return '<br/>'.$this->l('Tax excluded');
+		}
+		return '';
 	}
 
 	/**
@@ -184,7 +200,15 @@ class Advancedeucompliance extends Module
 		foreach ($post_keys as $key)
 		{
 			if (Tools::isSubmit($key))
-				Configuration::updateValue($key, Tools::getValue($key));
+			{
+				$is_option_active = Tools::getValue($key);
+				Configuration::updateValue($key, $is_option_active);
+				$key = Tools::strtolower($key);
+				$key = Tools::toCamelCase($key, true);
+				if (method_exists($this, 'process'.$key))
+					$this->{'process'.$key}($is_option_active);
+			}
+
 		}
 	}
 
@@ -196,6 +220,23 @@ class Advancedeucompliance extends Module
 		{
 			if (Tools::isSubmit($key))
 				Configuration::updateValue($key, Tools::getValue($key));
+		}
+	}
+
+	protected function processAeucLabelTaxIncExc($is_option_active)
+	{
+		$id_lang = (int)Configuration::get('PS_LANG_DEFAULT');
+		$countries = Country::getCountries($id_lang, true, false, false);
+		foreach ($countries as $id_country => $country_details)
+		{
+
+			$country = new Country((int)$country_details['id_country']);
+			if (Validate::isLoadedObject($country))
+			{
+				$country->display_tax_label = ($is_option_active ? 0 : 1);
+				// @Todo: Display error message when failed to update a country
+				$country->update();
+			}
 		}
 	}
 
@@ -477,13 +518,14 @@ class Advancedeucompliance extends Module
 		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
 		$cms_roles = $cms_role_repository->getCMSRolesWhereNamesIn(array_keys($this->getCMSRoles()));
 		$cms_roles_assoc = array();
+		$id_lang = Context::getContext()->employee->id_lang;
 
 		foreach ($cms_roles as $cms_role)
 		{
 			if ((int)$cms_role['id_cms'] != 0)
 			{
 				$cms_entity = $cms_repository->getRecordById((int)$cms_role['id_cms'], true);
-				$assoc_cms_name = $cms_entity->name;
+				$assoc_cms_name = $cms_entity->meta_title[(int)$id_lang];
 			}
 			else
 				$assoc_cms_name = $this->l('No association (means disabled)');
@@ -515,7 +557,16 @@ class Advancedeucompliance extends Module
 			'mails_available' => $this->getAvailableMails(),
 			'legal_options' => $this->getCMSRoles()
 		));
+
+		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
+		$cms_roles_associated = $cms_role_repository->getCMSRolesAssociated();
+
+		$this->context->smarty->assign(array(
+			'has_assoc' => $cms_roles_associated
+		));
+
 		$content = $this->context->smarty->fetch($this->local_path.'views/templates/admin/email_attachments_form.tpl');
+
 		return $content;
 	}
 
