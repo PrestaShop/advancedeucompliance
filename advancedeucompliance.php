@@ -127,7 +127,7 @@ class Advancedeucompliance extends Module
 
 	public function hookDisplayProductPriceBlock($param)
 	{
-        
+
 		if ((bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true &&
             isset($param['product']) &&
 			isset($param['type']) &&
@@ -172,57 +172,35 @@ class Advancedeucompliance extends Module
 	 */
 	protected function _postProcess()
 	{
-		$has_processed_something = false;
+        $has_processed_something = false;
+        $post_keys = array_keys(
+            array_merge(
+                $this->getConfigFormLabelsManagerValues(),
+                $this->getConfigFormFeaturesManagerValues()
+            )
+        );
 
-		if (Tools::isSubmit('submitAEUC_labelsManager')) {
-			$this->_postProcessLabelsManager();
-			$has_processed_something = true;
-		}
+        foreach ($post_keys as $key)
+        {
+            if (Tools::isSubmit($key))
+            {
+                $is_option_active = Tools::getValue($key);
+                Configuration::updateValue($key, $is_option_active);
+                $key = Tools::strtolower($key);
+                $key = Tools::toCamelCase($key, true);
+                if (method_exists($this, 'process'.$key))
+                {
+                    $this->{'process'.$key}($is_option_active);
+                    $has_processed_something = true;
+                }
+            }
 
-		if (Tools::isSubmit('submitAEUC_featuresManager')) {
-			$this->_postProcessFeaturesManager();
-			$has_processed_something = true;
-		}
-
-		if (Tools::isSubmit('submitAEUC_legalContentManager')) {
-			$this->_postProcessLegalContentManager();
-			$has_processed_something = true;
-		}
+        }
 
 		if ($has_processed_something)
 			return $this->displayConfirmation($this->l('Settings saved successfully!'));
 		else
 			return '';
-	}
-
-	protected function _postProcessLabelsManager()
-	{
-		$post_keys = array_keys($this->getConfigFormLabelsManagerValues());
-
-		foreach ($post_keys as $key)
-		{
-			if (Tools::isSubmit($key))
-			{
-				$is_option_active = Tools::getValue($key);
-				Configuration::updateValue($key, $is_option_active);
-				$key = Tools::strtolower($key);
-				$key = Tools::toCamelCase($key, true);
-				if (method_exists($this, 'process'.$key))
-					$this->{'process'.$key}($is_option_active);
-			}
-
-		}
-	}
-
-	protected function _postProcessFeaturesManager()
-	{
-		$post_keys = array_keys($this->getConfigFormFeaturesManagerValues());
-
-		foreach ($post_keys as $key)
-		{
-			if (Tools::isSubmit($key))
-				Configuration::updateValue($key, Tools::getValue($key));
-		}
 	}
 
 	protected function processAeucLabelTaxIncExc($is_option_active)
@@ -241,6 +219,26 @@ class Advancedeucompliance extends Module
 			}
 		}
 	}
+
+    protected function processAeucFeatTellAFriend($is_option_active)
+    {
+        $staf_module = Module::getInstanceByName('sendtoafriend');
+
+        if ((bool)$staf_module->active && (bool)$is_option_active)
+            $staf_module->disable();
+        else if (!(bool)$staf_module->active && !(bool)$is_option_active)
+            $staf_module->enable();
+    }
+
+    protected function processAeucFeatReorder($is_option_active)
+    {
+        $is_ps_reordoring_active = Configuration::get('PS_DISALLOW_HISTORY_REORDERING');
+
+        if ((bool)$is_ps_reordoring_active && (bool)$is_option_active)
+            Configuration::set('PS_DISALLOW_HISTORY_REORDERING', 0);
+        else if (!(bool)$is_ps_reordoring_active && !(bool)$is_option_active)
+            Configuration::set('PS_DISALLOW_HISTORY_REORDERING', 1);
+    }
 
 	protected function _postProcessLegalContentManager()
 	{
@@ -456,10 +454,10 @@ class Advancedeucompliance extends Module
 				'input' => array(
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Enable/Disable "Tell A Friend" feature'),
+						'label' => $this->l('Disable "Tell A Friend" feature'),
 						'name' => 'AEUC_FEAT_TELL_A_FRIEND',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to enable "Tell A Friend" feature'),
+						'desc' => $this->l('Whether to disable "Tell A Friend" feature'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -475,10 +473,10 @@ class Advancedeucompliance extends Module
 					),
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Enable/Disable "Reorder" feature'),
+						'label' => $this->l('Disable "Reorder" feature'),
 						'name' => 'AEUC_FEAT_REORDER',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to enable "Reorder" feature'),
+						'desc' => $this->l('Whether to disable "Reorder" feature'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
