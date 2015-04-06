@@ -127,7 +127,9 @@ class Advancedeucompliance extends Module
 
 	public function hookDisplayProductPriceBlock($param)
 	{
+        
 		if ((bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true &&
+            isset($param['product']) &&
 			isset($param['type']) &&
 			$param['type'] == 'price')
 		{
