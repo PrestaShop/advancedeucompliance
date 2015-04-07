@@ -127,11 +127,18 @@ class Advancedeucompliance extends Module
 
 	public function hookDisplayProductPriceBlock($param)
 	{
+		if (!isset($param['product']) || !isset($param['type']))
+			return;
 
-		if ((bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true &&
-            isset($param['product']) &&
-			isset($param['type']) &&
-			$param['type'] == 'price')
+		$product = $param['product'];
+
+		if (is_array($product))
+			$product = new Product((int)$product['id_product']);
+		if (!Validate::isLoadedObject($product))
+			return;
+
+		/* Handle taxes */
+		if ($param['type'] == 'price' && (bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true)
 		{
 
 			// @Todo: REfactor with templates
@@ -140,7 +147,20 @@ class Advancedeucompliance extends Module
 			else
 				return '<br/>'.$this->l('Tax excluded');
 		}
-		return '';
+
+		/* Handles product's weight */
+		if ($param['type'] == 'weight' && (bool)Configuration::get('PS_DISPLAY_PRODUCT_WEIGHT') === true &&
+		isset($param['hook_origin']) && $param['hook_origin'] == 'product_sheet')
+		{
+			if ((int)$product->weight)
+			{
+				$rounded_weight = round((float)$product->weight,
+										Configuration::get('PS_PRODUCT_WEIGHT_PRECISION'));
+				return sprintf($this->l('Weight: %s'), $rounded_weight.' '.Configuration::get('PS_WEIGHT_UNIT'));
+			}
+		}
+
+		return;
 	}
 
 	/**
@@ -239,6 +259,16 @@ class Advancedeucompliance extends Module
         else if (!(bool)$is_ps_reordering_active && !(bool)$is_option_active)
 			Configuration::updateValue('PS_REORDERING', true);
     }
+
+	protected function processAeucLabelWeight($is_option_active)
+	{
+		$is_ps_display_weight_active = Configuration::get('PS_DISPLAY_PRODUCT_WEIGHT');
+
+		if (!(bool)$is_ps_display_weight_active && (bool)$is_option_active)
+			Configuration::updateValue('PS_DISPLAY_PRODUCT_WEIGHT', true);
+		else if ((bool)$is_ps_display_weight_active && !(bool)$is_option_active)
+			Configuration::updateValue('PS_DISPLAY_PRODUCT_WEIGHT', false);
+	}
 
 	protected function _postProcessLegalContentManager()
 	{
@@ -639,11 +669,7 @@ class Advancedeucompliance extends Module
 				}
 			}
 		}
-
 		return $content_list;
 	}
-
-
-
 
 }
