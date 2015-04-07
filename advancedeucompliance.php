@@ -231,13 +231,13 @@ class Advancedeucompliance extends Module
     }
 
     protected function processAeucFeatReorder($is_option_active)
-    {
-        $is_ps_reordoring_active = Configuration::get('PS_DISALLOW_HISTORY_REORDERING');
+	{
+        $is_ps_reordering_active = Configuration::get('PS_REORDERING');
 
-        if ((bool)$is_ps_reordoring_active && (bool)$is_option_active)
-            Configuration::set('PS_DISALLOW_HISTORY_REORDERING', 0);
-        else if (!(bool)$is_ps_reordoring_active && !(bool)$is_option_active)
-            Configuration::set('PS_DISALLOW_HISTORY_REORDERING', 1);
+        if ((bool)$is_ps_reordering_active && (bool)$is_option_active)
+			Configuration::updateValue('PS_REORDERING', false);
+        else if (!(bool)$is_ps_reordering_active && !(bool)$is_option_active)
+			Configuration::updateValue('PS_REORDERING', true);
     }
 
 	protected function _postProcessLegalContentManager()
