@@ -1,6 +1,6 @@
 <?php
 /**
-* 2007-2014 PrestaShop
+* 2007-2015 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -19,19 +19,21 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author    PrestaShop SA <contact@prestashop.com>
-*  @copyright 2007-2014 PrestaShop SA
+*  @copyright 2007-2015 PrestaShop SA
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
-/*if (!defined('_PS_VERSION_'))
-	exit;*/
+if (!defined('_PS_VERSION_'))
+	exit;
 
 class Advancedeucompliance extends Module
 {
 	/* Class members */
 	protected $config_form = false;
 	private $repository_manager;
+	private $filesystem;
+	private $emails;
 
 	/* Constants used for LEGAL/CMS Management */
 	// TODO: Remove this once in DB
@@ -45,7 +47,7 @@ class Advancedeucompliance extends Module
 	const LEGAL_SHIP_PAY 		= 'LEGAL_SHIP_PAY';
 	/* End of LEGAL/CMS Constants declarations */
 
-	public function __construct(RepositoryManager $repository_manager)
+	public function __construct(RepositoryManager $repository_manager, FileSystem $fs, Email $email)
 	{
 		$this->name = 'advancedeucompliance';
 		$this->tab = 'administration';
@@ -56,7 +58,10 @@ class Advancedeucompliance extends Module
 
 		parent::__construct();
 
+		/* Register dependencies to module */
 		$this->repository_manager = $repository_manager;
+		$this->filesystem = $fs;
+		$this->emails = $email;
 
 		$this->displayName = $this->l('Advanced EU Compliance');
 		$this->description = $this->l('This module will help European merchants to get compliant with their countries e-commerce laws');
@@ -89,7 +94,8 @@ class Advancedeucompliance extends Module
 				Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME', true) &&
 				Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', true) &&
 				Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', true) &&
-				Configuration::updateValue('AEUC_LABEL_WEIGHT', true);
+				Configuration::updateValue('AEUC_LABEL_WEIGHT', true) &&
+				Configuration::updateValue('AEUC_FEAT_ALT_ORDER_PROCESS', true);
 	}
 
 	public function loadTables()
@@ -122,7 +128,8 @@ class Advancedeucompliance extends Module
 				Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME') &&
 				Configuration::deleteByName('AEUC_LABEL_SPECIFIC_PRICE') &&
 				Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
-				Configuration::deleteByName('AEUC_LABEL_WEIGHT');
+				Configuration::deleteByName('AEUC_LABEL_WEIGHT') &&
+				Configuration::deleteByName('AEUC_FEAT_ALT_ORDER_PROCESS');
 	}
 
 	public function hookDisplayProductPriceBlock($param)
@@ -520,6 +527,25 @@ class Advancedeucompliance extends Module
 							)
 						),
 					),
+					array(
+						'type' => 'switch',
+						'label' => $this->l('Enable Alternative Checkout process'),
+						'name' => 'AEUC_FEAT_ALT_ORDER_PROCESS',
+						'is_bool' => true,
+						'desc' => $this->l('Whether to enable "Alternative Checkout Process" feature'),
+						'values' => array(
+							array(
+								'id' => 'active_on',
+								'value' => true,
+								'label' => $this->l('Enabled')
+							),
+							array(
+								'id' => 'active_off',
+								'value' => false,
+								'label' => $this->l('Disabled')
+							)
+						),
+					),
 				),
 				'submit' => array(
 					'title' => $this->l('Save'),
@@ -536,6 +562,7 @@ class Advancedeucompliance extends Module
 		return array(
 			'AEUC_FEAT_TELL_A_FRIEND' => Configuration::get('AEUC_FEAT_TELL_A_FRIEND'),
 			'AEUC_FEAT_REORDER' => Configuration::get('AEUC_FEAT_REORDER'),
+			'AEUC_FEAT_ALT_ORDER_PROCESS' => Configuration::get('AEUC_FEAT_ALT_ORDER_PROCESS')
 		);
 	}
 
@@ -578,13 +605,10 @@ class Advancedeucompliance extends Module
 		return $content;
 	}
 
-
-
-
 	protected function renderFormEmailAttachmentsManager()
 	{
 		$this->context->smarty->assign(array(
-			'mails_available' => $this->getAvailableMails(),
+			'mails_available' => $this->emails->getAvailableMails(),
 			'legal_options' => $this->getCMSRoles()
 		));
 
@@ -598,78 +622,6 @@ class Advancedeucompliance extends Module
 		$content = $this->context->smarty->fetch($this->local_path.'views/templates/admin/email_attachments_form.tpl');
 
 		return $content;
-	}
-
-
-
-	/**
-	 * THIS SECTION CONTAINS ALL THE METHODS THAT SHOULD BE MOVED INTO THE CORE OF PRESTASHOP. BUT LATER ! :)
-	 */
-
-	// @TODO: Dont know yet where to copy/past this one, any idea ?
-	public function getAvailableMails($lang = null, $dir = null)
-	{
-		if (is_null($lang))
-			$iso_lang = Language::getIsoById((int)Configuration::get('PS_LANG_DEFAULT'));
-		else
-			$iso_lang = $lang;
-
-		if (is_null($dir))
-			$mail_directory = _PS_MAIL_DIR_.$iso_lang.DIRECTORY_SEPARATOR;
-		else
-			$mail_directory = $dir;
-
-		if (!file_exists($mail_directory))
-			return null;
-
-		// @TODO: Make scanned directory dynamic ?
-		$mail_directory = $this->getDirContentRecursive(_PS_MAIL_DIR_.$iso_lang.DIRECTORY_SEPARATOR);
-		// Prestashop Mail should only be at root level
-		$mail_directory = $mail_directory['root'];
-		$clean_mail_list = array();
-
-		// Remove duplicate .html / .txt / .tpl
-		foreach ($mail_directory as $mail) {
-			$exploded_filename = explode('.', $mail, 3);
-			// Avoid badly named mail templates
-			if (is_array($exploded_filename) && count($exploded_filename) == 2) {
-				$clean_filename = (string)$exploded_filename[0];
-				if (!in_array($clean_filename, $clean_mail_list)) {
-					$clean_mail_list[] = $clean_filename;
-				}
-			}
-		}
-		return $clean_mail_list;
-	}
-
-	// @TODO: To put into Tools (return content of current) ?
-	public function getDirContentRecursive($dir, $is_iterating = false)
-	{
-		if (!file_exists($dir) || !is_dir($dir))
-			return false;
-
-		$content_dir_scanned = scandir($dir);
-		$content_list = array();
-
-		if (!$content_dir_scanned)
-			return false;
-
-		foreach ($content_dir_scanned as $entry)
-		{
-			if ($entry != '.' && $entry != '..') {
-				if (is_dir($dir . DIRECTORY_SEPARATOR . $entry)) {
-					$recurse_iteration = $this->getDirContentRecursive($dir . DIRECTORY_SEPARATOR . $entry, true);
-					if ($recurse_iteration)
-						$content_list[$entry] = $recurse_iteration;
-				} else {
-					if ($is_iterating)
-						$content_list[] = $entry;
-					else
-						$content_list['root'][] = $entry;
-				}
-			}
-		}
-		return $content_list;
 	}
 
 }
