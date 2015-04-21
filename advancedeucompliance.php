@@ -95,7 +95,7 @@ class Advancedeucompliance extends Module
 				Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', true) &&
 				Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', true) &&
 				Configuration::updateValue('AEUC_LABEL_WEIGHT', true) &&
-				Configuration::updateValue('AEUC_FEAT_ALT_ORDER_PROCESS', true);
+				Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', true);
 	}
 
 	public function loadTables()
@@ -129,7 +129,7 @@ class Advancedeucompliance extends Module
 				Configuration::deleteByName('AEUC_LABEL_SPECIFIC_PRICE') &&
 				Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
 				Configuration::deleteByName('AEUC_LABEL_WEIGHT') &&
-				Configuration::deleteByName('AEUC_FEAT_ALT_ORDER_PROCESS');
+				Configuration::deleteByName('AEUC_FEAT_ADV_PAYMENT_API');
 	}
 
 	public function hookDisplayProductPriceBlock($param)
@@ -244,6 +244,20 @@ class Advancedeucompliance extends Module
 				// @Todo: Display error message when failed to update a country
 				$country->update();
 			}
+		}
+	}
+
+	protected function processAeucFeatAdvPaymentApi($is_option_active)
+	{
+		if ((bool)$is_option_active)
+		{
+			Configuration::updateValue('PS_ADVANCED_PAYMENT_API', true);
+			Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', true);
+		}
+		else
+		{
+			Configuration::updateValue('PS_ADVANCED_PAYMENT_API', false);
+			Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', false);
 		}
 	}
 
@@ -529,10 +543,10 @@ class Advancedeucompliance extends Module
 					),
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Enable Alternative Checkout process'),
-						'name' => 'AEUC_FEAT_ALT_ORDER_PROCESS',
+						'label' => $this->l('Enable "Advanced Payment API" feature'),
+						'name' => 'AEUC_FEAT_ADV_PAYMENT_API',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to enable "Alternative Checkout Process" feature'),
+						'desc' => $this->l('Whether to enable "Advanced Payment API" feature'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -562,7 +576,7 @@ class Advancedeucompliance extends Module
 		return array(
 			'AEUC_FEAT_TELL_A_FRIEND' => Configuration::get('AEUC_FEAT_TELL_A_FRIEND'),
 			'AEUC_FEAT_REORDER' => Configuration::get('AEUC_FEAT_REORDER'),
-			'AEUC_FEAT_ALT_ORDER_PROCESS' => Configuration::get('AEUC_FEAT_ALT_ORDER_PROCESS')
+			'AEUC_FEAT_ADV_PAYMENT_API' => Configuration::get('AEUC_FEAT_ADV_PAYMENT_API')
 		);
 	}
 
