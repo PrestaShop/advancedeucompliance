@@ -34,6 +34,7 @@ class Advancedeucompliance extends Module
 	private $repository_manager;
 	private $filesystem;
 	private $emails;
+	protected $_errors;
 
 	/* Constants used for LEGAL/CMS Management */
 	// TODO: Remove this once in DB
@@ -66,6 +67,9 @@ class Advancedeucompliance extends Module
 		$this->displayName = $this->l('Advanced EU Compliance');
 		$this->description = $this->l('This module will help European merchants to get compliant with their countries e-commerce laws');
 		$this->confirmUninstall = $this->l('Are you sure you cant to uninstall this module ?');
+
+		/* Init errors var */
+		$this->_errors = array();
 	}
 
 	/**
@@ -77,6 +81,7 @@ class Advancedeucompliance extends Module
 		return parent::install() &&
 				$this->loadTables() &&
 				$this->registerHook('displayProductPriceBlock') &&
+				$this->registerHook('overrideTOSDisplay') &&
 				$this->createConfig();
 	}
 
@@ -95,7 +100,8 @@ class Advancedeucompliance extends Module
 				Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', true) &&
 				Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', true) &&
 				Configuration::updateValue('AEUC_LABEL_WEIGHT', true) &&
-				Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', true);
+				Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', true) &&
+				Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', true);
 	}
 
 	public function loadTables()
@@ -116,7 +122,6 @@ class Advancedeucompliance extends Module
 				$cms_role->save();
 			}
 		}
-
 		return true;
 	}
 
@@ -129,7 +134,56 @@ class Advancedeucompliance extends Module
 				Configuration::deleteByName('AEUC_LABEL_SPECIFIC_PRICE') &&
 				Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
 				Configuration::deleteByName('AEUC_LABEL_WEIGHT') &&
-				Configuration::deleteByName('AEUC_FEAT_ADV_PAYMENT_API');
+				Configuration::deleteByName('AEUC_FEAT_ADV_PAYMENT_API') &&
+				Configuration::deleteByName('AEUC_LABEL_REVOCATION_TOS');
+	}
+
+	public function hookOverrideTOSDisplay($param)
+	{
+		$has_tos_override_opt = (bool)Configuration::get('AEUC_LABEL_REVOCATION_TOS');
+		$cms_repository = $this->repository_manager->getRepository('CMS');
+		// Check first if LEGAL_REVOCATION CMS Role is been set before doing anything here
+		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
+		$cms_page_associated = $cms_role_repository->getCMSIdAssociatedFromName(Advancedeucompliance::LEGAL_REVOCATION);
+
+		if (!$has_tos_override_opt || !isset($cms_page_associated['id_cms']) || (int)$cms_page_associated['id_cms'] == 0)
+			return false;
+
+		// Get IDs of CMS pages required
+		$cms_conditions_id = (int)Configuration::get('PS_CONDITIONS_CMS_ID');
+		$cms_revocation_id = (int)$cms_page_associated['id_cms'];
+
+		// Get misc vars
+		$id_lang = (int)$this->context->language->id;
+		$is_ssl_enabled = (bool)Configuration::get('PS_SSL_ENABLED');
+		$checkedTos = $this->context->cart->checkedTos ? true : false;
+
+		// Get CMS OBJs
+		$cms_conditions = $cms_repository->getCMSById($cms_conditions_id, $id_lang);
+		$cms_revocations = $cms_repository->getCMSById($cms_revocation_id, $id_lang);
+
+		// Get links to these pages
+		$link_conditions = $this->context->link->getCMSLink($cms_conditions, $cms_conditions->link_rewrite, $is_ssl_enabled);
+		$link_revocations = $this->context->link->getCMSLink($cms_revocations, $cms_revocations->link_rewrite, $is_ssl_enabled);
+
+		if (!strpos($link_conditions, '?'))
+			$link_conditions .= '?content_only=1';
+		else
+			$link_conditions .= '&content_only=1';
+
+		if (!strpos($link_revocations, '?'))
+			$link_revocations .= '?content_only=1';
+		else
+			$link_revocations .= '&content_only=1';
+
+		$this->context->smarty->assign(array(
+			'checkedTOS' => $checkedTos,
+			'link_conditions' => $link_conditions,
+			'link_revocations' => $link_revocations
+		));
+
+		$content = $this->context->smarty->fetch($this->local_path.'views/templates/front/hookOverrideTOSDisplay.tpl');
+		return $content;
 	}
 
 	public function hookDisplayProductPriceBlock($param)
@@ -147,7 +201,6 @@ class Advancedeucompliance extends Module
 		/* Handle taxes */
 		if ($param['type'] == 'price' && (bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true)
 		{
-
 			// @Todo: REfactor with templates
 			if ((bool)Configuration::get('PS_TAX') === true)
 				return '<br/>'.$this->l('Tax included');
@@ -179,7 +232,9 @@ class Advancedeucompliance extends Module
 		 * If values have been submitted in the form, process.
 		 */
 		$success_band = $this->_postProcess();
+
 		$this->context->smarty->assign('module_dir', $this->_path);
+		$this->context->smarty->assign('errors', $this->_errors);
 
 		// Render all required form for each 'part'
 		$formLabelsManager = $this->renderFormLabelsManager();
@@ -200,34 +255,78 @@ class Advancedeucompliance extends Module
 	protected function _postProcess()
 	{
         $has_processed_something = false;
-        $post_keys = array_keys(
+
+        $post_keys_switchable = array_keys(
             array_merge(
                 $this->getConfigFormLabelsManagerValues(),
                 $this->getConfigFormFeaturesManagerValues()
             )
         );
 
-        foreach ($post_keys as $key)
+		$post_keys_complex = array(
+			'submitAEUC_legalContentManager',
+			'submitAEUC_emailAttachmentsManager'
+		);
+
+		$received_values = Tools::getAllValues();
+
+        foreach (array_keys($received_values) as $key_received)
         {
-            if (Tools::isSubmit($key))
-            {
-                $is_option_active = Tools::getValue($key);
-                Configuration::updateValue($key, $is_option_active);
-                $key = Tools::strtolower($key);
-                $key = Tools::toCamelCase($key, true);
-                if (method_exists($this, 'process'.$key))
-                {
-                    $this->{'process'.$key}($is_option_active);
-                    $has_processed_something = true;
-                }
-            }
+			/* Case its one of form with only switches in it */
+			if (in_array($key_received, $post_keys_switchable)) {
+				$is_option_active = Tools::getValue($key_received);
+				$key = Tools::strtolower($key_received);
+				$key = Tools::toCamelCase($key);
+				if (method_exists($this, 'process' . $key))
+				{
+
+					$this->{'process' . $key}($is_option_active);
+					$has_processed_something = true;
+				}
+				continue;
+			}
+			/* Case we are on more complex forms */
+			if (in_array($key_received, $post_keys_complex))
+			{
+				// Clean key
+				$key_exploded = explode('_', $key_received);
+				if (!count($key_exploded) == 2)
+					continue;
+				$key = $key_exploded[1];
+				$key = Tools::strtolower($key);
+				if (method_exists($this, 'process' . $key))
+				{
+					$this->{'process' . $key}();
+					$has_processed_something = true;
+				}
+			}
 
         }
 
 		if ($has_processed_something)
-			return $this->displayConfirmation($this->l('Settings saved successfully!'));
+			return (count($this->_errors) ? $this->displayError($this->_errors) : '').
+					$this->displayConfirmation($this->l('Settings saved successfully!'));
 		else
-			return '';
+			return (count($this->_errors) ? $this->displayError($this->_errors) : '').'';
+	}
+
+	protected function processAeucLabelRevocationTOS($is_option_active)
+	{
+		// Check first if LEGAL_REVOCATION CMS Role is been set before doing anything here
+		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
+		$cms_page_associated = $cms_role_repository->getCMSIdAssociatedFromName(Advancedeucompliance::LEGAL_REVOCATION);
+
+		// @TODO: Fill error member attribute
+		if (!isset($cms_page_associated['id_cms']) || (int)$cms_page_associated['id_cms'] == 0)
+		{
+			$this->_errors[] = $this->l('CMS Role "Legal Revocation" has not been associated yet. Therefore we cannot activate "Revocation Terms" option');
+			return;
+		}
+
+		if ((bool)$is_option_active)
+			Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', true);
+		else
+			Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', false);
 	}
 
 	protected function processAeucLabelTaxIncExc($is_option_active)
@@ -241,8 +340,8 @@ class Advancedeucompliance extends Module
 			if (Validate::isLoadedObject($country))
 			{
 				$country->display_tax_label = ($is_option_active ? 0 : 1);
-				// @Todo: Display error message when failed to update a country
-				$country->update();
+				if (!$country->update())
+					$this->_errors[] = $this->l('A country could not be updated for Tax INC/EXC label');
 			}
 		}
 	}
@@ -291,7 +390,7 @@ class Advancedeucompliance extends Module
 			Configuration::updateValue('PS_DISPLAY_PRODUCT_WEIGHT', false);
 	}
 
-	protected function _postProcessLegalContentManager()
+	protected function processLegalContentManager()
 	{
 
 		$posted_values = Tools::getAllValues();
@@ -442,6 +541,26 @@ class Advancedeucompliance extends Module
 							)
 						),
 					),
+					array(
+						'type' => 'switch',
+						'label' => $this->l('Display Revocation Terms within TOS'),
+						'name' => 'AEUC_LABEL_REVOCATION_TOS',
+						'is_bool' => true,
+						'desc' => $this->l('Whether to display Revocation Terms CMS page within TOS text (NB: Related CMS Role need to be set)'),
+						'disable' => true,
+						'values' => array(
+							array(
+								'id' => 'active_on',
+								'value' => true,
+								'label' => $this->l('Enabled')
+							),
+							array(
+								'id' => 'active_off',
+								'value' => false,
+								'label' => $this->l('Disabled')
+							)
+						),
+					),
 				),
 				'submit' => array(
 					'title' => $this->l('Save'),
@@ -460,6 +579,7 @@ class Advancedeucompliance extends Module
 			'AEUC_LABEL_SPECIFIC_PRICE' => Configuration::get('AEUC_LABEL_SPECIFIC_PRICE'),
 			'AEUC_LABEL_TAX_INC_EXC' => Configuration::get('AEUC_LABEL_TAX_INC_EXC'),
 			'AEUC_LABEL_WEIGHT' => Configuration::get('AEUC_LABEL_WEIGHT'),
+			'AEUC_LABEL_REVOCATION_TOS' => Configuration::get('AEUC_LABEL_REVOCATION_TOS'),
 		);
 	}
 
