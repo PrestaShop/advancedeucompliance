@@ -101,7 +101,9 @@ class Advancedeucompliance extends Module
 				Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', true) &&
 				Configuration::updateValue('AEUC_LABEL_WEIGHT', true) &&
 				Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', true) &&
-				Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', true);
+				Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', true) &&
+				Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', true) &&
+				Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', true);
 	}
 
 	public function loadTables()
@@ -113,7 +115,6 @@ class Advancedeucompliance extends Module
 
 		foreach ($roles as $role)
 		{
-
 			if (!$cms_role_repository->getRoleByName($role))
 			{
 				$cms_role = $cms_role_repository->createNewRecord();
@@ -135,7 +136,8 @@ class Advancedeucompliance extends Module
 				Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
 				Configuration::deleteByName('AEUC_LABEL_WEIGHT') &&
 				Configuration::deleteByName('AEUC_FEAT_ADV_PAYMENT_API') &&
-				Configuration::deleteByName('AEUC_LABEL_REVOCATION_TOS');
+				Configuration::deleteByName('AEUC_LABEL_REVOCATION_TOS') &&
+				Configuration::deleteByName('AEUC_LABEL_SHIPPING_INC_EXC');
 	}
 
 	public function hookOverrideTOSDisplay($param)
@@ -198,14 +200,47 @@ class Advancedeucompliance extends Module
 		if (!Validate::isLoadedObject($product))
 			return;
 
-		/* Handle taxes */
+		$content_to_return = '';
+
+
+		/* Handle taxes  Inc./Exc.*/
 		if ($param['type'] == 'price' && (bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true)
 		{
 			// @Todo: REfactor with templates
 			if ((bool)Configuration::get('PS_TAX') === true)
-				return '<br/>'.$this->l('Tax included');
+				$content_to_return.= '<br/>'.$this->l('Tax included');
 			else
-				return '<br/>'.$this->l('Tax excluded');
+				$content_to_return .= '<br/>'.$this->l('Tax excluded');
+		}
+
+		/* Handle Shipping Inc./Exc. */
+		if ($param['type'] == 'price' && (bool)Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC') === true)
+		{
+			// @Todo: REfactor with templates
+			if ($product->is_virtual)
+			{
+				$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
+				$cms_repository = $this->repository_manager->getRepository('CMS');
+				$cms_page_associated = $cms_role_repository->getCMSIdAssociatedFromName(Advancedeucompliance::LEGAL_SHIP_PAY);
+
+				if (isset($cms_page_associated['id_cms']) && (int)$cms_page_associated['id_cms'] != 0)
+				{
+					$cms_ship_pay_id = (int)$cms_page_associated['id_cms'];
+					$cms_revocations = $cms_repository->getCMSById($cms_ship_pay_id, $this->context->language->id);
+					$is_ssl_enabled = (bool)Configuration::get('PS_SSL_ENABLED');
+					$link_ship_pay = $this->context->link->getCMSLink($cms_revocations, $cms_revocations->link_rewrite, $is_ssl_enabled);
+
+					if (!strpos($link_ship_pay, '?'))
+						$link_ship_pay .= '?content_only=1';
+					else
+						$link_ship_pay .= '&content_only=1';
+
+					$content_to_return .= 	'<br/>' .
+											'<a href="'.$link_ship_pay.'" target="_blank">'.
+												$this->l('Shipping included').
+											'</a>';
+				}
+			}
 		}
 
 		/* Handles product's weight */
@@ -216,11 +251,11 @@ class Advancedeucompliance extends Module
 			{
 				$rounded_weight = round((float)$product->weight,
 										Configuration::get('PS_PRODUCT_WEIGHT_PRECISION'));
-				return sprintf($this->l('Weight: %s'), $rounded_weight.' '.Configuration::get('PS_WEIGHT_UNIT'));
+				$content_to_return .= sprintf($this->l('Weight: %s'), $rounded_weight.' '.Configuration::get('PS_WEIGHT_UNIT'));
 			}
 		}
 
-		return;
+		return $content_to_return;
 	}
 
 	/**
@@ -327,6 +362,26 @@ class Advancedeucompliance extends Module
 			Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', true);
 		else
 			Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', false);
+	}
+
+	protected function processAeucLabelShippingIncExc($is_option_active)
+	{
+		// Check first if LEGAL_REVOCATION CMS Role is been set before doing anything here
+		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
+		$cms_page_associated = $cms_role_repository->getCMSIdAssociatedFromName(Advancedeucompliance::LEGAL_SHIP_PAY);
+
+		// @TODO: Fill error member attribute
+		if (!isset($cms_page_associated['id_cms']) || (int)$cms_page_associated['id_cms'] == 0)
+		{
+			$this->_errors[] = $this->l('CMS Role "Legal Shipping" has not been associated yet. Therefore we cannot activate "Shipping Exc/Inc. Label Terms" option');
+			return;
+		}
+
+		if ((bool)$is_option_active)
+			Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', true);
+		else
+			Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', false);
+
 	}
 
 	protected function processAeucLabelTaxIncExc($is_option_active)
@@ -524,6 +579,25 @@ class Advancedeucompliance extends Module
 					),
 					array(
 						'type' => 'switch',
+						'label' => $this->l('Display Shipping "Inc./Excl." label'),
+						'name' => 'AEUC_LABEL_SHIPPING_INC_EXC',
+						'is_bool' => true,
+						'desc' => $this->l('Whether to display shipping included/excluded label next to product\'s price'),
+						'values' => array(
+							array(
+								'id' => 'active_on',
+								'value' => true,
+								'label' => $this->l('Enabled')
+							),
+							array(
+								'id' => 'active_off',
+								'value' => false,
+								'label' => $this->l('Disabled')
+							)
+						),
+					),
+					array(
+						'type' => 'switch',
 						'label' => $this->l('Display product weight label'),
 						'name' => 'AEUC_LABEL_WEIGHT',
 						'is_bool' => true,
@@ -580,6 +654,7 @@ class Advancedeucompliance extends Module
 			'AEUC_LABEL_TAX_INC_EXC' => Configuration::get('AEUC_LABEL_TAX_INC_EXC'),
 			'AEUC_LABEL_WEIGHT' => Configuration::get('AEUC_LABEL_WEIGHT'),
 			'AEUC_LABEL_REVOCATION_TOS' => Configuration::get('AEUC_LABEL_REVOCATION_TOS'),
+			'AEUC_LABEL_SHIPPING_INC_EXC' => Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC')
 		);
 	}
 
