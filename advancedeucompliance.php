@@ -46,7 +46,6 @@ class Advancedeucompliance extends Module
 	const LEGAL_PRIVACY 		= 'LEGAL_PRIVACY';
 	const LEGAL_ENVIRONMENTAL 	= 'LEGAL_ENVIRONMENTAL';
 	const LEGAL_SHIP_PAY 		= 'LEGAL_SHIP_PAY';
-	/* End of LEGAL/CMS Constants declarations */
 
 	public function __construct(RepositoryManager $repository_manager, FileSystem $fs, Email $email)
 	{
