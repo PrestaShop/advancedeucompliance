@@ -33,29 +33,27 @@
         <p>
             {l s='Here you can associate different legal content to supported legal options' mod='advancedeucompliance'}
         </p>
-
+        <br/>
         <div class="form-wrapper">
 
                 {foreach from=$cms_roles_assoc key=id_cms_role item=cms_role_assoc}
                     <div class="form-group">
                         <label class="control-label col-lg-3">
-                            {$cms_role_assoc['role_title']} - {$cms_role_assoc['id_cms']}
+                            {$cms_role_assoc['role_title']}
                         </label>
 
                         <div class="col-lg-9">
                             <select class="form-control fixed-width-xxl" name="CMSROLE_{$id_cms_role}" id="CMSROLE_{$id_cms_role}">
                             {foreach from=$cms_pages item=cms_page}
-
-                                <option value="{$cms_page['id_cms']}" {if $cms_role_assoc['id_cms'] == $cms_page['id_cms']}selected{/if}>{$cms_page['id_cms']} - {$cms_page['meta_title']}</option>
+                                <option value="{$cms_page['id_cms']}" {if $cms_role_assoc['id_cms'] == $cms_page['id_cms']}selected{/if}>{$cms_page['meta_title']}</option>
                             {/foreach}
                             </select>
                         </div>
                     </div>
                 {/foreach}
         </div>
-
         <div class="panel-footer">
-            <button type="submit" value="1" id="module_form_submit_btn_1" class="btn btn-default pull-right">
+            <button type="submit" class="btn btn-default pull-right">
                 <i class="process-icon-save"></i>  {l s='Save' mod='advancedeucompliance'}
             </button>
             <a href="{$add_cms_link|escape:'html':'UTF-8'}" class="btn btn-default">

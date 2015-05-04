@@ -87,7 +87,8 @@ class Advancedeucompliance extends Module
 	public function uninstall()
 	{
 		return parent::uninstall() &&
-				$this->dropConfig();
+				$this->dropConfig() &&
+				$this->unloadTables();
 	}
 
 	public function createConfig()
@@ -105,12 +106,24 @@ class Advancedeucompliance extends Module
 				Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', true);
 	}
 
+	public function unloadTables()
+	{
+		$state = true;
+		include(dirname(__FILE__).'install/sql_install.php');
+
+		foreach ($sql as $name => $v)
+			$state &= Db::getInstance()->execute('DROP TABLE IF EXISTS'.$name);
+
+		return $state;
+	}
+
 	public function loadTables()
 	{
 		// Fillin CMS ROLE, temporary hard values (should be parsed from localization pack later)
 		$roles_array = $this->getCMSRoles();
 		$roles = array_keys($roles_array);
 		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
+		$state = true;
 
 		foreach ($roles as $role)
 		{
@@ -119,10 +132,20 @@ class Advancedeucompliance extends Module
 				$cms_role = $cms_role_repository->createNewRecord();
 				$cms_role->id_cms = 0; // No assoc at this time
 				$cms_role->name = $role;
-				$cms_role->save();
+				$state &= (bool)$cms_role->save();
 			}
 		}
-		return true;
+
+		// Create assoc table for role / mail
+		include(dirname(__FILE__).'install/sql_install.php');
+		var_dump(dirname(__FILE__).'install/sql_install.php', $sql);
+		foreach ($sql as $s) {
+			$state &= Db::getInstance()->execute($s);
+			var_dump($s);
+		}
+
+die('end');
+		return $state;
 	}
 
 
@@ -183,7 +206,7 @@ class Advancedeucompliance extends Module
 			'link_revocations' => $link_revocations
 		));
 
-		$content = $this->context->smarty->fetch($this->local_path.'views/templates/front/hookOverrideTOSDisplay.tpl');
+		$content = $this->context->smarty->fetch($this->local_path.'views/templates/hook/hookOverrideTOSDisplay.tpl');
 		return $content;
 	}
 
@@ -303,6 +326,8 @@ class Advancedeucompliance extends Module
 		);
 
 		$received_values = Tools::getAllValues();
+
+		//var_dump($received_values);die();
 
         foreach (array_keys($received_values) as $key_received)
         {
@@ -779,9 +804,10 @@ class Advancedeucompliance extends Module
 	 */
 	protected function renderFormLegalContentManager()
 	{
+		$cms_roles_aeuc = $this->getCMSRoles();
 		$cms_repository = $this->repository_manager->getRepository('CMS');
 		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
-		$cms_roles = $cms_role_repository->getCMSRolesWhereNamesIn(array_keys($this->getCMSRoles()));
+		$cms_roles = $cms_role_repository->getCMSRolesWhereNamesIn(array_keys($cms_roles_aeuc));
 		$cms_roles_assoc = array();
 		$id_lang = Context::getContext()->employee->id_lang;
 
@@ -797,7 +823,7 @@ class Advancedeucompliance extends Module
 
 			$cms_roles_assoc[(int)$cms_role['id_cms_role']] = array('id_cms' => (int)$cms_role['id_cms'],
 																	'page_title' => (string)$assoc_cms_name,
-																	'role_title' => (string)$cms_role['name']);
+																	'role_title' => (string)$cms_roles_aeuc[$cms_role['name']]);
 		}
 
 		$cms_pages = $cms_repository->getCMSPagesList();
@@ -815,16 +841,34 @@ class Advancedeucompliance extends Module
 
 	protected function renderFormEmailAttachmentsManager()
 	{
-		$this->context->smarty->assign(array(
-			'mails_available' => $this->emails->getAvailableMails(),
-			'legal_options' => $this->getCMSRoles()
-		));
-
+		$cms_roles_aeuc = $this->getCMSRoles();
 		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
 		$cms_roles_associated = $cms_role_repository->getCMSRolesAssociated();
+		$cms_roles_full = $cms_role_repository->getCMSRolesWhereNamesIn(array_keys($cms_roles_aeuc));
+		$incomplete_cms_role_association_warning = false;
+		$legal_options = array();
+		$cleaned_mails_names = array();
+
+		if (count($cms_roles_associated) != count($cms_roles_full))
+		{
+			$incomplete_cms_role_association_warning = $this->displayWarning(
+				$this->l('You do not have associated all roles,
+				therefore you cannot associate all of them to mails (check above section)')
+			);
+		}
+
+		foreach ($cms_roles_associated as $role)
+			$legal_options[$role['name']] = $cms_roles_aeuc[$role['name']];
+
+		foreach ($this->emails->getAvailableMails() as $mail)
+			$cleaned_mails_names[] = ucfirst(str_replace(array('_', '-'), ' ', $mail));
+
 
 		$this->context->smarty->assign(array(
-			'has_assoc' => $cms_roles_associated
+			'has_assoc' => $cms_roles_associated,
+			'incomplete_cms_role_association_warning' => $incomplete_cms_role_association_warning,
+			'mails_available' => $cleaned_mails_names,
+			'legal_options' => $legal_options
 		));
 
 		$content = $this->context->smarty->fetch($this->local_path.'views/templates/admin/email_attachments_form.tpl');

@@ -23,9 +23,6 @@
 *  International Registered Trademark & Property of PrestaShop SA
 *}
 
-{* @TODO: Create content depending on LEGAL CONTENT MANAGEMENT mapped CMS page *}
-
-
 <form id="module_form_4" class="defaultForm form-horizontal" action="{$form_action}" method="POST" enctype="multipart/form-data" novalidate>
     <input type="hidden" name="submitAEUC_emailAttachmentsManager" value="1">
     <div class="panel">
@@ -36,29 +33,28 @@
         <p>
             {l s='Here you can choose which files has to be attached for a given email' mod='advancedeucompliance'}
         </p>
-
+        {if $incomplete_cms_role_association_warning}
+            <p>
+                {$incomplete_cms_role_association_warning}
+            </p>
+        {/if}
+        <br/>
         <div class="form-wrapper">
-
             <table class="table accesses">
                 <thead>
                 <tr>
                     <th>
                         <span class="title_box">{l s='Email templates'}</span>
                     </th>
-
-                    {* @TODO: Loop over legal content mapped to a cms page *}
-{*  {$mails_available|var_dump}*}
                     {foreach from=$legal_options item=option}
                         <th class="center fixed-width-xs"><span class="title_box">{$option}</span></th>
                     {/foreach}
-
-
                 </tr>
                 </thead>
                 <tbody>
                 {foreach from=$mails_available item=mail}
                     <tr>
-                        <td>{$mail}</td>
+                        <td><input type="checkbox"/></th>&nbsp;{$mail}</td>
                         {foreach from=$legal_options item=option}
                         <td class="center">
                             <input type="checkbox"/></th>
@@ -67,22 +63,17 @@
                     </tr>
 
                 {/foreach}
-
                 </tbody>
             </table>
-
         </div>
 
         <div class="panel-footer">
-            <button type="submit" value="1" id="module_form_submit_btn_1" name="submitAEUC_emailAttachmentsManager_btn" class="btn btn-default pull-right">
+            <button type="submit" class="btn btn-default pull-right">
                 <i class="process-icon-save"></i>  {l s='Save' mod='advancedeucompliance'}
             </button>
 
         </div>
-
     </div>
-
-
 </form>
 
 
