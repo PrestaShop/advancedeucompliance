@@ -24,10 +24,10 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
-class AeucCMSRoleMailEntity extends Entity
+class AeucCMSRoleEmailEntity extends Entity
 {
 	/** @var string name */
-	public $id_cms;
+	public $id_cms_role;
 	/** @var integer id_cms */
 	public $id_mail;
 
@@ -35,12 +35,53 @@ class AeucCMSRoleMailEntity extends Entity
 	 * @see ObjectModel::$definition
 	 */
 	public static $definition = array(
-		'table' => 'aeuc_cmsrole_mail',
+		'table' => 'aeuc_cmsrole_email',
 		'primary' => 'id',
 		'fields' => array(
 			'id_mail'	=> 	array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'),
-			'id_cms' 	=> 	array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'),
+			'id_cms_role' 	=> 	array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'),
 		),
 	);
+
+	/**
+	 * Truncate Table
+	 * @return array|false
+	 * @throws PrestaShopDatabaseException
+	 */
+	public static function truncate()
+	{
+		$sql = 'TRUNCATE `'._DB_PREFIX_.AeucCMSRoleEmailEntity::$definition['table'].'`';
+		return Db::getInstance()->execute($sql);
+	}
+
+	/**
+	 * Return the complete list of cms_role_ids associated
+	 * @return array|false
+	 * @throws PrestaShopDatabaseException
+	 */
+	public static function getIdEmailFromCMSRoleId($id_cms_role)
+	{
+		$sql = '
+		SELECT `id_mail`
+		FROM `'._DB_PREFIX_.AeucCMSRoleEmailEntity::$definition['table'].'`
+		WHERE `id_cms_role` = '.(int)$id_cms_role;
+
+		return Db::getInstance()->executeS($sql);
+	}
+
+
+	/**
+	 * Return the complete email collection from DB
+	 * @return array|false
+	 * @throws PrestaShopDatabaseException
+	 */
+	public static function getAll()
+	{
+		$sql = '
+		SELECT *
+		FROM `'._DB_PREFIX_.AeucCMSRoleEmailEntity::$definition['table'].'`';
+
+		return Db::getInstance()->executeS($sql);
+	}
 
 }

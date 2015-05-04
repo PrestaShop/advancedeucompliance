@@ -23,8 +23,8 @@
 *  International Registered Trademark & Property of PrestaShop SA
 *}
 
-<form id="module_form_4" class="defaultForm form-horizontal" action="{$form_action}" method="POST" enctype="multipart/form-data" novalidate>
-    <input type="hidden" name="submitAEUC_emailAttachmentsManager" value="1">
+<form id="emailAttachementsManager" class="defaultForm form-horizontal" action="{$form_action}" method="POST" enctype="multipart/form-data" novalidate>
+    <input type="hidden" name="AEUC_emailAttachmentsManager" value="1">
     <div class="panel">
         <div class="panel-heading">
             <i class="icon-envelope"></i>
@@ -47,17 +47,18 @@
                         <span class="title_box">{l s='Email templates'}</span>
                     </th>
                     {foreach from=$legal_options item=option}
-                        <th class="center fixed-width-xs"><span class="title_box">{$option}</span></th>
+                        <th class="center fixed-width-xs"><span class="title_box">{$option.name}</span></th>
                     {/foreach}
                 </tr>
                 </thead>
                 <tbody>
                 {foreach from=$mails_available item=mail}
                     <tr>
-                        <td><input type="checkbox"/></th>&nbsp;{$mail}</td>
+                        <td><input id="mail_{$mail.id_mail}" class="select-all-for-mail" type="checkbox"/></th>&nbsp;{$mail.display_name}</td>
                         {foreach from=$legal_options item=option}
+
                         <td class="center">
-                            <input type="checkbox"/></th>
+                            <input name="attach_{$mail.id_mail}_{$option.id}" id="attach_{$mail.id_mail}_{$option.id}" type="checkbox"/></th>
                         </td>
                         {/foreach}
                     </tr>

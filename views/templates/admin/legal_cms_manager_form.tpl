@@ -23,8 +23,8 @@
 *  International Registered Trademark & Property of PrestaShop SA
 *}
 
-<form id="module_form_3" class="defaultForm form-horizontal" action="{$form_action}" method="POST" enctype="multipart/form-data" novalidate>
-    <input type="hidden" name="submitAEUC_legalContentManager" value="1">
+<form id="legalCMSManager" class="defaultForm form-horizontal" action="{$form_action}" method="POST" enctype="multipart/form-data" novalidate>
+    <input type="hidden" name="AEUC_legalContentManager" value="1">
     <div class="panel">
         <div class="panel-heading">
             <i class="icon-cogs"></i>

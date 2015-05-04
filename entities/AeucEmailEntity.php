@@ -24,7 +24,7 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
-class AeucMailEntity extends Entity
+class AeucEmailEntity extends Entity
 {
 	/** @var integer id_mail */
 	public $id_mail;
@@ -37,12 +37,26 @@ class AeucMailEntity extends Entity
 	 * @see ObjectModel::$definition
 	 */
 	public static $definition = array(
-		'table' => 'aeuc_mail',
+		'table' => 'aeuc_email',
 		'primary' => 'id',
 		'fields' => array(
 			'id_mail'		=> 	array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'),
-			'filename' 		=> 	array('type' => self::TYPE_STRING, 'validate' => 'isName', 'required' => true, 'size' => 64),
-			'display_name' 	=> 	array('type' => self::TYPE_STRING, 'validate' => 'isName', 'required' => true, 'size' => 64),
+			'filename' 		=> 	array('type' => self::TYPE_STRING, 'required' => true, 'size' => 64),
+			'display_name' 	=> 	array('type' => self::TYPE_STRING, 'required' => true, 'size' => 64),
 		),
 	);
+
+	/**
+	 * Return the complete email collection from DB
+	 * @return array|false
+	 * @throws PrestaShopDatabaseException
+	 */
+	public static function getAll()
+	{
+		$sql = '
+		SELECT *
+		FROM `'._DB_PREFIX_.AeucEmailEntity::$definition['table'].'`';
+
+		return Db::getInstance()->executeS($sql);
+	}
 }
