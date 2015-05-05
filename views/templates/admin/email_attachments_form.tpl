@@ -56,10 +56,13 @@
                     <tr>
                         <td><input id="mail_{$mail.id_mail}" class="select-all-for-mail" type="checkbox"/></th>&nbsp;{$mail.display_name}</td>
                         {foreach from=$legal_options item=option}
-
-                        <td class="center">
-                            <input name="attach_{$mail.id_mail}_{$option.id}" id="attach_{$mail.id_mail}_{$option.id}" type="checkbox"/></th>
-                        </td>
+                            <td class="center">
+                                <input name="attach_{$mail.id_mail}_{$option.id}" id="attach_{$mail.id_mail}_{$option.id}" type="checkbox"
+                                {if in_array($mail.id_mail, $option.list_id_mail_assoc)}
+                                    checked="true"
+                                {/if}
+                                /></th>
+                            </td>
                         {/foreach}
                     </tr>
 

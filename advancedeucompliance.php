@@ -27,6 +27,10 @@
 if (!defined('_PS_VERSION_'))
 	exit;
 
+// Include required entities
+include_once dirname(__FILE__).'/entities/AeucCMSRoleEmailEntity.php';
+include_once dirname(__FILE__).'/entities/AeucEmailEntity.php';
+
 class Advancedeucompliance extends Module
 {
 	/* Class members */
@@ -81,6 +85,7 @@ class Advancedeucompliance extends Module
 				$this->loadTables() &&
 				$this->registerHook('displayProductPriceBlock') &&
 				$this->registerHook('overrideTOSDisplay') &&
+				$this->registerHook('actionEmailAddAfterContent') &&
 				$this->createConfig();
 	}
 
@@ -109,21 +114,26 @@ class Advancedeucompliance extends Module
 	public function unloadTables()
 	{
 		$state = true;
-		include(dirname(__FILE__).'install/sql_install.php');
-
+		include_once dirname(__FILE__).'/install/sql_install.php';
 		foreach ($sql as $name => $v)
-			$state &= Db::getInstance()->execute('DROP TABLE IF EXISTS'.$name);
+			$state &= Db::getInstance()->execute('DROP TABLE IF EXISTS '.$name);
 
 		return $state;
 	}
 
 	public function loadTables()
 	{
-		// Fillin CMS ROLE, temporary hard values (should be parsed from localization pack later)
+		$state = true;
+
+		// Create module's table
+		include_once dirname(__FILE__).'/install/sql_install.php';
+		foreach ($sql as $s)
+			$state &= Db::getInstance()->execute($s);
+
+		// Fillin CMS ROLE - @Todo: Parser from loc pack to get base configuration
 		$roles_array = $this->getCMSRoles();
 		$roles = array_keys($roles_array);
 		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
-		$state = true;
 
 		foreach ($roles as $role)
 		{
@@ -136,15 +146,17 @@ class Advancedeucompliance extends Module
 			}
 		}
 
-		// Create assoc table for role / mail
-		include(dirname(__FILE__).'install/sql_install.php');
-		var_dump(dirname(__FILE__).'install/sql_install.php', $sql);
-		foreach ($sql as $s) {
-			$state &= Db::getInstance()->execute($s);
-			var_dump($s);
+		// Fill-in aeuc_mail table
+		foreach ($this->emails->getAvailableMails() as $mail)
+		{
+			$new_email = new AeucEmailEntity();
+			$new_email->filename = (string)$mail;
+			$new_email->display_name = (string)ucfirst(str_replace(array('_', '-'), ' ', $mail));
+			$new_email->save();
+
+			unset($new_email);
 		}
 
-die('end');
 		return $state;
 	}
 
@@ -160,6 +172,54 @@ die('end');
 				Configuration::deleteByName('AEUC_FEAT_ADV_PAYMENT_API') &&
 				Configuration::deleteByName('AEUC_LABEL_REVOCATION_TOS') &&
 				Configuration::deleteByName('AEUC_LABEL_SHIPPING_INC_EXC');
+	}
+
+	public function hookActionEmailAddAfterContent($param)
+	{
+		if (!isset($param['template']) || !isset($param['template_html']) || !isset($param['template_txt']))
+			return;
+
+		$tpl_name = (string)$param['template'];
+		$tpl_name_exploded = explode('.', $tpl_name);
+		if (is_array($tpl_name_exploded))
+			$tpl_name = (string)$tpl_name_exploded[0];
+
+		$id_lang = (int)$param['id_lang'];
+		$mail_id = AeucEmailEntity::getMailIdFromTplFilename($tpl_name);
+
+
+		if (!isset($mail_id['id_mail']))
+			return;
+
+		$mail_id = (int)$mail_id['id_mail'];
+		$cms_role_ids = AeucCMSRoleEmailEntity::getCMSRoleIdsFromIdMail($mail_id);
+
+		if (!$cms_role_ids)
+			return;
+
+		$tmp_cms_role_list = array();
+		foreach ($cms_role_ids as $cms_role_id)
+			$tmp_cms_role_list[] = $cms_role_id['id_cms_role'];
+
+		$sql_where_in_cmsroles = implode(', ', $tmp_cms_role_list);
+		unset($tmp_cms_role_list);
+		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
+		$cms_ids = $cms_role_repository->getCMSIdsWhereCMSRoleIdIn($sql_where_in_cmsroles);
+
+		if (!$cms_ids)
+			return;
+
+		$cms_repo = $this->repository_manager->getRepository('CMS');
+		foreach ($cms_ids as $cms_id) {
+			$cms_content = $cms_repo->getCMSContent((int)$cms_id['id_cms'], $id_lang);
+
+			if (!isset($cms_content['content']))
+				continue;
+
+			$cms_content = $cms_content['content'];
+			$param['template_html'] .= $cms_content;
+			$param['template_txt'] .= strip_tags($cms_content, true);
+		}
 	}
 
 	public function hookOverrideTOSDisplay($param)
@@ -321,13 +381,11 @@ die('end');
         );
 
 		$post_keys_complex = array(
-			'submitAEUC_legalContentManager',
-			'submitAEUC_emailAttachmentsManager'
+			'AEUC_legalContentManager',
+			'AEUC_emailAttachmentsManager'
 		);
 
 		$received_values = Tools::getAllValues();
-
-		//var_dump($received_values);die();
 
         foreach (array_keys($received_values) as $key_received)
         {
@@ -348,11 +406,9 @@ die('end');
 			if (in_array($key_received, $post_keys_complex))
 			{
 				// Clean key
-				$key_exploded = explode('_', $key_received);
-				if (!count($key_exploded) == 2)
-					continue;
-				$key = $key_exploded[1];
-				$key = Tools::strtolower($key);
+				$key = Tools::strtolower($key_received);
+				$key = Tools::toCamelCase($key, true);
+
 				if (method_exists($this, 'process' . $key))
 				{
 					$this->{'process' . $key}();
@@ -367,6 +423,27 @@ die('end');
 					$this->displayConfirmation($this->l('Settings saved successfully!'));
 		else
 			return (count($this->_errors) ? $this->displayError($this->_errors) : '').'';
+	}
+
+	protected function processAeucEmailAttachmentsManager()
+	{
+		$json_attach_assoc = json_decode(Tools::getValue('emails_attach_assoc'));
+
+		if (!$json_attach_assoc)
+			return;
+
+		// Empty previous assoc to make new ones
+		AeucCMSRoleEmailEntity::truncate();
+
+		foreach ($json_attach_assoc as $assoc)
+		{
+			$assoc_obj = new AeucCMSRoleEmailEntity();
+			$assoc_obj->id_mail = $assoc->id_mail;
+			$assoc_obj->id_cms_role = $assoc->id_cms_role;
+
+			if (!$assoc_obj->save())
+				$this->_errors[] = $this->l("An email attachment to a CMS role has failed.");
+		}
 	}
 
 	protected function processAeucLabelRevocationTOS($is_option_active)
@@ -469,7 +546,7 @@ die('end');
 			Configuration::updateValue('PS_DISPLAY_PRODUCT_WEIGHT', false);
 	}
 
-	protected function processLegalContentManager()
+	protected function processAeucLegalContentManager()
 	{
 
 		$posted_values = Tools::getAllValues();
@@ -849,20 +926,31 @@ die('end');
 		$legal_options = array();
 		$cleaned_mails_names = array();
 
-		if (count($cms_roles_associated) != count($cms_roles_full))
-		{
+		if (count($cms_roles_associated) != count($cms_roles_full)) {
 			$incomplete_cms_role_association_warning = $this->displayWarning(
 				$this->l('You do not have associated all roles,
 				therefore you cannot associate all of them to mails (check above section)')
 			);
 		}
 
-		foreach ($cms_roles_associated as $role)
-			$legal_options[$role['name']] = $cms_roles_aeuc[$role['name']];
+		foreach ($cms_roles_associated as $role) {
+			$list_id_mail_assoc = AeucCMSRoleEmailEntity::getIdEmailFromCMSRoleId((int)$role['id_cms_role']);
+			$clean_list = array();
 
-		foreach ($this->emails->getAvailableMails() as $mail)
-			$cleaned_mails_names[] = ucfirst(str_replace(array('_', '-'), ' ', $mail));
+			foreach ($list_id_mail_assoc as $list_id_mail_assoc) {
+				$clean_list[] = $list_id_mail_assoc['id_mail'];
+			}
 
+			$legal_options[$role['name']] = array(
+				'name' => $cms_roles_aeuc[$role['name']],
+				'id' => $role['id_cms_role'],
+				'list_id_mail_assoc' => $clean_list
+			);
+		}
+
+		foreach (AeucEmailEntity::getAll() as $email) {
+			$cleaned_mails_names[] = $email;
+		}
 
 		$this->context->smarty->assign(array(
 			'has_assoc' => $cms_roles_associated,
@@ -872,6 +960,8 @@ die('end');
 		));
 
 		$content = $this->context->smarty->fetch($this->local_path.'views/templates/admin/email_attachments_form.tpl');
+		// Insert JS in the page
+		$this->context->controller->addJS(($this->_path).'assets/js/email_attachement.js');
 
 		return $content;
 	}

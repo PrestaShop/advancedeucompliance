@@ -84,4 +84,16 @@ class AeucCMSRoleEmailEntity extends Entity
 		return Db::getInstance()->executeS($sql);
 	}
 
+	public static function getCMSRoleIdsFromIdMail($id_mail)
+	{
+		$sql = '
+		SELECT DISTINCT(`id_cms_role`)
+		FROM `'._DB_PREFIX_.AeucCMSRoleEmailEntity::$definition['table'].'`
+		WHERE `id_mail` = '.(int)$id_mail;
+
+		return Db::getInstance()->executeS($sql);
+	}
+
+
+
 }

@@ -59,4 +59,14 @@ class AeucEmailEntity extends Entity
 
 		return Db::getInstance()->executeS($sql);
 	}
+
+	public static function getMailIdFromTplFilename($tpl_name)
+	{
+		$sql = '
+		SELECT `id_mail`
+		FROM `'._DB_PREFIX_.AeucEmailEntity::$definition['table'].'`
+		WHERE `filename` = "'.pSQL($tpl_name).'"';
+
+		return Db::getInstance()->getRow($sql);
+	}
 }
