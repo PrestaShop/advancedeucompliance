@@ -35,13 +35,13 @@ class Advancedeucompliance extends Module
 {
 	/* Class members */
 	protected $config_form = false;
-	private $repository_manager;
+	private $entity_manager;
 	private $filesystem;
 	private $emails;
 	protected $_errors;
+	protected $_warnings;
 
 	/* Constants used for LEGAL/CMS Management */
-	// TODO: Remove this once in DB
 	const LEGAL_NO_ASSOC		= 'NO_ASSOC';
 	const LEGAL_NOTICE			= 'LEGAL_NOTICE';
 	const LEGAL_CONDITIONS 		= 'LEGAL_CONDITIONS';
@@ -51,8 +51,9 @@ class Advancedeucompliance extends Module
 	const LEGAL_ENVIRONMENTAL 	= 'LEGAL_ENVIRONMENTAL';
 	const LEGAL_SHIP_PAY 		= 'LEGAL_SHIP_PAY';
 
-	public function __construct(RepositoryManager $repository_manager, FileSystem $fs, Email $email)
+	public function __construct(Core_Foundation_Database_EntityManager $entity_manager, FileSystem $fs, Email $email)
 	{
+
 		$this->name = 'advancedeucompliance';
 		$this->tab = 'administration';
 		$this->version = '1.0.0';
@@ -61,9 +62,10 @@ class Advancedeucompliance extends Module
 		$this->bootstrap = true;
 
 		parent::__construct();
+		//$this->autoRequireOnce(array('entities'));
 
 		/* Register dependencies to module */
-		$this->repository_manager = $repository_manager;
+		$this->entity_manager = $entity_manager;
 		$this->filesystem = $fs;
 		$this->emails = $email;
 
@@ -74,6 +76,40 @@ class Advancedeucompliance extends Module
 		/* Init errors var */
 		$this->_errors = array();
 	}
+
+	/**
+	 * Give an Array of module's root folders to be auto-included (e.g: array('classes', 'entities', ...),
+	 * so you can use them without having to include them manually
+	 * @param array $to_require_once
+	 * @throws PrestaShopModuleException
+	 */
+	/*public function autoRequireOnce(array $to_require_once, $recursive = false, $root_path = null)
+	{
+		if (is_null($root_path))
+			$root_path = dirname(__FILE__);
+
+		foreach ($to_require_once as $to_require)
+		{
+			$path = .DIRECTORY_SEPARATOR.$to_require;
+			var_dump($path, is_dir($path));d('kk');
+			if (!is_string($to_require))
+				throw new PrestaShopModuleException('Folder required is not a string!');
+			if (!is_dir($path))
+				throw new PrestaShopModuleException('Given folder "'.$to_require.'" is not a directory or doesnt exist');
+
+			$has_inner_folders = false;
+			$directory_content = scandir($path);
+			if ($directory_content)
+			{
+				foreach ($directory_content as $content)
+				{
+
+				}
+			}
+		}
+	}*/
+
+
 
 	/**
 	 * Don't forget to create update methods if needed:
@@ -98,17 +134,16 @@ class Advancedeucompliance extends Module
 
 	public function createConfig()
 	{
-		// @TODO: Create config from localization pack ? (ATM everythings goeas to TRUE)
-		return Configuration::updateValue('AEUC_FEAT_TELL_A_FRIEND', true) &&
-				Configuration::updateValue('AEUC_FEAT_REORDER', true) &&
-				Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME', true) &&
-				Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', true) &&
-				Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', true) &&
-				Configuration::updateValue('AEUC_LABEL_WEIGHT', true) &&
-				Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', true) &&
-				Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', true) &&
-				Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', true) &&
-				Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', true);
+		return Configuration::updateValue('AEUC_FEAT_TELL_A_FRIEND', false) &&
+				Configuration::updateValue('AEUC_FEAT_REORDER', false) &&
+				Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME', false) &&
+				Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', false) &&
+				Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', false) &&
+				Configuration::updateValue('AEUC_LABEL_WEIGHT', false) &&
+				Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', false) &&
+				Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', false) &&
+				Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', false) &&
+				Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', false);
 	}
 
 	public function unloadTables()
@@ -130,16 +165,16 @@ class Advancedeucompliance extends Module
 		foreach ($sql as $s)
 			$state &= Db::getInstance()->execute($s);
 
-		// Fillin CMS ROLE - @Todo: Parser from loc pack to get base configuration
+		// Fillin CMS ROLE
 		$roles_array = $this->getCMSRoles();
 		$roles = array_keys($roles_array);
-		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
+		$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
 
 		foreach ($roles as $role)
 		{
-			if (!$cms_role_repository->getRoleByName($role))
+			if (!$cms_role_repository->findOneByName($role))
 			{
-				$cms_role = $cms_role_repository->createNewRecord();
+				$cms_role = $cms_role_repository->getNewEntity();
 				$cms_role->id_cms = 0; // No assoc at this time
 				$cms_role->name = $role;
 				$state &= (bool)$cms_role->save();
@@ -163,6 +198,19 @@ class Advancedeucompliance extends Module
 
 	public function dropConfig()
 	{
+		// Remove roles
+		$roles_array = $this->getCMSRoles();
+		$roles = array_keys($roles_array);
+		$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+		$cleaned = true;
+
+		foreach ($roles as $role) {
+			$cms_role_tmp = $cms_role_repository->findOneByName($role);
+			if ($cms_role_tmp) {
+				$cleaned &= $cms_role_tmp->delete();
+			}
+		}
+
 		return Configuration::deleteByName('AEUC_FEAT_TELL_A_FRIEND') &&
 				Configuration::deleteByName('AEUC_FEAT_REORDER') &&
 				Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME') &&
@@ -203,13 +251,13 @@ class Advancedeucompliance extends Module
 
 		$sql_where_in_cmsroles = implode(', ', $tmp_cms_role_list);
 		unset($tmp_cms_role_list);
-		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
+		$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
 		$cms_ids = $cms_role_repository->getCMSIdsWhereCMSRoleIdIn($sql_where_in_cmsroles);
 
 		if (!$cms_ids)
 			return;
 
-		$cms_repo = $this->repository_manager->getRepository('CMS');
+		$cms_repo = $this->entity_manager->getRepository('CMS');
 		foreach ($cms_ids as $cms_id) {
 			$cms_content = $cms_repo->getCMSContent((int)$cms_id['id_cms'], $id_lang);
 
@@ -225,9 +273,9 @@ class Advancedeucompliance extends Module
 	public function hookOverrideTOSDisplay($param)
 	{
 		$has_tos_override_opt = (bool)Configuration::get('AEUC_LABEL_REVOCATION_TOS');
-		$cms_repository = $this->repository_manager->getRepository('CMS');
+		$cms_repository = $this->entity_manager->getRepository('CMS');
 		// Check first if LEGAL_REVOCATION CMS Role is been set before doing anything here
-		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
+		$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
 		$cms_page_associated = $cms_role_repository->getCMSIdAssociatedFromName(Advancedeucompliance::LEGAL_REVOCATION);
 
 		if (!$has_tos_override_opt || !isset($cms_page_associated['id_cms']) || (int)$cms_page_associated['id_cms'] == 0)
@@ -301,8 +349,8 @@ class Advancedeucompliance extends Module
 			// @Todo: REfactor with templates
 			if ($product->is_virtual)
 			{
-				$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
-				$cms_repository = $this->repository_manager->getRepository('CMS');
+				$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+				$cms_repository = $this->entity_manager->getRepository('CMS');
 				$cms_page_associated = $cms_role_repository->getCMSIdAssociatedFromName(Advancedeucompliance::LEGAL_SHIP_PAY);
 
 				if (isset($cms_page_associated['id_cms']) && (int)$cms_page_associated['id_cms'] != 0)
@@ -420,9 +468,12 @@ class Advancedeucompliance extends Module
 
 		if ($has_processed_something)
 			return (count($this->_errors) ? $this->displayError($this->_errors) : '').
+					(count($this->_warnings) ? $this->displayWarning($this->_warnings) : '').
 					$this->displayConfirmation($this->l('Settings saved successfully!'));
 		else
-			return (count($this->_errors) ? $this->displayError($this->_errors) : '').'';
+			return (count($this->_errors) ? $this->displayError($this->_errors) : '').
+					(count($this->_warnings) ? $this->displayWarning($this->_warnings) : '').
+					'';
 	}
 
 	protected function processAeucEmailAttachmentsManager()
@@ -448,17 +499,14 @@ class Advancedeucompliance extends Module
 
 	protected function processAeucLabelRevocationTOS($is_option_active)
 	{
-		// Check first if LEGAL_REVOCATION CMS Role is been set before doing anything here
-		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
+		$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
 		$cms_page_associated = $cms_role_repository->getCMSIdAssociatedFromName(Advancedeucompliance::LEGAL_REVOCATION);
 
-		// @TODO: Fill error member attribute
 		if (!isset($cms_page_associated['id_cms']) || (int)$cms_page_associated['id_cms'] == 0)
 		{
-			$this->_errors[] = $this->l('CMS Role "Legal Revocation" has not been associated yet. Therefore we cannot activate "Revocation Terms" option');
+			$this->_warnings[] = $this->l('CMS Role "Legal Revocation" has not been associated yet. No change were made.');
 			return;
 		}
-
 		if ((bool)$is_option_active)
 			Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', true);
 		else
@@ -468,13 +516,12 @@ class Advancedeucompliance extends Module
 	protected function processAeucLabelShippingIncExc($is_option_active)
 	{
 		// Check first if LEGAL_REVOCATION CMS Role is been set before doing anything here
-		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
+		$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
 		$cms_page_associated = $cms_role_repository->getCMSIdAssociatedFromName(Advancedeucompliance::LEGAL_SHIP_PAY);
 
-		// @TODO: Fill error member attribute
 		if (!isset($cms_page_associated['id_cms']) || (int)$cms_page_associated['id_cms'] == 0)
 		{
-			$this->_errors[] = $this->l('CMS Role "Legal Shipping" has not been associated yet. Therefore we cannot activate "Shipping Exc/Inc. Label Terms" option');
+			$this->_warnings[] = $this->l('CMS Role "Legal Shipping" has not been associated yet. No change were made.');
 			return;
 		}
 
@@ -550,7 +597,7 @@ class Advancedeucompliance extends Module
 	{
 
 		$posted_values = Tools::getAllValues();
-		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
+		$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
 
 		foreach ($posted_values as $key_name => $assoc_cms_id)
 		{
@@ -882,29 +929,30 @@ class Advancedeucompliance extends Module
 	protected function renderFormLegalContentManager()
 	{
 		$cms_roles_aeuc = $this->getCMSRoles();
-		$cms_repository = $this->repository_manager->getRepository('CMS');
-		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
-		$cms_roles = $cms_role_repository->getCMSRolesWhereNamesIn(array_keys($cms_roles_aeuc));
+		$cms_repository = $this->entity_manager->getRepository('CMS');
+		$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+		$cms_roles = $cms_role_repository->findByName(array_keys($cms_roles_aeuc));
 		$cms_roles_assoc = array();
 		$id_lang = Context::getContext()->employee->id_lang;
+		$id_shop = Context::getContext()->shop->id;
 
-		foreach ($cms_roles as $cms_role)
-		{
-			if ((int)$cms_role['id_cms'] != 0)
-			{
-				$cms_entity = $cms_repository->getRecordById((int)$cms_role['id_cms'], true);
+		foreach ($cms_roles as $cms_role) {
+
+			if ((int)$cms_role->id_cms !== 0) {
+				$cms_entity = $cms_repository->findOne((int)$cms_role->id_cms);
 				$assoc_cms_name = $cms_entity->meta_title[(int)$id_lang];
 			}
-			else
+			else {
 				$assoc_cms_name = $this->l('No association (means disabled)');
+			}
 
-			$cms_roles_assoc[(int)$cms_role['id_cms_role']] = array('id_cms' => (int)$cms_role['id_cms'],
-																	'page_title' => (string)$assoc_cms_name,
-																	'role_title' => (string)$cms_roles_aeuc[$cms_role['name']]);
+			$cms_roles_assoc[(int)$cms_role->id] = array('id_cms' => (int)$cms_role->id_cms,
+														'page_title' => (string)$assoc_cms_name,
+														'role_title' => (string)$cms_roles_aeuc[$cms_role->name]
+														);
 		}
 
-		$cms_pages = $cms_repository->getCMSPagesList();
-		array_unshift($cms_pages, array('id_cms' => 0, 'meta_title' => $this->l('No association (means disabled)')));
+		$cms_pages = $cms_repository->i10nFindAll($id_lang, $id_shop);
 
 		$this->context->smarty->assign(array(
 			'cms_roles_assoc' => $cms_roles_assoc,
@@ -919,9 +967,9 @@ class Advancedeucompliance extends Module
 	protected function renderFormEmailAttachmentsManager()
 	{
 		$cms_roles_aeuc = $this->getCMSRoles();
-		$cms_role_repository = $this->repository_manager->getRepository('CMSRole');
+		$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
 		$cms_roles_associated = $cms_role_repository->getCMSRolesAssociated();
-		$cms_roles_full = $cms_role_repository->getCMSRolesWhereNamesIn(array_keys($cms_roles_aeuc));
+		$cms_roles_full = $cms_role_repository->findByName(array_keys($cms_roles_aeuc));
 		$incomplete_cms_role_association_warning = false;
 		$legal_options = array();
 		$cleaned_mails_names = array();
@@ -934,16 +982,16 @@ class Advancedeucompliance extends Module
 		}
 
 		foreach ($cms_roles_associated as $role) {
-			$list_id_mail_assoc = AeucCMSRoleEmailEntity::getIdEmailFromCMSRoleId((int)$role['id_cms_role']);
+			$list_id_mail_assoc = AeucCMSRoleEmailEntity::getIdEmailFromCMSRoleId((int)$role->id);
 			$clean_list = array();
 
 			foreach ($list_id_mail_assoc as $list_id_mail_assoc) {
 				$clean_list[] = $list_id_mail_assoc['id_mail'];
 			}
 
-			$legal_options[$role['name']] = array(
-				'name' => $cms_roles_aeuc[$role['name']],
-				'id' => $role['id_cms_role'],
+			$legal_options[$role->name] = array(
+				'name' => $cms_roles_aeuc[$role->name],
+				'id' => $role->id,
 				'list_id_mail_assoc' => $clean_list
 			);
 		}
