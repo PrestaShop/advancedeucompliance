@@ -24,7 +24,7 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
-class AeucEmailEntity extends Entity
+class AeucEmailEntity extends ObjectModel
 {
 	/** @var integer id_mail */
 	public $id_mail;
@@ -57,7 +57,8 @@ class AeucEmailEntity extends Entity
 		SELECT *
 		FROM `'._DB_PREFIX_.AeucEmailEntity::$definition['table'].'`';
 
-		return Db::getInstance()->executeS($sql);
+		return Db::getInstance()->executeS
+		($sql);
 	}
 
 	public static function getMailIdFromTplFilename($tpl_name)

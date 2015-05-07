@@ -24,7 +24,7 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
-class AeucCMSRoleEmailEntity extends Entity
+class AeucCMSRoleEmailEntity extends ObjectModel
 {
 	/** @var string name */
 	public $id_cms_role;
