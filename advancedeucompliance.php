@@ -62,7 +62,6 @@ class Advancedeucompliance extends Module
 		$this->bootstrap = true;
 
 		parent::__construct();
-		//$this->autoRequireOnce(array('entities'));
 
 		/* Register dependencies to module */
 		$this->entity_manager = $entity_manager;
@@ -76,40 +75,6 @@ class Advancedeucompliance extends Module
 		/* Init errors var */
 		$this->_errors = array();
 	}
-
-	/**
-	 * Give an Array of module's root folders to be auto-included (e.g: array('classes', 'entities', ...),
-	 * so you can use them without having to include them manually
-	 * @param array $to_require_once
-	 * @throws PrestaShopModuleException
-	 */
-	/*public function autoRequireOnce(array $to_require_once, $recursive = false, $root_path = null)
-	{
-		if (is_null($root_path))
-			$root_path = dirname(__FILE__);
-
-		foreach ($to_require_once as $to_require)
-		{
-			$path = .DIRECTORY_SEPARATOR.$to_require;
-			var_dump($path, is_dir($path));d('kk');
-			if (!is_string($to_require))
-				throw new PrestaShopModuleException('Folder required is not a string!');
-			if (!is_dir($path))
-				throw new PrestaShopModuleException('Given folder "'.$to_require.'" is not a directory or doesnt exist');
-
-			$has_inner_folders = false;
-			$directory_content = scandir($path);
-			if ($directory_content)
-			{
-				foreach ($directory_content as $content)
-				{
-
-				}
-			}
-		}
-	}*/
-
-
 
 	/**
 	 * Don't forget to create update methods if needed:
@@ -134,16 +99,28 @@ class Advancedeucompliance extends Module
 
 	public function createConfig()
 	{
+		$status = true;
+		$delivery_time_available_values = array();
+		$delivery_time_oos_values = array();
+		$langs = Language::getLanguages(false, false);
+
+		foreach ($langs as $lang) {
+			$delivery_time_available_values[(int)$lang['id_lang']] = $this->l('Delivery: 1 to 3 weeks');
+			$delivery_time_oos_values[(int)$lang['id_lang']] = $this->l('Delivery: 3 to 6 weeks');
+		}
+
 		return Configuration::updateValue('AEUC_FEAT_TELL_A_FRIEND', false) &&
 				Configuration::updateValue('AEUC_FEAT_REORDER', false) &&
-				Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME', false) &&
+				Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $delivery_time_available_values) &&
+				Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_OOS', $delivery_time_oos_values) &&
 				Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', false) &&
 				Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', false) &&
 				Configuration::updateValue('AEUC_LABEL_WEIGHT', false) &&
 				Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', false) &&
 				Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', false) &&
 				Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', false) &&
-				Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', false);
+				Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', false) &&
+				Configuration::updateValue('AEUC_LABEL_COMBINATION_FROM', false);
 	}
 
 	public function unloadTables()
@@ -213,13 +190,15 @@ class Advancedeucompliance extends Module
 
 		return Configuration::deleteByName('AEUC_FEAT_TELL_A_FRIEND') &&
 				Configuration::deleteByName('AEUC_FEAT_REORDER') &&
-				Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME') &&
+				Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_AVAILABLE') &&
+				Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_OOS') &&
 				Configuration::deleteByName('AEUC_LABEL_SPECIFIC_PRICE') &&
 				Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
 				Configuration::deleteByName('AEUC_LABEL_WEIGHT') &&
 				Configuration::deleteByName('AEUC_FEAT_ADV_PAYMENT_API') &&
 				Configuration::deleteByName('AEUC_LABEL_REVOCATION_TOS') &&
-				Configuration::deleteByName('AEUC_LABEL_SHIPPING_INC_EXC');
+				Configuration::deleteByName('AEUC_LABEL_SHIPPING_INC_EXC') &&
+				Configuration::deleteByName('AEUC_LABEL_COMBINATION_FROM');
 	}
 
 	public function hookActionEmailAddAfterContent($param)
@@ -318,56 +297,70 @@ class Advancedeucompliance extends Module
 		return $content;
 	}
 
+	// @Todo: REfactor with templates
 	public function hookDisplayProductPriceBlock($param)
 	{
-		if (!isset($param['product']) || !isset($param['type']))
+		if (!isset($param['product']) || !isset($param['type'])) {
 			return;
+		}
 
 		$product = $param['product'];
 
-		if (is_array($product))
+		if (is_array($product)) {
+			/*$product_repository = $this->entity_manager->getRepository('Product');
+			$product_repository->findOne()*/
 			$product = new Product((int)$product['id_product']);
-		if (!Validate::isLoadedObject($product))
+		}
+		if (!Validate::isLoadedObject($product)) {
 			return;
+		}
 
 		$content_to_return = '';
 
+		/* Handle Product Combinations label */
+		if ($param['type'] == 'before_price' && (bool)Configuration::get('AEUC_LABEL_SPECIFIC_PRICE') === true) {
+			$content_to_return .= $this->l('From', 'advancedeucompliance');
+		}
+
+		/* Handle Specific Price label*/
+		if ($param['type'] == 'old_price' && (bool)Configuration::get('AEUC_LABEL_SPECIFIC_PRICE') === true) {
+			$content_to_return .= $this->l('Before', 'advancedeucompliance');
+		}
 
 		/* Handle taxes  Inc./Exc.*/
-		if ($param['type'] == 'price' && (bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true)
-		{
-			// @Todo: REfactor with templates
-			if ((bool)Configuration::get('PS_TAX') === true)
-				$content_to_return.= '<br/>'.$this->l('Tax included');
-			else
-				$content_to_return .= '<br/>'.$this->l('Tax excluded');
+		if ($param['type'] == 'price' && (bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true)	{
+
+			if ((bool)Configuration::get('PS_TAX') === true) {
+				$content_to_return .= '<br/>' . $this->l('Tax included', 'advancedeucompliance');
+			}
+			else {
+				$content_to_return .= '<br/>' . $this->l('Tax excluded', 'advancedeucompliance');
+			}
 		}
 
 		/* Handle Shipping Inc./Exc. */
-		if ($param['type'] == 'price' && (bool)Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC') === true)
-		{
-			// @Todo: REfactor with templates
-			if ($product->is_virtual)
-			{
+		if ($param['type'] == 'price' && (bool)Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC') === true)	{
+			if ($product->is_virtual) {
 				$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
 				$cms_repository = $this->entity_manager->getRepository('CMS');
 				$cms_page_associated = $cms_role_repository->getCMSIdAssociatedFromName(Advancedeucompliance::LEGAL_SHIP_PAY);
 
-				if (isset($cms_page_associated['id_cms']) && (int)$cms_page_associated['id_cms'] != 0)
-				{
+				if (isset($cms_page_associated['id_cms']) && (int)$cms_page_associated['id_cms'] != 0)	{
 					$cms_ship_pay_id = (int)$cms_page_associated['id_cms'];
 					$cms_revocations = $cms_repository->getCMSById($cms_ship_pay_id, $this->context->language->id);
 					$is_ssl_enabled = (bool)Configuration::get('PS_SSL_ENABLED');
 					$link_ship_pay = $this->context->link->getCMSLink($cms_revocations, $cms_revocations->link_rewrite, $is_ssl_enabled);
 
-					if (!strpos($link_ship_pay, '?'))
+					if (!strpos($link_ship_pay, '?')) {
 						$link_ship_pay .= '?content_only=1';
-					else
+					}
+					else {
 						$link_ship_pay .= '&content_only=1';
+					}
 
 					$content_to_return .= 	'<br/>' .
-											'<a href="'.$link_ship_pay.'" target="_blank">'.
-												$this->l('Shipping included').
+											'<a href="'.$link_ship_pay.'" class="_blank">'.
+												$this->l('Shipping included', 'advancedeucompliance').
 											'</a>';
 				}
 			}
@@ -383,6 +376,20 @@ class Advancedeucompliance extends Module
 										Configuration::get('PS_PRODUCT_WEIGHT_PRECISION'));
 				$content_to_return .= sprintf($this->l('Weight: %s'), $rounded_weight.' '.Configuration::get('PS_WEIGHT_UNIT'));
 			}
+		}
+
+		/* Handle Estimated delivery time label */
+		if ($param['type'] == 'after_price') {
+			$context_id_lang = $this->context->language->id;
+			$is_product_available = (Product::getRealQuantity($product->id) >= 1) ? true : false;
+
+			if ($is_product_available) {
+				$contextualized_content = Configuration::get('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', (int)$context_id_lang);
+			} else {
+				$contextualized_content = Configuration::get('AEUC_LABEL_DELIVERY_TIME_OOS', (int)$context_id_lang);
+			}
+
+			$content_to_return .= '<br/>' . $contextualized_content;
 		}
 
 		return $content_to_return;
@@ -476,6 +483,26 @@ class Advancedeucompliance extends Module
 					'';
 	}
 
+	protected function processAeucLabelCombinationFrom($is_option_active)
+	{
+		if ((bool)$is_option_active) {
+			Configuration::updateValue('AEUC_LABEL_COMBINATION_FROM', true);
+		}
+		else {
+			Configuration::updateValue('AEUC_LABEL_COMBINATION_FROM', false);
+		}
+	}
+
+	protected function processAeucLabelSpecificPrice($is_option_active)
+	{
+		if ((bool)$is_option_active) {
+			Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', true);
+		}
+		else {
+			Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', false);
+		}
+	}
+
 	protected function processAeucEmailAttachmentsManager()
 	{
 		$json_attach_assoc = json_decode(Tools::getValue('emails_attach_assoc'));
@@ -500,35 +527,46 @@ class Advancedeucompliance extends Module
 	protected function processAeucLabelRevocationTOS($is_option_active)
 	{
 		$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
-		$cms_page_associated = $cms_role_repository->getCMSIdAssociatedFromName(Advancedeucompliance::LEGAL_REVOCATION);
+		$cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_REVOCATION);
+		$cms_roles = $this->getCMSRoles();
 
-		if (!isset($cms_page_associated['id_cms']) || (int)$cms_page_associated['id_cms'] == 0)
-		{
-			$this->_warnings[] = $this->l('CMS Role "Legal Revocation" has not been associated yet. No change were made.');
+		if (!$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms == 0) {
+			$this->_warnings[] = sprintf(
+					$this->l('"Revocation TOS" label cannot be activated until you associate "%s" role to a CMS Page',
+							'advancedeucompliance'),
+					(string)$cms_roles[Advancedeucompliance::LEGAL_REVOCATION]
+			);
 			return;
 		}
-		if ((bool)$is_option_active)
+
+		if ((bool)$is_option_active) {
 			Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', true);
-		else
+		} else {
 			Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', false);
+		}
 	}
 
 	protected function processAeucLabelShippingIncExc($is_option_active)
 	{
 		// Check first if LEGAL_REVOCATION CMS Role is been set before doing anything here
 		$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
-		$cms_page_associated = $cms_role_repository->getCMSIdAssociatedFromName(Advancedeucompliance::LEGAL_SHIP_PAY);
+		$cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_SHIP_PAY);
+		$cms_roles = $this->getCMSRoles();
 
-		if (!isset($cms_page_associated['id_cms']) || (int)$cms_page_associated['id_cms'] == 0)
-		{
-			$this->_warnings[] = $this->l('CMS Role "Legal Shipping" has not been associated yet. No change were made.');
+		if (!$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms === 0) {
+			$this->_warnings[] = sprintf(
+				$this->l('"Shipping Inc./Exc." label cannot be activated until you associate "%s" role to a CMS Page',
+					'advancedeucompliance'),
+				(string)$cms_roles[Advancedeucompliance::LEGAL_SHIP_PAY]
+			);
 			return;
 		}
 
-		if ((bool)$is_option_active)
+		if ((bool)$is_option_active) {
 			Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', true);
-		else
+		} else {
 			Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', false);
+		}
 
 	}
 
@@ -536,28 +574,25 @@ class Advancedeucompliance extends Module
 	{
 		$id_lang = (int)Configuration::get('PS_LANG_DEFAULT');
 		$countries = Country::getCountries($id_lang, true, false, false);
-		foreach ($countries as $id_country => $country_details)
-		{
-
+		foreach ($countries as $id_country => $country_details)	{
 			$country = new Country((int)$country_details['id_country']);
-			if (Validate::isLoadedObject($country))
-			{
-				$country->display_tax_label = ($is_option_active ? 0 : 1);
+			if (Validate::isLoadedObject($country)) {
+				$country->display_tax_label = (int)$is_option_active;
 				if (!$country->update())
 					$this->_errors[] = $this->l('A country could not be updated for Tax INC/EXC label');
 			}
 		}
+		Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', (bool)$is_option_active);
+
 	}
 
 	protected function processAeucFeatAdvPaymentApi($is_option_active)
 	{
-		if ((bool)$is_option_active)
-		{
+		if ((bool)$is_option_active) {
 			Configuration::updateValue('PS_ADVANCED_PAYMENT_API', true);
 			Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', true);
 		}
-		else
-		{
+		else {
 			Configuration::updateValue('PS_ADVANCED_PAYMENT_API', false);
 			Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', false);
 		}
@@ -567,30 +602,32 @@ class Advancedeucompliance extends Module
     {
         $staf_module = Module::getInstanceByName('sendtoafriend');
 
-        if ((bool)$staf_module->active && (bool)$is_option_active)
-            $staf_module->disable();
-        else if (!(bool)$staf_module->active && !(bool)$is_option_active)
-            $staf_module->enable();
+        if ((bool)$is_option_active) {
+			$staf_module->enable();
+		} else {
+			$staf_module->disable();
+		}
     }
 
     protected function processAeucFeatReorder($is_option_active)
 	{
-        $is_ps_reordering_active = Configuration::get('PS_REORDERING');
-
-        if ((bool)$is_ps_reordering_active && (bool)$is_option_active)
-			Configuration::updateValue('PS_REORDERING', false);
-        else if (!(bool)$is_ps_reordering_active && !(bool)$is_option_active)
+        if ((bool)$is_option_active) {
 			Configuration::updateValue('PS_REORDERING', true);
+		} else {
+			Configuration::updateValue('PS_REORDERING', false);
+		}
     }
 
 	protected function processAeucLabelWeight($is_option_active)
 	{
-		$is_ps_display_weight_active = Configuration::get('PS_DISPLAY_PRODUCT_WEIGHT');
-
-		if (!(bool)$is_ps_display_weight_active && (bool)$is_option_active)
+		if ((bool)$is_option_active) {
 			Configuration::updateValue('PS_DISPLAY_PRODUCT_WEIGHT', true);
-		else if ((bool)$is_ps_display_weight_active && !(bool)$is_option_active)
+			Configuration::updateValue('AEUC_LABEL_WEIGHT', true);
+		}
+		elseif (!(bool)$is_option_active) {
 			Configuration::updateValue('PS_DISPLAY_PRODUCT_WEIGHT', false);
+			Configuration::updateValue('AEUC_LABEL_WEIGHT', false);
+		}
 	}
 
 	protected function processAeucLegalContentManager()
@@ -599,12 +636,10 @@ class Advancedeucompliance extends Module
 		$posted_values = Tools::getAllValues();
 		$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
 
-		foreach ($posted_values as $key_name => $assoc_cms_id)
-		{
-			if (strpos($key_name, 'CMSROLE_') !== false)
-			{
+		foreach ($posted_values as $key_name => $assoc_cms_id) {
+			if (strpos($key_name, 'CMSROLE_') !== false) {
 				$exploded_key_name = explode('_', $key_name);
-				$cms_role = $cms_role_repository->getRecordById((int)$exploded_key_name[1]);
+				$cms_role = $cms_role_repository->findOne((int)$exploded_key_name[1]);
 				$cms_role->id_cms = (int)$assoc_cms_id;
 				$cms_role->update();
 			}
@@ -612,8 +647,6 @@ class Advancedeucompliance extends Module
 		unset($cms_role);
 	}
 
-
-	// @TODO: To be moved to the core ?
 	protected function getCMSRoles()
 	{
 		return array(
@@ -626,7 +659,6 @@ class Advancedeucompliance extends Module
 			Advancedeucompliance::LEGAL_SHIP_PAY		=> $this->l('Shipping and payment')
 		);
 	}
-
 
 	/**
 	 * Create the form that will let user choose all the wording options
@@ -664,35 +696,30 @@ class Advancedeucompliance extends Module
 		return array(
 			'form' => array(
 				'legend' => array(
-				'title' => $this->l('Labeling Management'),
+				'title' => $this->l('Labeling Management', 'advancedeucompliance'),
 				'icon' => 'icon-tags',
 				),
 				'input' => array(
 					array(
-						'type' => 'switch',
-						'label' => $this->l('Display delivery time label'),
-						'name' => 'AEUC_LABEL_DELIVERY_TIME',
-						'is_bool' => true,
-						'desc' => $this->l('Whether to display estimated delivery time on products'),
-						'values' => array(
-							array(
-								'id' => 'active_on',
-								'value' => true,
-								'label' => $this->l('Enabled')
-							),
-							array(
-								'id' => 'active_off',
-								'value' => false,
-								'label' => $this->l('Disabled')
-							)
-						),
+						'type' => 'text',
+						'lang' => true,
+						'label' => $this->l('Display estimated delivery time label on product (available)', 'advancedeucompliance'),
+						'name' => 'AEUC_LABEL_DELIVERY_TIME_AVAILABLE',
+						'desc' => $this->l('Whether to display estimated delivery time on products (available)', 'advancedeucompliance'),
+					),
+					array(
+						'type' => 'text',
+						'lang' => true,
+						'label' => $this->l('Display estimated delivery time label on product (out of stock)', 'advancedeucompliance'),
+						'name' => 'AEUC_LABEL_DELIVERY_TIME_OOS',
+						'desc' => $this->l('Whether to display estimated delivery time on products (out of stock)', 'advancedeucompliance'),
 					),
 					array(
 						'type' => 'switch',
 						'label' => $this->l('Display specific price label'),
 						'name' => 'AEUC_LABEL_SPECIFIC_PRICE',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display a label before products with specific price'),
+						'desc' => $this->l('Whether to display "Before" label on Products with a specific price'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -711,7 +738,7 @@ class Advancedeucompliance extends Module
 						'label' => $this->l('Display Tax "Inc./Excl." label'),
 						'name' => 'AEUC_LABEL_TAX_INC_EXC',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display tax included/excluded label next to product\'s price'),
+						'desc' => $this->l('Whether to display "Tax Inc./Exc." label next to product\'s price'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -730,7 +757,7 @@ class Advancedeucompliance extends Module
 						'label' => $this->l('Display Shipping "Inc./Excl." label'),
 						'name' => 'AEUC_LABEL_SHIPPING_INC_EXC',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display shipping included/excluded label next to product\'s price'),
+						'desc' => $this->l('Whether to display "Shipping Inc./Exc." label next to product\'s price'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -783,6 +810,26 @@ class Advancedeucompliance extends Module
 							)
 						),
 					),
+					array(
+						'type' => 'switch',
+						'label' => $this->l('Display "From" label on Product prices with combinations'),
+						'name' => 'AEUC_LABEL_COMBINATION_FROM',
+						'is_bool' => true,
+						'desc' => $this->l('Whether to display "From" label before price on Products with combinations'),
+						'disable' => true,
+						'values' => array(
+							array(
+								'id' => 'active_on',
+								'value' => true,
+								'label' => $this->l('Enabled')
+							),
+							array(
+								'id' => 'active_off',
+								'value' => false,
+								'label' => $this->l('Disabled')
+							)
+						),
+					),
 				),
 				'submit' => array(
 					'title' => $this->l('Save'),
@@ -796,13 +843,25 @@ class Advancedeucompliance extends Module
 	 */
 	protected function getConfigFormLabelsManagerValues()
 	{
+		$delivery_time_available_values = array();
+		$delivery_time_oos_values = array();
+		$langs = Language::getLanguages(false, false);
+
+		foreach ($langs as $lang) {
+			$tmp_id_lang = (int)$lang['id_lang'];
+			$delivery_time_available_values[$tmp_id_lang] = Configuration::get('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $tmp_id_lang);
+			$delivery_time_oos_values[$tmp_id_lang] = Configuration::get('AEUC_LABEL_DELIVERY_TIME_OOS', $tmp_id_lang);
+		}
+
 		return array(
-			'AEUC_LABEL_DELIVERY_TIME' => Configuration::get('AEUC_LABEL_DELIVERY_TIME'),
+			'AEUC_LABEL_DELIVERY_TIME_AVAILABLE' => $delivery_time_available_values,
+			'AEUC_LABEL_DELIVERY_TIME_OOS' => $delivery_time_oos_values,
 			'AEUC_LABEL_SPECIFIC_PRICE' => Configuration::get('AEUC_LABEL_SPECIFIC_PRICE'),
 			'AEUC_LABEL_TAX_INC_EXC' => Configuration::get('AEUC_LABEL_TAX_INC_EXC'),
 			'AEUC_LABEL_WEIGHT' => Configuration::get('AEUC_LABEL_WEIGHT'),
 			'AEUC_LABEL_REVOCATION_TOS' => Configuration::get('AEUC_LABEL_REVOCATION_TOS'),
-			'AEUC_LABEL_SHIPPING_INC_EXC' => Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC')
+			'AEUC_LABEL_SHIPPING_INC_EXC' => Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC'),
+			'AEUC_LABEL_COMBINATION_FROM' => Configuration::get('AEUC_LABEL_COMBINATION_FROM')
 		);
 	}
 
@@ -848,7 +907,7 @@ class Advancedeucompliance extends Module
 				'input' => array(
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Disable "Tell A Friend" feature'),
+						'label' => $this->l('Enable "Tell A Friend" feature'),
 						'name' => 'AEUC_FEAT_TELL_A_FRIEND',
 						'is_bool' => true,
 						'desc' => $this->l('Whether to disable "Tell A Friend" feature'),
@@ -867,7 +926,7 @@ class Advancedeucompliance extends Module
 					),
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Disable "Reorder" feature'),
+						'label' => $this->l('Enable "Reorder" feature'),
 						'name' => 'AEUC_FEAT_REORDER',
 						'is_bool' => true,
 						'desc' => $this->l('Whether to disable "Reorder" feature'),
@@ -943,7 +1002,7 @@ class Advancedeucompliance extends Module
 				$assoc_cms_name = $cms_entity->meta_title[(int)$id_lang];
 			}
 			else {
-				$assoc_cms_name = $this->l('No association (means disabled)');
+				$assoc_cms_name = $this->l('No association (means disabled)', 'advancedeucompliance');
 			}
 
 			$cms_roles_assoc[(int)$cms_role->id] = array('id_cms' => (int)$cms_role->id_cms,
@@ -953,6 +1012,11 @@ class Advancedeucompliance extends Module
 		}
 
 		$cms_pages = $cms_repository->i10nFindAll($id_lang, $id_shop);
+		$fake_object =  new stdClass();
+		$fake_object->id = 0;
+		$fake_object->meta_title = $this->l('No association (means disabled)', 'advancedeucompliance');
+		$cms_pages[0] = $fake_object;
+		unset($fake_object);
 
 		$this->context->smarty->assign(array(
 			'cms_roles_assoc' => $cms_roles_assoc,
@@ -977,7 +1041,7 @@ class Advancedeucompliance extends Module
 		if (count($cms_roles_associated) != count($cms_roles_full)) {
 			$incomplete_cms_role_association_warning = $this->displayWarning(
 				$this->l('You do not have associated all roles,
-				therefore you cannot associate all of them to mails (check above section)')
+				therefore you cannot associate all of them to mails (check above section)', 'advancedeucompliance')
 			);
 		}
 
