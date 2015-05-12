@@ -51,6 +51,9 @@ class Advancedeucompliance extends Module
 	const LEGAL_ENVIRONMENTAL 	= 'LEGAL_ENVIRONMENTAL';
 	const LEGAL_SHIP_PAY 		= 'LEGAL_SHIP_PAY';
 
+	/* Other constants */
+	const HIGHEST_TAXRULE_NAME = 'Highest Cart Tax Rate';
+
 	public function __construct(Core_Foundation_Database_EntityManager $entity_manager, FileSystem $fs, Email $email)
 	{
 
@@ -109,16 +112,19 @@ class Advancedeucompliance extends Module
 			$delivery_time_oos_values[(int)$lang['id_lang']] = $this->l('Delivery: 3 to 6 weeks');
 		}
 
+
+
+
 		return Configuration::updateValue('AEUC_FEAT_TELL_A_FRIEND', false) &&
 				Configuration::updateValue('AEUC_FEAT_REORDER', false) &&
+				Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', false) &&
+				Configuration::updateValue('AEUC_FEAT_TAX_SHIP_GIFT', false) &&
 				Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $delivery_time_available_values) &&
 				Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_OOS', $delivery_time_oos_values) &&
 				Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', false) &&
 				Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', false) &&
 				Configuration::updateValue('AEUC_LABEL_WEIGHT', false) &&
-				Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', false) &&
 				Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', false) &&
-				Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', false) &&
 				Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', false) &&
 				Configuration::updateValue('AEUC_LABEL_COMBINATION_FROM', false);
 	}
@@ -190,12 +196,13 @@ class Advancedeucompliance extends Module
 
 		return Configuration::deleteByName('AEUC_FEAT_TELL_A_FRIEND') &&
 				Configuration::deleteByName('AEUC_FEAT_REORDER') &&
+				Configuration::deleteByName('AEUC_FEAT_ADV_PAYMENT_API') &&
+				Configuration::deleteByName('AEUC_FEAT_TAX_SHIP_GIFT') &&
 				Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_AVAILABLE') &&
 				Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_OOS') &&
 				Configuration::deleteByName('AEUC_LABEL_SPECIFIC_PRICE') &&
 				Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
 				Configuration::deleteByName('AEUC_LABEL_WEIGHT') &&
-				Configuration::deleteByName('AEUC_FEAT_ADV_PAYMENT_API') &&
 				Configuration::deleteByName('AEUC_LABEL_REVOCATION_TOS') &&
 				Configuration::deleteByName('AEUC_LABEL_SHIPPING_INC_EXC') &&
 				Configuration::deleteByName('AEUC_LABEL_COMBINATION_FROM');
@@ -255,14 +262,14 @@ class Advancedeucompliance extends Module
 		$cms_repository = $this->entity_manager->getRepository('CMS');
 		// Check first if LEGAL_REVOCATION CMS Role is been set before doing anything here
 		$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
-		$cms_page_associated = $cms_role_repository->getCMSIdAssociatedFromName(Advancedeucompliance::LEGAL_REVOCATION);
+		$cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_REVOCATION);
 
-		if (!$has_tos_override_opt || !isset($cms_page_associated['id_cms']) || (int)$cms_page_associated['id_cms'] == 0)
+		if (!$has_tos_override_opt || $cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms == 0)
 			return false;
 
 		// Get IDs of CMS pages required
 		$cms_conditions_id = (int)Configuration::get('PS_CONDITIONS_CMS_ID');
-		$cms_revocation_id = (int)$cms_page_associated['id_cms'];
+		$cms_revocation_id = (int)$cms_page_associated->id_cms;
 
 		// Get misc vars
 		$id_lang = (int)$this->context->language->id;
@@ -400,6 +407,28 @@ class Advancedeucompliance extends Module
 	 */
 	public function getContent()
 	{
+		// Create tax rule
+		$tax_rule_repository = $this->entity_manager->getRepository('TaxRule');
+		$tax_rule_grp_repository = $this->entity_manager->getRepository('TaxRulesGroup');
+		$new_tax_rule = $tax_rule_repository->getNewEntity();
+
+		$hctr_tax_rule_grp_id = TaxRulesGroup::getIdByName((string)$this->european_vat_name);
+		if (!$euro_tax_rule_grp_id)
+		{
+			// Create it
+			$trg = new TaxRulesGroup();
+			$trg->name = (string)$this->european_vat_name;
+			$trg->active = 1;
+			if (!$trg->save())
+			{
+				$this->_errors[] = Tools::displayError('Tax rule cannot be saved.');
+				return false;
+			}
+			$euro_tax_rule_grp_id = (int)$trg->id;
+		}
+
+		ddd('end');
+
 		/**
 		 * If values have been submitted in the form, process.
 		 */
@@ -481,6 +510,18 @@ class Advancedeucompliance extends Module
 			return (count($this->_errors) ? $this->displayError($this->_errors) : '').
 					(count($this->_warnings) ? $this->displayWarning($this->_warnings) : '').
 					'';
+	}
+
+	protected function processAeucFeatTaxShipGift($is_option_active)
+	{
+		if ((bool)$is_option_active) {
+			Configuration::updateValue('PS_TAX_ON_SERVICES', true);
+			Configuration::updateValue('AEUC_FEAT_TAX_SHIP_GIFT', true);
+		}
+		else {
+			Configuration::updateValue('PS_TAX_ON_SERVICES', false);
+			Configuration::updateValue('AEUC_FEAT_TAX_SHIP_GIFT', false);
+		}
 	}
 
 	protected function processAeucLabelCombinationFrom($is_option_active)
@@ -962,6 +1003,25 @@ class Advancedeucompliance extends Module
 							)
 						),
 					),
+					array(
+						'type' => 'switch',
+						'label' => $this->l('Enable Taxes for Shipping and Gift Wrapping'),
+						'name' => 'AEUC_FEAT_TAX_SHIP_GIFT',
+						'is_bool' => true,
+						'desc' => $this->l('Whether to enable Taxes for Shipping and Gift Wrapping services'),
+						'values' => array(
+							array(
+								'id' => 'active_on',
+								'value' => true,
+								'label' => $this->l('Enabled')
+							),
+							array(
+								'id' => 'active_off',
+								'value' => false,
+								'label' => $this->l('Disabled')
+							)
+						),
+					),
 				),
 				'submit' => array(
 					'title' => $this->l('Save'),
@@ -978,7 +1038,8 @@ class Advancedeucompliance extends Module
 		return array(
 			'AEUC_FEAT_TELL_A_FRIEND' => Configuration::get('AEUC_FEAT_TELL_A_FRIEND'),
 			'AEUC_FEAT_REORDER' => Configuration::get('AEUC_FEAT_REORDER'),
-			'AEUC_FEAT_ADV_PAYMENT_API' => Configuration::get('AEUC_FEAT_ADV_PAYMENT_API')
+			'AEUC_FEAT_ADV_PAYMENT_API' => Configuration::get('AEUC_FEAT_ADV_PAYMENT_API'),
+			'AEUC_FEAT_TAX_SHIP_GIFT' => Configuration::get('AEUC_FEAT_TAX_SHIP_GIFT')
 		);
 	}
 
