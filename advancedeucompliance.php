@@ -105,11 +105,12 @@ class Advancedeucompliance extends Module
 		$status = true;
 		$delivery_time_available_values = array();
 		$delivery_time_oos_values = array();
-		$langs = Language::getLanguages(false, false);
+		$langs_repository = $this->entity_manager->getRepository('Language');
+		$langs = $langs_repository->findAll();
 
 		foreach ($langs as $lang) {
-			$delivery_time_available_values[(int)$lang['id_lang']] = $this->l('Delivery: 1 to 3 weeks');
-			$delivery_time_oos_values[(int)$lang['id_lang']] = $this->l('Delivery: 3 to 6 weeks');
+			$delivery_time_available_values[(int)$lang->id] = $this->l('Delivery: 1 to 3 weeks');
+			$delivery_time_oos_values[(int)$lang->id] = $this->l('Delivery: 3 to 6 weeks');
 		}
 
 		return Configuration::updateValue('AEUC_FEAT_TELL_A_FRIEND', false) &&
@@ -240,12 +241,12 @@ class Advancedeucompliance extends Module
 
 		$cms_repo = $this->entity_manager->getRepository('CMS');
 		foreach ($cms_ids as $cms_id) {
-			$cms_content = $cms_repo->getCMSContent((int)$cms_id['id_cms'], $id_lang);
+			$cms_page = $cms_repo->i10nFindOneById((int)$cms_id['id_cms'], $id_lang, $this->context->shop->id);
 
-			if (!isset($cms_content['content']))
+			if (!isset($cms_page->content))
 				continue;
 
-			$cms_content = $cms_content['content'];
+			$cms_content = $cms_page->content;
 			$param['template_html'] .= $cms_content;
 			$param['template_txt'] .= strip_tags($cms_content, true);
 		}
@@ -345,14 +346,15 @@ class Advancedeucompliance extends Module
 
 		/* Handle Shipping Inc./Exc. */
 		if ($param['type'] == 'price' && (bool)Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC') === true)	{
-			if ($product->is_virtual) {
+			if (!$product->is_virtual) {
 				$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
 				$cms_repository = $this->entity_manager->getRepository('CMS');
-				$cms_page_associated = $cms_role_repository->getCMSIdAssociatedFromName(Advancedeucompliance::LEGAL_SHIP_PAY);
+				$cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_SHIP_PAY);
 
-				if (isset($cms_page_associated['id_cms']) && (int)$cms_page_associated['id_cms'] != 0)	{
-					$cms_ship_pay_id = (int)$cms_page_associated['id_cms'];
-					$cms_revocations = $cms_repository->getCMSById($cms_ship_pay_id, $this->context->language->id);
+				if (isset($cms_page_associated->id_cms) && $cms_page_associated->id_cms != 0)	{
+					$cms_ship_pay_id = (int)$cms_page_associated->id_cms;
+					$cms_revocations = $cms_repository->i10nFindOneById($cms_ship_pay_id, $this->context->language->id,
+						$this->context->shop->id);
 					$is_ssl_enabled = (bool)Configuration::get('PS_SSL_ENABLED');
 					$link_ship_pay = $this->context->link->getCMSLink($cms_revocations, $cms_revocations->link_rewrite, $is_ssl_enabled);
 
@@ -365,7 +367,7 @@ class Advancedeucompliance extends Module
 
 					$content_to_return .= 	'<br/>' .
 											'<a href="'.$link_ship_pay.'" class="_blank">'.
-												$this->l('Shipping included', 'advancedeucompliance').
+												$this->l('Shipping Excluded', 'advancedeucompliance').
 											'</a>';
 				}
 			}
@@ -375,6 +377,7 @@ class Advancedeucompliance extends Module
 		if ($param['type'] == 'weight' && (bool)Configuration::get('PS_DISPLAY_PRODUCT_WEIGHT') === true &&
 		isset($param['hook_origin']) && $param['hook_origin'] == 'product_sheet')
 		{
+
 			if ((int)$product->weight)
 			{
 				$rounded_weight = round((float)$product->weight,
