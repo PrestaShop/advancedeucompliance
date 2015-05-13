@@ -366,7 +366,7 @@ class Advancedeucompliance extends Module
 					}
 
 					$content_to_return .= 	'<br/>' .
-											'<a href="'.$link_ship_pay.'" class="_blank">'.
+											'<a href="'.$link_ship_pay.'" class="iframe">'.
 												$this->l('Shipping Excluded', 'advancedeucompliance').
 											'</a>';
 				}

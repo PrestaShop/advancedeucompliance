@@ -7,3 +7,13 @@
         <a href="{$link_revocations|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='(Read the Terms of Revocation)'}</a>
     </p>
 </div>
+<script type="text/javascript">
+    $(document).ready(function(){
+        if (!!$.prototype.fancybox)
+            $("a.iframe").fancybox({
+                'type': 'iframe',
+                'width': 600,
+                'height': 600
+            });
+    })
+</script>
