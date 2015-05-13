@@ -612,8 +612,10 @@ class Advancedeucompliance extends Module
 	{
         if ((bool)$is_option_active) {
 			Configuration::updateValue('PS_REORDERING', true);
+			Configuration::updateValue('AEUC_FEAT_REORDER', true);
 		} else {
 			Configuration::updateValue('PS_REORDERING', false);
+			Configuration::updateValue('AEUC_FEAT_REORDER', false);
 		}
     }
 
