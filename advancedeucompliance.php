@@ -322,7 +322,9 @@ class Advancedeucompliance extends Module
 
 		/* Handle Product Combinations label */
 		if ($param['type'] == 'before_price' && (bool)Configuration::get('AEUC_LABEL_SPECIFIC_PRICE') === true) {
-			$content_to_return .= $this->l('From', 'advancedeucompliance');
+			if ($product->hasAttributes()) {
+				$content_to_return .= $this->l('From', 'advancedeucompliance');
+			}
 		}
 
 		/* Handle Specific Price label*/
