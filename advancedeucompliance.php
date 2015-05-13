@@ -368,7 +368,17 @@ class Advancedeucompliance extends Module
 					$content_to_return .= 	'<br/>' .
 											'<a href="'.$link_ship_pay.'" class="iframe">'.
 												$this->l('Shipping Excluded', 'advancedeucompliance').
-											'</a>';
+											'</a>'.
+											'<script type="text/javascript">
+												$(document).ready(function(){
+													if (!!$.prototype.fancybox)
+														$("a.iframe").fancybox({
+															"type": "iframe",
+															"width": 600,
+															"height": 600
+														});
+												})
+											</script>';
 				}
 			}
 		}
