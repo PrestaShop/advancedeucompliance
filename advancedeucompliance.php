@@ -578,13 +578,12 @@ class Advancedeucompliance extends Module
 		foreach ($countries as $id_country => $country_details)	{
 			$country = new Country((int)$country_details['id_country']);
 			if (Validate::isLoadedObject($country)) {
-				$country->display_tax_label = (int)$is_option_active;
+				$country->display_tax_label = !(int)$is_option_active;
 				if (!$country->update())
 					$this->_errors[] = $this->l('A country could not be updated for Tax INC/EXC label');
 			}
 		}
 		Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', (bool)$is_option_active);
-
 	}
 
 	protected function processAeucFeatAdvPaymentApi($is_option_active)
