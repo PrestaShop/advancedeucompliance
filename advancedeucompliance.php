@@ -112,13 +112,9 @@ class Advancedeucompliance extends Module
 			$delivery_time_oos_values[(int)$lang['id_lang']] = $this->l('Delivery: 3 to 6 weeks');
 		}
 
-
-
-
 		return Configuration::updateValue('AEUC_FEAT_TELL_A_FRIEND', false) &&
 				Configuration::updateValue('AEUC_FEAT_REORDER', false) &&
 				Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', false) &&
-				Configuration::updateValue('AEUC_FEAT_TAX_SHIP_GIFT', false) &&
 				Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $delivery_time_available_values) &&
 				Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_OOS', $delivery_time_oos_values) &&
 				Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', false) &&
@@ -197,7 +193,6 @@ class Advancedeucompliance extends Module
 		return Configuration::deleteByName('AEUC_FEAT_TELL_A_FRIEND') &&
 				Configuration::deleteByName('AEUC_FEAT_REORDER') &&
 				Configuration::deleteByName('AEUC_FEAT_ADV_PAYMENT_API') &&
-				Configuration::deleteByName('AEUC_FEAT_TAX_SHIP_GIFT') &&
 				Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_AVAILABLE') &&
 				Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_OOS') &&
 				Configuration::deleteByName('AEUC_LABEL_SPECIFIC_PRICE') &&
@@ -264,7 +259,7 @@ class Advancedeucompliance extends Module
 		$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
 		$cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_REVOCATION);
 
-		if (!$has_tos_override_opt || $cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms == 0)
+		if (!$has_tos_override_opt || !$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms == 0)
 			return false;
 
 		// Get IDs of CMS pages required
@@ -273,12 +268,13 @@ class Advancedeucompliance extends Module
 
 		// Get misc vars
 		$id_lang = (int)$this->context->language->id;
+		$id_shop = (int)$this->context->shop->id;
 		$is_ssl_enabled = (bool)Configuration::get('PS_SSL_ENABLED');
 		$checkedTos = $this->context->cart->checkedTos ? true : false;
 
 		// Get CMS OBJs
-		$cms_conditions = $cms_repository->getCMSById($cms_conditions_id, $id_lang);
-		$cms_revocations = $cms_repository->getCMSById($cms_revocation_id, $id_lang);
+		$cms_conditions = $cms_repository->i10nFindOneById($cms_conditions_id, $id_lang, $id_shop);
+		$cms_revocations = $cms_repository->i10nFindOneById($cms_revocation_id, $id_lang, $id_shop);
 
 		// Get links to these pages
 		$link_conditions = $this->context->link->getCMSLink($cms_conditions, $cms_conditions->link_rewrite, $is_ssl_enabled);
@@ -407,36 +403,9 @@ class Advancedeucompliance extends Module
 	 */
 	public function getContent()
 	{
-		// Create tax rule
-		$tax_rule_repository = $this->entity_manager->getRepository('TaxRule');
-		$tax_rule_grp_repository = $this->entity_manager->getRepository('TaxRulesGroup');
-		$new_tax_rule = $tax_rule_repository->getNewEntity();
-
-		$hctr_tax_rule_grp_id = TaxRulesGroup::getIdByName((string)$this->european_vat_name);
-		if (!$euro_tax_rule_grp_id)
-		{
-			// Create it
-			$trg = new TaxRulesGroup();
-			$trg->name = (string)$this->european_vat_name;
-			$trg->active = 1;
-			if (!$trg->save())
-			{
-				$this->_errors[] = Tools::displayError('Tax rule cannot be saved.');
-				return false;
-			}
-			$euro_tax_rule_grp_id = (int)$trg->id;
-		}
-
-		ddd('end');
-
-		/**
-		 * If values have been submitted in the form, process.
-		 */
 		$success_band = $this->_postProcess();
-
 		$this->context->smarty->assign('module_dir', $this->_path);
 		$this->context->smarty->assign('errors', $this->_errors);
-
 		// Render all required form for each 'part'
 		$formLabelsManager = $this->renderFormLabelsManager();
 		$formFeaturesManager = $this->renderFormFeaturesManager();
@@ -512,17 +481,6 @@ class Advancedeucompliance extends Module
 					'';
 	}
 
-	protected function processAeucFeatTaxShipGift($is_option_active)
-	{
-		if ((bool)$is_option_active) {
-			Configuration::updateValue('PS_TAX_ON_SERVICES', true);
-			Configuration::updateValue('AEUC_FEAT_TAX_SHIP_GIFT', true);
-		}
-		else {
-			Configuration::updateValue('PS_TAX_ON_SERVICES', false);
-			Configuration::updateValue('AEUC_FEAT_TAX_SHIP_GIFT', false);
-		}
-	}
 
 	protected function processAeucLabelCombinationFrom($is_option_active)
 	{
@@ -572,7 +530,7 @@ class Advancedeucompliance extends Module
 		$cms_roles = $this->getCMSRoles();
 
 		if (!$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms == 0) {
-			$this->_warnings[] = sprintf(
+			$this->_errors[] = sprintf(
 					$this->l('"Revocation TOS" label cannot be activated until you associate "%s" role to a CMS Page',
 							'advancedeucompliance'),
 					(string)$cms_roles[Advancedeucompliance::LEGAL_REVOCATION]
@@ -595,7 +553,7 @@ class Advancedeucompliance extends Module
 		$cms_roles = $this->getCMSRoles();
 
 		if (!$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms === 0) {
-			$this->_warnings[] = sprintf(
+			$this->_errors[] = sprintf(
 				$this->l('"Shipping Inc./Exc." label cannot be activated until you associate "%s" role to a CMS Page',
 					'advancedeucompliance'),
 				(string)$cms_roles[Advancedeucompliance::LEGAL_SHIP_PAY]
@@ -757,97 +715,99 @@ class Advancedeucompliance extends Module
 					),
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Display specific price label'),
+						'label' => $this->l('Display specific price label', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_SPECIFIC_PRICE',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display "Before" label on Products with a specific price'),
+						'desc' => $this->l('Whether to display "Before" label on Products with a specific price', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
 								'value' => true,
-								'label' => $this->l('Enabled')
+								'label' => $this->l('Enabled', 'advancedeucompliance')
 							),
 							array(
 								'id' => 'active_off',
 								'value' => false,
-								'label' => $this->l('Disabled')
+								'label' => $this->l('Disabled', 'advancedeucompliance')
 							)
 						),
 					),
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Display Tax "Inc./Excl." label'),
+						'label' => $this->l('Display Tax "Inc./Excl." label', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_TAX_INC_EXC',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display "Tax Inc./Exc." label next to product\'s price'),
+						'desc' => $this->l('Whether to display "Tax Inc./Exc." label next to product\'s price', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
 								'value' => true,
-								'label' => $this->l('Enabled')
+								'label' => $this->l('Enabled', 'advancedeucompliance')
 							),
 							array(
 								'id' => 'active_off',
 								'value' => false,
-								'label' => $this->l('Disabled')
+								'label' => $this->l('Disabled', 'advancedeucompliance')
 							)
 						),
 					),
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Display Shipping "Inc./Excl." label'),
+						'label' => $this->l('Display Shipping "Inc./Excl." label', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_SHIPPING_INC_EXC',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display "Shipping Inc./Exc." label next to product\'s price'),
+						'desc' => $this->l('Whether to display "Shipping Inc./Exc." label next to product\'s price', 'advancedeucompliance'),
+						'hint' => $this->l('This option requires that you set related CMS role association in the form box below', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
 								'value' => true,
-								'label' => $this->l('Enabled')
+								'label' => $this->l('Enabled', 'advancedeucompliance')
 							),
 							array(
 								'id' => 'active_off',
 								'value' => false,
-								'label' => $this->l('Disabled')
+								'label' => $this->l('Disabled', 'advancedeucompliance')
 							)
 						),
 					),
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Display product weight label'),
+						'label' => $this->l('Display product weight label', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_WEIGHT',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display product\'s weight on product\'s sheet (when available)'),
+						'desc' => $this->l('Whether to display product\'s weight on product\'s sheet (when available)', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
 								'value' => true,
-								'label' => $this->l('Enabled')
+								'label' => $this->l('Enabled', 'advancedeucompliance')
 							),
 							array(
 								'id' => 'active_off',
 								'value' => false,
-								'label' => $this->l('Disabled')
+								'label' => $this->l('Disabled', 'advancedeucompliance')
 							)
 						),
 					),
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Display Revocation Terms within TOS'),
+						'label' => $this->l('Display Revocation Terms within TOS', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_REVOCATION_TOS',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display Revocation Terms CMS page within TOS text (NB: Related CMS Role need to be set)'),
+						'desc' => $this->l('Whether to display Revocation Terms CMS page within TOS text (NB: Related CMS Role need to be set)', 'advancedeucompliance'),
+						'hint' => $this->l('This option requires that you set related CMS role association in the form box below', 'advancedeucompliance'),
 						'disable' => true,
 						'values' => array(
 							array(
 								'id' => 'active_on',
 								'value' => true,
-								'label' => $this->l('Enabled')
+								'label' => $this->l('Enabled', 'advancedeucompliance')
 							),
 							array(
 								'id' => 'active_off',
 								'value' => false,
-								'label' => $this->l('Disabled')
+								'label' => $this->l('Disabled', 'advancedeucompliance')
 							)
 						),
 					),
@@ -856,24 +816,24 @@ class Advancedeucompliance extends Module
 						'label' => $this->l('Display "From" label on Product prices with combinations'),
 						'name' => 'AEUC_LABEL_COMBINATION_FROM',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display "From" label before price on Products with combinations'),
+						'desc' => $this->l('Whether to display "From" label before price on Products with combinations', 'advancedeucompliance'),
 						'disable' => true,
 						'values' => array(
 							array(
 								'id' => 'active_on',
 								'value' => true,
-								'label' => $this->l('Enabled')
+								'label' => $this->l('Enabled', 'advancedeucompliance')
 							),
 							array(
 								'id' => 'active_off',
 								'value' => false,
-								'label' => $this->l('Disabled')
+								'label' => $this->l('Disabled', 'advancedeucompliance')
 							)
 						),
 					),
 				),
 				'submit' => array(
-					'title' => $this->l('Save'),
+					'title' => $this->l('Save', 'advancedeucompliance'),
 				),
 			),
 		);
@@ -1003,25 +963,7 @@ class Advancedeucompliance extends Module
 							)
 						),
 					),
-					array(
-						'type' => 'switch',
-						'label' => $this->l('Enable Taxes for Shipping and Gift Wrapping'),
-						'name' => 'AEUC_FEAT_TAX_SHIP_GIFT',
-						'is_bool' => true,
-						'desc' => $this->l('Whether to enable Taxes for Shipping and Gift Wrapping services'),
-						'values' => array(
-							array(
-								'id' => 'active_on',
-								'value' => true,
-								'label' => $this->l('Enabled')
-							),
-							array(
-								'id' => 'active_off',
-								'value' => false,
-								'label' => $this->l('Disabled')
-							)
-						),
-					),
+
 				),
 				'submit' => array(
 					'title' => $this->l('Save'),
@@ -1038,8 +980,7 @@ class Advancedeucompliance extends Module
 		return array(
 			'AEUC_FEAT_TELL_A_FRIEND' => Configuration::get('AEUC_FEAT_TELL_A_FRIEND'),
 			'AEUC_FEAT_REORDER' => Configuration::get('AEUC_FEAT_REORDER'),
-			'AEUC_FEAT_ADV_PAYMENT_API' => Configuration::get('AEUC_FEAT_ADV_PAYMENT_API'),
-			'AEUC_FEAT_TAX_SHIP_GIFT' => Configuration::get('AEUC_FEAT_TAX_SHIP_GIFT')
+			'AEUC_FEAT_ADV_PAYMENT_API' => Configuration::get('AEUC_FEAT_ADV_PAYMENT_API')
 		);
 	}
 
