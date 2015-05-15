@@ -611,6 +611,11 @@ class Advancedeucompliance extends Module
 		}
 	}
 
+	protected function processPsAtcpShipWrap($is_option_active)
+	{
+		Configuration::updateValue('PS_ATCP_SHIPWRAP', $is_option_active);
+	}
+
     protected function processAeucFeatTellAFriend($is_option_active)
     {
         $staf_module = Module::getInstanceByName('sendtoafriend');
@@ -979,7 +984,24 @@ class Advancedeucompliance extends Module
 							)
 						),
 					),
-
+					array(
+						'type' => 'switch',
+						'label' => $this->l('Use average tax of cart products for Shipping and Wrapping'),
+						'name' => 'PS_ATCP_SHIPWRAP',
+						'is_bool' => true,
+						'values' => array(
+							array(
+								'id' => 'active_on',
+								'value' => true,
+								'label' => $this->l('Enabled')
+							),
+							array(
+								'id' => 'active_off',
+								'value' => false,
+								'label' => $this->l('Disabled')
+							)
+						),
+					),
 				),
 				'submit' => array(
 					'title' => $this->l('Save'),
@@ -996,7 +1018,8 @@ class Advancedeucompliance extends Module
 		return array(
 			'AEUC_FEAT_TELL_A_FRIEND' => Configuration::get('AEUC_FEAT_TELL_A_FRIEND'),
 			'AEUC_FEAT_REORDER' => Configuration::get('AEUC_FEAT_REORDER'),
-			'AEUC_FEAT_ADV_PAYMENT_API' => Configuration::get('AEUC_FEAT_ADV_PAYMENT_API')
+			'AEUC_FEAT_ADV_PAYMENT_API' => Configuration::get('AEUC_FEAT_ADV_PAYMENT_API'),
+			'PS_ATCP_SHIPWRAP' => Configuration::get('PS_ATCP_SHIPWRAP'),
 		);
 	}
 
