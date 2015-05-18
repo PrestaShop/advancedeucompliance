@@ -234,14 +234,14 @@ class Advancedeucompliance extends Module
 		$sql_where_in_cmsroles = implode(', ', $tmp_cms_role_list);
 		unset($tmp_cms_role_list);
 		$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
-		$cms_ids = $cms_role_repository->getCMSIdsWhereCMSRoleIdIn($sql_where_in_cmsroles);
+		$cms_roles = $cms_role_repository->findByIdCmsRole($sql_where_in_cmsroles);
 
-		if (!$cms_ids)
+		if (!$cms_roles)
 			return;
 
 		$cms_repo = $this->entity_manager->getRepository('CMS');
-		foreach ($cms_ids as $cms_id) {
-			$cms_page = $cms_repo->i10nFindOneById((int)$cms_id['id_cms'], $id_lang, $this->context->shop->id);
+		foreach ($cms_roles as $cms_role) {
+			$cms_page = $cms_repo->i10nFindOneById((int)$cms_role->id_cms, $id_lang, $this->context->shop->id);
 
 			if (!isset($cms_page->content))
 				continue;
