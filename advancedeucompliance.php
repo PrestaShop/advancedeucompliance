@@ -240,16 +240,21 @@ class Advancedeucompliance extends Module
 			return;
 
 		$cms_repo = $this->entity_manager->getRepository('CMS');
+		$cms_contents = array();
+
 		foreach ($cms_roles as $cms_role) {
 			$cms_page = $cms_repo->i10nFindOneById((int)$cms_role->id_cms, $id_lang, $this->context->shop->id);
 
 			if (!isset($cms_page->content))
 				continue;
 
-			$cms_content = $cms_page->content;
-			$param['template_html'] .= $cms_content;
-			$param['template_txt'] .= strip_tags($cms_content, true);
+			$cms_contents[] = $cms_page->content;
+			$param['template_txt'] .= strip_tags($cms_page->content, true);
 		}
+
+		$this->context->smarty->assign(array('cms_contents' => $cms_contents));
+		$final_content = $this->context->smarty->fetch($this->local_path.'views/templates/hook/hook-email-wrapper.tpl');
+		$param['template_html'] .= $final_content;
 	}
 
 	public function hookOverrideTOSDisplay($param)
