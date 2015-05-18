@@ -90,6 +90,7 @@ class Advancedeucompliance extends Module
 				$this->registerHook('displayProductPriceBlock') &&
 				$this->registerHook('overrideTOSDisplay') &&
 				$this->registerHook('actionEmailAddAfterContent') &&
+				$this->registerHook('advancedPaymentOptions') &&
 				$this->createConfig();
 	}
 
@@ -129,7 +130,7 @@ class Advancedeucompliance extends Module
 	public function unloadTables()
 	{
 		$state = true;
-		include_once dirname(__FILE__).'/install/sql_install.php';
+		$sql = include_once dirname(__FILE__).'/install/sql_install.php';
 		foreach ($sql as $name => $v)
 			$state &= Db::getInstance()->execute('DROP TABLE IF EXISTS '.$name);
 
@@ -141,7 +142,7 @@ class Advancedeucompliance extends Module
 		$state = true;
 
 		// Create module's table
-		include_once dirname(__FILE__).'/install/sql_install.php';
+		$sql = include_once dirname(__FILE__).'/install/sql_install.php';
 		foreach ($sql as $s)
 			$state &= Db::getInstance()->execute($s);
 
@@ -202,6 +203,28 @@ class Advancedeucompliance extends Module
 				Configuration::deleteByName('AEUC_LABEL_REVOCATION_TOS') &&
 				Configuration::deleteByName('AEUC_LABEL_SHIPPING_INC_EXC') &&
 				Configuration::deleteByName('AEUC_LABEL_COMBINATION_FROM');
+	}
+
+	/* This hook is present to maintain backward compatibility */
+	public function hookAdvancedPaymentOptions($param)
+	{
+		$backward_payment_options = array();
+		$old_hook_result = Hook::exec('displayPaymentEU', array(), null, true);
+
+		if (!$old_hook_result)
+			return;
+
+		foreach ($old_hook_result as $module_name => $hook_result) {
+			$tmp_obj = new PaymentOption();
+			foreach ($hook_result as $key => $value) {
+				$tmp_obj->{$key} = $value;
+			}
+			$tmp_obj->module_name = (string)$module_name;
+			$backward_payment_options[] = $tmp_obj;
+			unset($tmp_obj);
+		}
+		
+		return $backward_payment_options;
 	}
 
 	public function hookActionEmailAddAfterContent($param)
@@ -426,6 +449,7 @@ class Advancedeucompliance extends Module
 		$success_band = $this->_postProcess();
 		$this->context->smarty->assign('module_dir', $this->_path);
 		$this->context->smarty->assign('errors', $this->_errors);
+		$this->context->controller->addCSS($this->_path.'assets/css/configure.css', 'all');
 		// Render all required form for each 'part'
 		$formLabelsManager = $this->renderFormLabelsManager();
 		$formFeaturesManager = $this->renderFormFeaturesManager();

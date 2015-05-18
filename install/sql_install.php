@@ -41,3 +41,5 @@ $sql[_DB_PREFIX_.'aeuc_email'] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'aeu
 			  `display_name` varchar(64) NOT NULL,
 			  PRIMARY KEY (`id_mail`)
 			) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
+
+return $sql;
