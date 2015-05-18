@@ -44,10 +44,19 @@
                 <thead>
                 <tr>
                     <th>
-                        <span class="title_box">{l s='Email templates'}</span>
+                        <span class="title_box">
+                            <input id="selectall_attach" type="checkbox"/>
+                            {l s='Email templates'}
+                        </span>
+
                     </th>
                     {foreach from=$legal_options item=option}
-                        <th class="center fixed-width-xs"><span class="title_box">{$option.name}</span></th>
+                        <th class="center fixed-width-xs">
+                            <span class="title_box">
+                                 <input id="selectall_opt_{$option.id}" type="checkbox"/>
+                                {$option.name}
+                            </span>
+                        </th>
                     {/foreach}
                 </tr>
                 </thead>
