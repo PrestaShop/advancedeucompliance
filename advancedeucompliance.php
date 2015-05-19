@@ -215,14 +215,15 @@ class Advancedeucompliance extends Module
 	public function hookAdvancedPaymentOptions($param)
 	{
 		$legacyOptions = Hook::exec('displayPaymentEU', array(), null, true);
+		$newOptions = array();
 
-		return call_user_func_array(
-			'array_merge',
-			array_map(
-				array('Core_Business_Payment_PaymentOption', 'convertLegacyOption'),
-				$legacyOptions
-			)
-		);
+		foreach ($legacyOptions as $module_name => $legacyOption) {
+			foreach (Core_Business_Payment_PaymentOption::convertLegacyOption($legacyOption) as $option) {
+				$newOptions[] = $option->setModuleName($module_name);
+			}
+		}
+		
+		return $newOptions;
 	}
 
 	public function hookActionEmailAddAfterContent($param)
