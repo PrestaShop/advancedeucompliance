@@ -51,10 +51,9 @@ class Advancedeucompliance extends Module
 	const LEGAL_ENVIRONMENTAL 	= 'LEGAL_ENVIRONMENTAL';
 	const LEGAL_SHIP_PAY 		= 'LEGAL_SHIP_PAY';
 
-	/* Other constants */
-	const HIGHEST_TAXRULE_NAME = 'Highest Cart Tax Rate';
-
-	public function __construct(Core_Foundation_Database_EntityManager $entity_manager, FileSystem $fs, Email $email)
+	public function __construct(Core_Foundation_Database_EntityManager $entity_manager,
+								Core_Foundation_FileSystem_FileSystem $fs,
+								Core_Business_Email_EmailLister $email)
 	{
 
 		$this->name = 'advancedeucompliance';
@@ -114,17 +113,27 @@ class Advancedeucompliance extends Module
 			$delivery_time_oos_values[(int)$lang->id] = $this->l('Delivery: 3 to 6 weeks');
 		}
 
+		$this->processAeucFeatTellAFriend(false);
+		$this->processAeucFeatReorder(false);
+		$this->processAeucFeatAdvPaymentApi(false);
+		$this->processAeucLabelRevocationTOS(false);
+		$this->processAeucLabelSpecificPrice(true);
+		$this->processAeucLabelTaxIncExc(true);
+		$this->processAeucLabelShippingIncExc(false);
+		$this->processAeucLabelWeight(true);
+		$this->processAeucLabelCombinationFrom(true);
+
 		return Configuration::updateValue('AEUC_FEAT_TELL_A_FRIEND', false) &&
 				Configuration::updateValue('AEUC_FEAT_REORDER', false) &&
 				Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', false) &&
 				Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $delivery_time_available_values) &&
 				Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_OOS', $delivery_time_oos_values) &&
-				Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', false) &&
-				Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', false) &&
-				Configuration::updateValue('AEUC_LABEL_WEIGHT', false) &&
+				Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', true) &&
+				Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', true) &&
+				Configuration::updateValue('AEUC_LABEL_WEIGHT', true) &&
 				Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', false) &&
 				Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', false) &&
-				Configuration::updateValue('AEUC_LABEL_COMBINATION_FROM', false);
+				Configuration::updateValue('AEUC_LABEL_COMBINATION_FROM', true);
 	}
 
 	public function unloadTables()
@@ -169,7 +178,6 @@ class Advancedeucompliance extends Module
 			$new_email->filename = (string)$mail;
 			$new_email->display_name = (string)ucfirst(str_replace(array('_', '-'), ' ', $mail));
 			$new_email->save();
-
 			unset($new_email);
 		}
 
