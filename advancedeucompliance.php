@@ -208,23 +208,15 @@ class Advancedeucompliance extends Module
 	/* This hook is present to maintain backward compatibility */
 	public function hookAdvancedPaymentOptions($param)
 	{
-		$backward_payment_options = array();
-		$old_hook_result = Hook::exec('displayPaymentEU', array(), null, true);
+		$legacyOptions = Hook::exec('displayPaymentEU', array(), null, true);
 
-		if (!$old_hook_result)
-			return;
-
-		foreach ($old_hook_result as $module_name => $hook_result) {
-			$tmp_obj = new PaymentOption();
-			foreach ($hook_result as $key => $value) {
-				$tmp_obj->{$key} = $value;
-			}
-			$tmp_obj->module_name = (string)$module_name;
-			$backward_payment_options[] = $tmp_obj;
-			unset($tmp_obj);
-		}
-		
-		return $backward_payment_options;
+		return call_user_func_array(
+			'array_merge',
+			array_map(
+				array('Core_Business_Payment_PaymentOption', 'convertLegacyOption'),
+				$legacyOptions
+			)
+		);
 	}
 
 	public function hookActionEmailAddAfterContent($param)
