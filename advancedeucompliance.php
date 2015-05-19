@@ -72,8 +72,8 @@ class Advancedeucompliance extends Module
 		$this->emails = $email;
 
 		$this->displayName = $this->l('Advanced EU Compliance');
-		$this->description = $this->l('This module will help European merchants to get compliant with their countries e-commerce laws');
-		$this->confirmUninstall = $this->l('Are you sure you cant to uninstall this module ?');
+		$this->description = $this->l('This module helps European merchants to get compliant with their countries e-commerce laws.');
+		$this->confirmUninstall = $this->l('Are you sure you want to uninstall this module?');
 
 		/* Init errors var */
 		$this->_errors = array();
@@ -555,7 +555,7 @@ class Advancedeucompliance extends Module
 			$assoc_obj->id_cms_role = $assoc->id_cms_role;
 
 			if (!$assoc_obj->save())
-				$this->_errors[] = $this->l("An email attachment to a CMS role has failed.");
+				$this->_errors[] = $this->l('An email attachment to a CMS role has failed.', 'advancedeucompliance');
 		}
 	}
 
@@ -567,7 +567,7 @@ class Advancedeucompliance extends Module
 
 		if (!$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms == 0) {
 			$this->_errors[] = sprintf(
-					$this->l('"Revocation TOS" label cannot be activated until you associate "%s" role to a CMS Page',
+					$this->l('\'Revocation Terms within ToS\' label cannot be activated unless you associate "%s" role with a CMS Page.',
 							'advancedeucompliance'),
 					(string)$cms_roles[Advancedeucompliance::LEGAL_REVOCATION]
 			);
@@ -583,14 +583,14 @@ class Advancedeucompliance extends Module
 
 	protected function processAeucLabelShippingIncExc($is_option_active)
 	{
-		// Check first if LEGAL_REVOCATION CMS Role is been set before doing anything here
+		// Check first if LEGAL_REVOCATION CMS Role has been set before doing anything here
 		$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
 		$cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_SHIP_PAY);
 		$cms_roles = $this->getCMSRoles();
 
 		if (!$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms === 0) {
 			$this->_errors[] = sprintf(
-				$this->l('"Shipping Inc./Exc." label cannot be activated until you associate "%s" role to a CMS Page',
+				$this->l('Shipping fees label cannot be activated unless you associate "%s" role with a CMS Page',
 					'advancedeucompliance'),
 				(string)$cms_roles[Advancedeucompliance::LEGAL_SHIP_PAY]
 			);
@@ -614,7 +614,7 @@ class Advancedeucompliance extends Module
 			if (Validate::isLoadedObject($country)) {
 				$country->display_tax_label = !(int)$is_option_active;
 				if (!$country->update())
-					$this->_errors[] = $this->l('A country could not be updated for Tax INC/EXC label');
+					$this->_errors[] = $this->l('A country could not be updated for \'Tax inc./excl.\' label', 'advancedeucompliance');
 			}
 		}
 		Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', (bool)$is_option_active);
@@ -691,13 +691,13 @@ class Advancedeucompliance extends Module
 	protected function getCMSRoles()
 	{
 		return array(
-			Advancedeucompliance::LEGAL_NOTICE 			=> $this->l('Legal notice'),
-			Advancedeucompliance::LEGAL_CONDITIONS 		=> $this->l('Conditions'),
-			Advancedeucompliance::LEGAL_REVOCATION 		=> $this->l('Revocation'),
-			Advancedeucompliance::LEGAL_REVOCATION_FORM => $this->l('Revocation Form'),
-			Advancedeucompliance::LEGAL_PRIVACY 		=> $this->l('Privacy'),
-			Advancedeucompliance::LEGAL_ENVIRONMENTAL 	=> $this->l('Environmental'),
-			Advancedeucompliance::LEGAL_SHIP_PAY		=> $this->l('Shipping and payment')
+			Advancedeucompliance::LEGAL_NOTICE 			=> $this->l('Legal notice', 'advancedeucompliance'),
+			Advancedeucompliance::LEGAL_CONDITIONS 		=> $this->l('Terms of Service (ToS)', 'advancedeucompliance'),
+			Advancedeucompliance::LEGAL_REVOCATION 		=> $this->l('Revocation terms', 'advancedeucompliance'),
+			Advancedeucompliance::LEGAL_REVOCATION_FORM => $this->l('Revocation form', 'advancedeucompliance'),
+			Advancedeucompliance::LEGAL_PRIVACY 		=> $this->l('Privacy', 'advancedeucompliance'),
+			Advancedeucompliance::LEGAL_ENVIRONMENTAL 	=> $this->l('Environmental notice', 'advancedeucompliance'),
+			Advancedeucompliance::LEGAL_SHIP_PAY		=> $this->l('Shipping and payment', 'advancedeucompliance')
 		);
 	}
 
@@ -737,30 +737,30 @@ class Advancedeucompliance extends Module
 		return array(
 			'form' => array(
 				'legend' => array(
-				'title' => $this->l('Labeling Management', 'advancedeucompliance'),
+				'title' => $this->l('Labels', 'advancedeucompliance'),
 				'icon' => 'icon-tags',
 				),
 				'input' => array(
 					array(
 						'type' => 'text',
 						'lang' => true,
-						'label' => $this->l('Display estimated delivery time label on product (available)', 'advancedeucompliance'),
+						'label' => $this->l('Estimated delivery time label (available products)', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_DELIVERY_TIME_AVAILABLE',
-						'desc' => $this->l('Whether to display estimated delivery time on products (available)', 'advancedeucompliance'),
+						'desc' => $this->l('Indicate the estimated delivery time for your in-stock products. Leave the field empty to disable.', 'advancedeucompliance'),
 					),
 					array(
 						'type' => 'text',
 						'lang' => true,
-						'label' => $this->l('Display estimated delivery time label on product (out of stock)', 'advancedeucompliance'),
+						'label' => $this->l('Estimated delivery time label (out-of-stock products)', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_DELIVERY_TIME_OOS',
-						'desc' => $this->l('Whether to display estimated delivery time on products (out of stock)', 'advancedeucompliance'),
+						'desc' => $this->l('Indicate the estimated delivery time for your out-of-stock products. Leave the field empty to disable.', 'advancedeucompliance'),
 					),
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Display specific price label', 'advancedeucompliance'),
+						'label' => $this->l('\'Before\' Base price label', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_SPECIFIC_PRICE',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display "Before" label on Products with a specific price', 'advancedeucompliance'),
+						'desc' => $this->l('When a product is on sale, displays the base price with a \'Before\' label.', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -776,10 +776,10 @@ class Advancedeucompliance extends Module
 					),
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Display Tax "Inc./Excl." label', 'advancedeucompliance'),
+						'label' => $this->l('Tax \'inc./excl.\' label', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_TAX_INC_EXC',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display "Tax Inc./Exc." label next to product\'s price', 'advancedeucompliance'),
+						'desc' => $this->l('Display whether the tax is included next to the product price (\'Tax included/excluded\' label).', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -795,11 +795,11 @@ class Advancedeucompliance extends Module
 					),
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Display Shipping "Inc./Excl." label', 'advancedeucompliance'),
+						'label' => $this->l('Shipping fees \'Inc./Excl.\' label', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_SHIPPING_INC_EXC',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display "Shipping Inc./Exc." label next to product\'s price', 'advancedeucompliance'),
-						'hint' => $this->l('This option requires that you set related CMS role association in the form box below', 'advancedeucompliance'),
+						'desc' => $this->l('Display whether the shipping fees are included, next to the product price (\'Shipping fees included / excluded\').', 'advancedeucompliance'),
+						'hint' => $this->l('If enabled, make sure the Shipping terms are associated with a CMS page below (Legal Content Management). The label will link to this content.', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -815,10 +815,10 @@ class Advancedeucompliance extends Module
 					),
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Display product weight label', 'advancedeucompliance'),
+						'label' => $this->l('Product weight label', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_WEIGHT',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display product\'s weight on product\'s sheet (when available)', 'advancedeucompliance'),
+						'desc' => $this->l('Display the weight of a product (when information is available).', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -834,11 +834,11 @@ class Advancedeucompliance extends Module
 					),
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Display Revocation Terms within TOS', 'advancedeucompliance'),
+						'label' => $this->l('Revocation Terms within ToS', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_REVOCATION_TOS',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display Revocation Terms CMS page within TOS text (NB: Related CMS Role need to be set)', 'advancedeucompliance'),
-						'hint' => $this->l('This option requires that you set related CMS role association in the form box below', 'advancedeucompliance'),
+						'desc' => $this->l('Include content from the Revocation Terms CMS page within the Terms of Services (ToS). ', 'advancedeucompliance'),
+						'hint' => $this->l('If enabled, make sure the Revocation Terms are associated with a CMS page below (Legal Content Management).', 'advancedeucompliance'),
 						'disable' => true,
 						'values' => array(
 							array(
@@ -855,10 +855,11 @@ class Advancedeucompliance extends Module
 					),
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Display "From" label on Product prices with combinations'),
+						'label' => $this->l('\'From\' price label (when combinations)'),
 						'name' => 'AEUC_LABEL_COMBINATION_FROM',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display "From" label before price on Products with combinations', 'advancedeucompliance'),
+						'desc' => $this->l('Display a \'From\' label before the price on products with combinations.', 'advancedeucompliance'),
+						'hint' => $this->l('As prices can vary from a combination to another, this label indicates that the final price may be higher.', 'advancedeucompliance'),
 						'disable' => true,
 						'values' => array(
 							array(
@@ -944,16 +945,17 @@ class Advancedeucompliance extends Module
 		return array(
 			'form' => array(
 				'legend' => array(
-					'title' => $this->l('Features Management'),
+					'title' => $this->l('Features'),
 					'icon' => 'icon-cogs',
 				),
 				'input' => array(
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Enable "Tell A Friend" feature'),
+						'label' => $this->l('Enable \'Tell A Friend\' feature'),
 						'name' => 'AEUC_FEAT_TELL_A_FRIEND',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to disable "Tell A Friend" feature'),
+						'desc' => $this->l('Make sure you comply with your local legislation before enabling: it can be regarded as an unsolicited commercial email.'),
+						'hint' => $this->l('If enabled, the \'Send to a Friend\' module allows customers to send to a friend an email with a link to a product\'s page.', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -969,10 +971,11 @@ class Advancedeucompliance extends Module
 					),
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Enable "Reorder" feature'),
+						'label' => $this->l('Enable \'Reordering\' feature'),
+						'hint' => $this->l('If enabled, the \'Reorder\' option allows customers to reorder in one click from their Order History page.', 'advancedeucompliance'),
 						'name' => 'AEUC_FEAT_REORDER',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to disable "Reorder" feature'),
+						'desc' => $this->l('Make sure you comply with your local legislation before enabling: it can be regarded as inertia selling.', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -988,10 +991,11 @@ class Advancedeucompliance extends Module
 					),
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Enable "Advanced Payment API" feature'),
+						'label' => $this->l('Enable \'Advanced checkout page\''),
+						'hint' => $this->l('The advanced checkout page displays the following sections: payment methods, address summary, ToS agreement, cart summary, and an \'Order with Obligation to Pay\' button.', 'advancedeucompliance'),
 						'name' => 'AEUC_FEAT_ADV_PAYMENT_API',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to enable "Advanced Payment API" feature'),
+						'desc' => $this->l('To address some of the latest European legal requirements, the advanced checkout page displays additional information (terms of service, payment methods, etc) in one single page.', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -1064,7 +1068,7 @@ class Advancedeucompliance extends Module
 				$assoc_cms_name = $cms_entity->meta_title[(int)$id_lang];
 			}
 			else {
-				$assoc_cms_name = $this->l('No association (means disabled)', 'advancedeucompliance');
+				$assoc_cms_name = $this->l('-- Select associated CMS page --', 'advancedeucompliance');
 			}
 
 			$cms_roles_assoc[(int)$cms_role->id] = array('id_cms' => (int)$cms_role->id_cms,
@@ -1076,7 +1080,7 @@ class Advancedeucompliance extends Module
 		$cms_pages = $cms_repository->i10nFindAll($id_lang, $id_shop);
 		$fake_object =  new stdClass();
 		$fake_object->id = 0;
-		$fake_object->meta_title = $this->l('No association (means disabled)', 'advancedeucompliance');
+		$fake_object->meta_title = $this->l('-- Select associated CMS page -- ', 'advancedeucompliance');
 		$cms_pages[0] = $fake_object;
 		unset($fake_object);
 
@@ -1102,8 +1106,7 @@ class Advancedeucompliance extends Module
 
 		if (count($cms_roles_associated) != count($cms_roles_full)) {
 			$incomplete_cms_role_association_warning = $this->displayWarning(
-				$this->l('You do not have associated all roles,
-				therefore you cannot associate all of them to mails (check above section)', 'advancedeucompliance')
+				$this->l('Your legal content is not linked to any CMS page yet (see above section). Please make sure your content is associated before managing emails attachements.', 'advancedeucompliance')
 			);
 		}
 
