@@ -28,10 +28,13 @@
     <div class="panel">
         <div class="panel-heading">
             <i class="icon-envelope"></i>
-            {l s='Email attachments associations' mod='advancedeucompliance'}
+            {l s='Email attachment associations' mod='advancedeucompliance'}
         </div>
         <p>
-            {l s='Here you can choose which files has to be attached for a given email' mod='advancedeucompliance'}
+            {l s='Email attachements allow you to include in your shop\'s emails PDF files containing content from the Legal Content Management section above. ' mod='advancedeucompliance'}
+        <p>
+        </p>
+            {l s='For each type of email, define which content you would like to attach.' mod='advancedeucompliance'}
         </p>
         {if $incomplete_cms_role_association_warning}
             <p>
