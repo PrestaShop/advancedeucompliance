@@ -177,10 +177,8 @@ class Advancedeucompliance extends Module
 			$new_email->filename = (string)$mail;
 			$new_email->display_name = $this->emails->getCleanedMailName($mail);
 			$new_email->save();
-			var_dump($new_email);
 			unset($new_email);
 		}
-die('ended');
 		return $state;
 	}
 
