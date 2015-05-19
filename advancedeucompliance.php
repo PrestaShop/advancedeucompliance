@@ -102,7 +102,6 @@ class Advancedeucompliance extends Module
 
 	public function createConfig()
 	{
-		$status = true;
 		$delivery_time_available_values = array();
 		$delivery_time_oos_values = array();
 		$langs_repository = $this->entity_manager->getRepository('Language');
@@ -139,9 +138,10 @@ class Advancedeucompliance extends Module
 	public function unloadTables()
 	{
 		$state = true;
-		$sql = include_once dirname(__FILE__).'/install/sql_install.php';
-		foreach ($sql as $name => $v)
-			$state &= Db::getInstance()->execute('DROP TABLE IF EXISTS '.$name);
+		$sql = require dirname(__FILE__).'/install/sql_install.php';
+		foreach ($sql as $name => $v) {
+			$state &= Db::getInstance()->execute('DROP TABLE IF EXISTS ' . $name);
+		}
 
 		return $state;
 	}
@@ -151,19 +151,18 @@ class Advancedeucompliance extends Module
 		$state = true;
 
 		// Create module's table
-		$sql = include_once dirname(__FILE__).'/install/sql_install.php';
-		foreach ($sql as $s)
+		$sql = require dirname(__FILE__).'/install/sql_install.php';
+		foreach ($sql as $s) {
 			$state &= Db::getInstance()->execute($s);
+		}
 
 		// Fillin CMS ROLE
 		$roles_array = $this->getCMSRoles();
 		$roles = array_keys($roles_array);
 		$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
 
-		foreach ($roles as $role)
-		{
-			if (!$cms_role_repository->findOneByName($role))
-			{
+		foreach ($roles as $role) {
+			if (!$cms_role_repository->findOneByName($role)) {
 				$cms_role = $cms_role_repository->getNewEntity();
 				$cms_role->id_cms = 0; // No assoc at this time
 				$cms_role->name = $role;
@@ -171,16 +170,17 @@ class Advancedeucompliance extends Module
 			}
 		}
 
+		$default_path_email = _PS_MAIL_DIR_.'en'.DIRECTORY_SEPARATOR;
 		// Fill-in aeuc_mail table
-		foreach ($this->emails->getAvailableMails() as $mail)
-		{
+		foreach ($this->emails->getAvailableMails($default_path_email) as $mail) {
 			$new_email = new AeucEmailEntity();
 			$new_email->filename = (string)$mail;
-			$new_email->display_name = (string)ucfirst(str_replace(array('_', '-'), ' ', $mail));
+			$new_email->display_name = $this->emails->getCleanedMailName($mail);
 			$new_email->save();
+			var_dump($new_email);
 			unset($new_email);
 		}
-
+die('ended');
 		return $state;
 	}
 
