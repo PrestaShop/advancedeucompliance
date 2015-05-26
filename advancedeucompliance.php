@@ -86,6 +86,7 @@ class Advancedeucompliance extends Module
 	{
 		return parent::install() &&
 				$this->loadTables() &&
+				$this->registerHook('header') &&
 				$this->registerHook('displayProductPriceBlock') &&
 				$this->registerHook('overrideTOSDisplay') &&
 				$this->registerHook('actionEmailAddAfterContent') &&
@@ -279,6 +280,15 @@ class Advancedeucompliance extends Module
 		$param['template_html'] .= $final_content;
 	}
 
+	public function hookHeader($param)
+	{
+		if (isset($this->context->controller->php_self) && ($this->context->controller->php_self === 'index' ||
+				$this->context->controller->php_self === 'product')) {
+
+		}
+		$this->context->controller->addCSS($this->_path.'assets/css/aeuc_front.css', 'all');
+	}
+
 	public function hookOverrideTOSDisplay($param)
 	{
 		$has_tos_override_opt = (bool)Configuration::get('AEUC_LABEL_REVOCATION_TOS');
@@ -328,7 +338,6 @@ class Advancedeucompliance extends Module
 		return $content;
 	}
 
-	// @Todo: REfactor with templates
 	public function hookDisplayProductPriceBlock($param)
 	{
 		if (!isset($param['product']) || !isset($param['type'])) {
@@ -338,88 +347,94 @@ class Advancedeucompliance extends Module
 		$product = $param['product'];
 
 		if (is_array($product)) {
-			/*$product_repository = $this->entity_manager->getRepository('Product');
-			$product_repository->findOne()*/
-			$product = new Product((int)$product['id_product']);
+			$product_repository = $this->entity_manager->getRepository('Product');
+			$product = $product_repository->findOne((int)$product['id_product']);
 		}
 		if (!Validate::isLoadedObject($product)) {
 			return;
 		}
 
-		$content_to_return = '';
+		$smartyVars = array();
 
 		/* Handle Product Combinations label */
 		if ($param['type'] == 'before_price' && (bool)Configuration::get('AEUC_LABEL_SPECIFIC_PRICE') === true) {
 			if ($product->hasAttributes()) {
-				$content_to_return .= $this->l('From', 'advancedeucompliance');
+				$smartyVars['before_price'] = array();
+				$smartyVars['before_price']['from_str_i18n'] = $this->l('From', 'advancedeucompliance');
+				return $this->dumpHookDisplayProductPriceBlock($smartyVars);
 			}
 		}
 
 		/* Handle Specific Price label*/
 		if ($param['type'] == 'old_price' && (bool)Configuration::get('AEUC_LABEL_SPECIFIC_PRICE') === true) {
-			$content_to_return .= $this->l('Before', 'advancedeucompliance');
+			$smartyVars['old_price'] = array();
+			$smartyVars['old_price']['before_str_i18n'] = $this->l('Before', 'advancedeucompliance');
+			return $this->dumpHookDisplayProductPriceBlock($smartyVars);
 		}
 
-		/* Handle taxes  Inc./Exc.*/
-		if ($param['type'] == 'price' && (bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true)	{
+		/* Handle taxes  Inc./Exc. and Shipping Inc./Exc.*/
+		if ($param['type'] == 'price')	{
+			$smartyVars['price'] = array();
 
-			if ((bool)Configuration::get('PS_TAX') === true) {
-				$content_to_return .= '<br/>' . $this->l('Tax included', 'advancedeucompliance');
-			}
-			else {
-				$content_to_return .= '<br/>' . $this->l('Tax excluded', 'advancedeucompliance');
-			}
-		}
+			if ((bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true) {
 
-		/* Handle Shipping Inc./Exc. */
-		if ($param['type'] == 'price' && (bool)Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC') === true)	{
-			if (!$product->is_virtual) {
-				$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
-				$cms_repository = $this->entity_manager->getRepository('CMS');
-				$cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_SHIP_PAY);
-
-				if (isset($cms_page_associated->id_cms) && $cms_page_associated->id_cms != 0)	{
-					$cms_ship_pay_id = (int)$cms_page_associated->id_cms;
-					$cms_revocations = $cms_repository->i10nFindOneById($cms_ship_pay_id, $this->context->language->id,
-						$this->context->shop->id);
-					$is_ssl_enabled = (bool)Configuration::get('PS_SSL_ENABLED');
-					$link_ship_pay = $this->context->link->getCMSLink($cms_revocations, $cms_revocations->link_rewrite, $is_ssl_enabled);
-
-					if (!strpos($link_ship_pay, '?')) {
-						$link_ship_pay .= '?content_only=1';
-					}
-					else {
-						$link_ship_pay .= '&content_only=1';
-					}
-
-					$content_to_return .= 	'<br/>' .
-											'<a href="'.$link_ship_pay.'" class="iframe">'.
-												$this->l('Shipping Excluded', 'advancedeucompliance').
-											'</a>'.
-											'<script type="text/javascript">
-												$(document).ready(function(){
-													if (!!$.prototype.fancybox)
-														$("a.iframe").fancybox({
-															"type": "iframe",
-															"width": 600,
-															"height": 600
-														});
-												})
-											</script>';
+				if ((bool)Configuration::get('PS_TAX') === true) {
+					$smartyVars['price']['tax_str_i18n'] = $this->l('Tax included', 'advancedeucompliance');
+				} else {
+					$smartyVars['price']['tax_str_i18n'] = $this->l('Tax excluded', 'advancedeucompliance');
 				}
 			}
+			if ((bool)Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC') === true) {
+
+				if (!$product->is_virtual) {
+					$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+					$cms_repository = $this->entity_manager->getRepository('CMS');
+					$cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_SHIP_PAY);
+
+					if (isset($cms_page_associated->id_cms) && $cms_page_associated->id_cms != 0)	{
+
+						$cms_ship_pay_id = (int)$cms_page_associated->id_cms;
+						$cms_revocations = $cms_repository->i10nFindOneById($cms_ship_pay_id, $this->context->language->id,
+							$this->context->shop->id);
+						$is_ssl_enabled = (bool)Configuration::get('PS_SSL_ENABLED');
+						$link_ship_pay = $this->context->link->getCMSLink($cms_revocations, $cms_revocations->link_rewrite, $is_ssl_enabled);
+
+						if (!strpos($link_ship_pay, '?')) {
+							$link_ship_pay .= '?content_only=1';
+						}
+						else {
+							$link_ship_pay .= '&content_only=1';
+						}
+
+						$smartyVars['ship'] = array();
+						$smartyVars['ship']['link_ship_pay'] = $link_ship_pay;
+						$smartyVars['ship']['ship_str_i18n'] = $this->l('Shipping Excluded', 'advancedeucompliance');
+						$smartyVars['ship']['js_ship_fancybx'] = '<script type="text/javascript">
+																	$(document).ready(function(){
+																		if (!!$.prototype.fancybox)
+																			$("a.iframe").fancybox({
+																				"type": "iframe",
+																				"width": 600,
+																				"height": 600
+																			});
+																	})
+																</script>';
+					}
+				}
+			}
+			return $this->dumpHookDisplayProductPriceBlock($smartyVars);
 		}
 
 		/* Handles product's weight */
 		if ($param['type'] == 'weight' && (bool)Configuration::get('PS_DISPLAY_PRODUCT_WEIGHT') === true &&
 		isset($param['hook_origin']) && $param['hook_origin'] == 'product_sheet')
 		{
-
 			if ((int)$product->weight)
 			{
-				$rounded_weight = round((float)$product->weight,
-										Configuration::get('PS_PRODUCT_WEIGHT_PRECISION'));
-				$content_to_return .= sprintf($this->l('Weight: %s'), $rounded_weight.' '.Configuration::get('PS_WEIGHT_UNIT'));
+				$smartyVars['weight'] = array();
+				$rounded_weight = round((float)$product->weight, Configuration::get('PS_PRODUCT_WEIGHT_PRECISION'));
+				$smartyVars['weight']['rounded_weight_str_i18n'] = $rounded_weight.' '.Configuration::get('PS_WEIGHT_UNIT');
+				return $this->dumpHookDisplayProductPriceBlock($smartyVars);
 			}
 		}
 
@@ -427,17 +442,24 @@ class Advancedeucompliance extends Module
 		if ($param['type'] == 'after_price') {
 			$context_id_lang = $this->context->language->id;
 			$is_product_available = (Product::getRealQuantity($product->id) >= 1) ? true : false;
-
+			$smartyVars['after_price'] = array();
 			if ($is_product_available) {
 				$contextualized_content = Configuration::get('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', (int)$context_id_lang);
+				$smartyVars['after_price']['delivery_str_i18n'] = $contextualized_content;
 			} else {
 				$contextualized_content = Configuration::get('AEUC_LABEL_DELIVERY_TIME_OOS', (int)$context_id_lang);
+				$smartyVars['after_price']['delivery_str_i18n'] = $contextualized_content;
 			}
-
-			$content_to_return .= '<br/>' . $contextualized_content;
+			return $this->dumpHookDisplayProductPriceBlock($smartyVars);
 		}
 
-		return $content_to_return;
+		return;
+	}
+
+	private function dumpHookDisplayProductPriceBlock(array $smartyVars)
+	{
+		$this->context->smarty->assign(array('smartyVars' => $smartyVars));
+		return $this->context->smarty->fetch($this->local_path.'views/templates/hook/hookDisplayProductPriceBlock.tpl');
 	}
 
 	/**
@@ -514,14 +536,16 @@ class Advancedeucompliance extends Module
 
         }
 
-		if ($has_processed_something)
-			return (count($this->_errors) ? $this->displayError($this->_errors) : '').
-					(count($this->_warnings) ? $this->displayWarning($this->_warnings) : '').
-					$this->displayConfirmation($this->l('Settings saved successfully!'));
-		else
-			return (count($this->_errors) ? $this->displayError($this->_errors) : '').
-					(count($this->_warnings) ? $this->displayWarning($this->_warnings) : '').
-					'';
+		if ($has_processed_something) {
+			$this->_clearCache('product.tpl');
+			return (count($this->_errors) ? $this->displayError($this->_errors) : '') .
+			(count($this->_warnings) ? $this->displayWarning($this->_warnings) : '') .
+			$this->displayConfirmation($this->l('Settings saved successfully!'));
+		} else {
+			return (count($this->_errors) ? $this->displayError($this->_errors) : '') .
+			(count($this->_warnings) ? $this->displayWarning($this->_warnings) : '') .
+			'';
+		}
 	}
 
 
@@ -658,10 +682,10 @@ class Advancedeucompliance extends Module
     protected function processAeucFeatReorder($is_option_active)
 	{
         if ((bool)$is_option_active) {
-			Configuration::updateValue('PS_REORDERING', true);
+			Configuration::updateValue('PS_DISALLOW_HISTORY_REORDERING', false);
 			Configuration::updateValue('AEUC_FEAT_REORDER', true);
 		} else {
-			Configuration::updateValue('PS_REORDERING', false);
+			Configuration::updateValue('PS_DISALLOW_HISTORY_REORDERING', true);
 			Configuration::updateValue('AEUC_FEAT_REORDER', false);
 		}
     }
