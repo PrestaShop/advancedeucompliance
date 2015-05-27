@@ -240,7 +240,6 @@ class Advancedeucompliance extends Module
 		$id_lang = (int)$param['id_lang'];
 		$mail_id = AeucEmailEntity::getMailIdFromTplFilename($tpl_name);
 
-
 		if (!isset($mail_id['id_mail']))
 			return;
 
@@ -254,10 +253,8 @@ class Advancedeucompliance extends Module
 		foreach ($cms_role_ids as $cms_role_id)
 			$tmp_cms_role_list[] = $cms_role_id['id_cms_role'];
 
-		$sql_where_in_cmsroles = implode(', ', $tmp_cms_role_list);
-		unset($tmp_cms_role_list);
 		$cms_role_repository = $this->entity_manager->getRepository('CMSRole');
-		$cms_roles = $cms_role_repository->findByIdCmsRole($sql_where_in_cmsroles);
+		$cms_roles = $cms_role_repository->findByIdCmsRole($tmp_cms_role_list);
 
 		if (!$cms_roles)
 			return;
