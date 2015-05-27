@@ -59,8 +59,8 @@ class Advancedeucompliance extends Module
 		$this->repository_manager = $repository_manager;
 
 		$this->displayName = $this->l('Advanced EU Compliance');
-		$this->description = $this->l('This module will help European merchants to get compliant with their countries e-commerce laws');
-		$this->confirmUninstall = $this->l('Are you sure you cant to uninstall this module ?');
+		$this->description = $this->l('This module provides compliancy with applicable e-commerce law for European merchants');
+		$this->confirmUninstall = $this->l('Are you sure you want to uninstall this module?');
 	}
 
 	/**
@@ -279,7 +279,7 @@ class Advancedeucompliance extends Module
 						'label' => $this->l('Display delivery time label'),
 						'name' => 'AEUC_LABEL_DELIVERY_TIME',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display estimated delivery time on products'),
+						'desc' => $this->l('Option to display the estimated delivery time for products'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -298,7 +298,7 @@ class Advancedeucompliance extends Module
 						'label' => $this->l('Display specific price label'),
 						'name' => 'AEUC_LABEL_SPECIFIC_PRICE',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display a label before products with specific price'),
+						'desc' => $this->l('Option to display a label for products with specific price'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -317,7 +317,7 @@ class Advancedeucompliance extends Module
 						'label' => $this->l('Display Tax "Inc./Excl." label'),
 						'name' => 'AEUC_LABEL_TAX_INC_EXC',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display tax included/excluded label next to product\'s price'),
+						'desc' => $this->l('Option to display a tax included/excluded label next to product\'s price'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -336,7 +336,7 @@ class Advancedeucompliance extends Module
 						'label' => $this->l('Display product weight label'),
 						'name' => 'AEUC_LABEL_WEIGHT',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to display product\'s weight on product\'s sheet (when available)'),
+						'desc' => $this->l('Option to display product\'s weight on product\'s details (if available)'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -416,7 +416,7 @@ class Advancedeucompliance extends Module
 						'label' => $this->l('Enable/Disable "Tell A Friend" feature'),
 						'name' => 'AEUC_FEAT_TELL_A_FRIEND',
 						'is_bool' => true,
-						'desc' => $this->l('Whether to enable "Tell A Friend" feature'),
+						'desc' => $this->l('Option to enable the "Tell A Friend" feature'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
