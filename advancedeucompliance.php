@@ -219,6 +219,11 @@ class Advancedeucompliance extends Module
 		$newOptions = array();
 
 		foreach ($legacyOptions as $module_name => $legacyOption) {
+
+			if (is_null($legacyOption) || $legacyOption === false) {
+				continue;
+			}
+
 			foreach (Core_Business_Payment_PaymentOption::convertLegacyOption($legacyOption) as $option) {
 				$option->setModuleName($module_name);
 				$to_be_cleaned = $option->getForm();
