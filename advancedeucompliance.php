@@ -1,33 +1,33 @@
 <?php
 /**
-* 2007-2015 PrestaShop
-*
-* NOTICE OF LICENSE
-*
-* This source file is subject to the Academic Free License (AFL 3.0)
-* that is bundled with this package in the file LICENSE.txt.
-* It is also available through the world-wide-web at this URL:
-* http://opensource.org/licenses/afl-3.0.php
-* If you did not receive a copy of the license and are unable to
-* obtain it through the world-wide-web, please send an email
-* to license@prestashop.com so we can send you a copy immediately.
-*
-* DISCLAIMER
-*
-* Do not edit or add to this file if you wish to upgrade PrestaShop to newer
-* versions in the future. If you wish to customize PrestaShop for your
-* needs please refer to http://www.prestashop.com for more information.
-*
-*  @author    PrestaShop SA <contact@prestashop.com>
-*  @copyright 2007-2015 PrestaShop SA
-*  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
-*  International Registered Trademark & Property of PrestaShop SA
-*/
+ * 2007-2015 PrestaShop
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Open Software License (OSL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/osl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@prestashop.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade PrestaShop to newer
+ * versions in the future. If you wish to customize PrestaShop for your
+ * needs please refer to http://www.prestashop.com for more information.
+ *
+ *  @author 	PrestaShop SA <contact@prestashop.com>
+ *  @copyright  2007-2015 PrestaShop SA
+ *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ *  International Registered Trademark & Property of PrestaShop SA
+ */
 
 if (!defined('_PS_VERSION_'))
 	exit;
 
-// Include required entities
+/* Include required entities */
 include_once dirname(__FILE__).'/entities/AeucCMSRoleEmailEntity.php';
 include_once dirname(__FILE__).'/entities/AeucEmailEntity.php';
 
@@ -234,7 +234,7 @@ class Advancedeucompliance extends Module
 				$newOptions[] = $option;
 			}
 		}
-		
+
 		return $newOptions;
 	}
 
@@ -292,9 +292,9 @@ class Advancedeucompliance extends Module
 	{
 		if (isset($this->context->controller->php_self) && ($this->context->controller->php_self === 'index' ||
 				$this->context->controller->php_self === 'product')) {
-
+			$this->context->controller->addCSS($this->_path.'assets/css/aeuc_front.css', 'all');
 		}
-		$this->context->controller->addCSS($this->_path.'assets/css/aeuc_front.css', 'all');
+
 	}
 
 	public function hookOverrideTOSDisplay($param)
@@ -485,7 +485,7 @@ class Advancedeucompliance extends Module
 		$formLegalContentManager = $this->renderFormLegalContentManager();
 		$formEmailAttachmentsManager = $this->renderFormEmailAttachmentsManager();
 
-		return 	$success_band.
+		return	$success_band.
 				$formLabelsManager.
 				$formFeaturesManager.
 				$formLegalContentManager.
@@ -785,21 +785,24 @@ class Advancedeucompliance extends Module
 						'lang' => true,
 						'label' => $this->l('Estimated delivery time label (available products)', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_DELIVERY_TIME_AVAILABLE',
-						'desc' => $this->l('Indicate the estimated delivery time for your in-stock products. Leave the field empty to disable.', 'advancedeucompliance'),
+						'desc' => $this->l('Indicate the estimated delivery time for your in-stock products.
+						Leave the field empty to disable.', 'advancedeucompliance'),
 					),
 					array(
 						'type' => 'text',
 						'lang' => true,
 						'label' => $this->l('Estimated delivery time label (out-of-stock products)', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_DELIVERY_TIME_OOS',
-						'desc' => $this->l('Indicate the estimated delivery time for your out-of-stock products. Leave the field empty to disable.', 'advancedeucompliance'),
+						'desc' => $this->l('Indicate the estimated delivery time for your out-of-stock products.
+						Leave the field empty to disable.', 'advancedeucompliance'),
 					),
 					array(
 						'type' => 'switch',
 						'label' => $this->l('\'Before\' Base price label', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_SPECIFIC_PRICE',
 						'is_bool' => true,
-						'desc' => $this->l('When a product is on sale, displays the base price with a \'Before\' label.', 'advancedeucompliance'),
+						'desc' => $this->l('When a product is on sale, displays the base price with a \'Before\' label.',
+							'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -818,7 +821,8 @@ class Advancedeucompliance extends Module
 						'label' => $this->l('Tax \'inc./excl.\' label', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_TAX_INC_EXC',
 						'is_bool' => true,
-						'desc' => $this->l('Display whether the tax is included next to the product price (\'Tax included/excluded\' label).', 'advancedeucompliance'),
+						'desc' => $this->l('Display whether the tax is included next to the product price
+						(\'Tax included/excluded\' label).', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -837,8 +841,10 @@ class Advancedeucompliance extends Module
 						'label' => $this->l('Shipping fees \'Inc./Excl.\' label', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_SHIPPING_INC_EXC',
 						'is_bool' => true,
-						'desc' => $this->l('Display whether the shipping fees are included, next to the product price (\'Shipping fees included / excluded\').', 'advancedeucompliance'),
-						'hint' => $this->l('If enabled, make sure the Shipping terms are associated with a CMS page below (Legal Content Management). The label will link to this content.', 'advancedeucompliance'),
+						'desc' => $this->l('Display whether the shipping fees are included, next to the product
+						price (\'Shipping fees included / excluded\').', 'advancedeucompliance'),
+						'hint' => $this->l('If enabled, make sure the Shipping terms are associated with a CMS page
+						below (Legal Content Management). The label will link to this content.', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -857,7 +863,8 @@ class Advancedeucompliance extends Module
 						'label' => $this->l('Product weight label', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_WEIGHT',
 						'is_bool' => true,
-						'desc' => $this->l('Display the weight of a product (when information is available).', 'advancedeucompliance'),
+						'desc' => $this->l('Display the weight of a product (when information is available).',
+							'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -876,8 +883,10 @@ class Advancedeucompliance extends Module
 						'label' => $this->l('Revocation Terms within ToS', 'advancedeucompliance'),
 						'name' => 'AEUC_LABEL_REVOCATION_TOS',
 						'is_bool' => true,
-						'desc' => $this->l('Include content from the Revocation Terms CMS page within the Terms of Services (ToS). ', 'advancedeucompliance'),
-						'hint' => $this->l('If enabled, make sure the Revocation Terms are associated with a CMS page below (Legal Content Management).', 'advancedeucompliance'),
+						'desc' => $this->l('Include content from the Revocation Terms CMS page within the
+						Terms of Services (ToS). ', 'advancedeucompliance'),
+						'hint' => $this->l('If enabled, make sure the Revocation Terms are associated with a CMS page
+						below (Legal Content Management).', 'advancedeucompliance'),
 						'disable' => true,
 						'values' => array(
 							array(
@@ -897,8 +906,10 @@ class Advancedeucompliance extends Module
 						'label' => $this->l('\'From\' price label (when combinations)'),
 						'name' => 'AEUC_LABEL_COMBINATION_FROM',
 						'is_bool' => true,
-						'desc' => $this->l('Display a \'From\' label before the price on products with combinations.', 'advancedeucompliance'),
-						'hint' => $this->l('As prices can vary from a combination to another, this label indicates that the final price may be higher.', 'advancedeucompliance'),
+						'desc' => $this->l('Display a \'From\' label before the price on products with combinations.',
+							'advancedeucompliance'),
+						'hint' => $this->l('As prices can vary from a combination to another, this label indicates
+						that the final price may be higher.', 'advancedeucompliance'),
 						'disable' => true,
 						'values' => array(
 							array(
@@ -993,8 +1004,10 @@ class Advancedeucompliance extends Module
 						'label' => $this->l('Enable \'Tell A Friend\' feature'),
 						'name' => 'AEUC_FEAT_TELL_A_FRIEND',
 						'is_bool' => true,
-						'desc' => $this->l('Make sure you comply with your local legislation before enabling: it can be regarded as an unsolicited commercial email.'),
-						'hint' => $this->l('If enabled, the \'Send to a Friend\' module allows customers to send to a friend an email with a link to a product\'s page.', 'advancedeucompliance'),
+						'desc' => $this->l('Make sure you comply with your local legislation before enabling:
+						it can be regarded as an unsolicited commercial email.'),
+						'hint' => $this->l('If enabled, the \'Send to a Friend\' module allows customers to send to a
+						friend an email with a link to a product\'s page.', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -1011,10 +1024,12 @@ class Advancedeucompliance extends Module
 					array(
 						'type' => 'switch',
 						'label' => $this->l('Enable \'Reordering\' feature'),
-						'hint' => $this->l('If enabled, the \'Reorder\' option allows customers to reorder in one click from their Order History page.', 'advancedeucompliance'),
+						'hint' => $this->l('If enabled, the \'Reorder\' option allows customers to reorder in one
+						click from their Order History page.', 'advancedeucompliance'),
 						'name' => 'AEUC_FEAT_REORDER',
 						'is_bool' => true,
-						'desc' => $this->l('Make sure you comply with your local legislation before enabling: it can be regarded as inertia selling.', 'advancedeucompliance'),
+						'desc' => $this->l('Make sure you comply with your local legislation before enabling:
+						it can be regarded as inertia selling.', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -1031,10 +1046,14 @@ class Advancedeucompliance extends Module
 					array(
 						'type' => 'switch',
 						'label' => $this->l('Enable \'Advanced checkout page\''),
-						'hint' => $this->l('The advanced checkout page displays the following sections: payment methods, address summary, ToS agreement, cart summary, and an \'Order with Obligation to Pay\' button.', 'advancedeucompliance'),
+						'hint' => $this->l('The advanced checkout page displays the following sections: payment methods,
+						address summary, ToS agreement, cart summary, and an \'Order with Obligation to Pay\' button.',
+							'advancedeucompliance'),
 						'name' => 'AEUC_FEAT_ADV_PAYMENT_API',
 						'is_bool' => true,
-						'desc' => $this->l('To address some of the latest European legal requirements, the advanced checkout page displays additional information (terms of service, payment methods, etc) in one single page.', 'advancedeucompliance'),
+						'desc' => $this->l('To address some of the latest European legal requirements,
+						the advanced checkout page displays additional information (terms of service, payment methods,
+						etc) in one single page.', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -1145,7 +1164,8 @@ class Advancedeucompliance extends Module
 
 		if (count($cms_roles_associated) != count($cms_roles_full)) {
 			$incomplete_cms_role_association_warning = $this->displayWarning(
-				$this->l('Your legal content is not linked to any CMS page yet (see above section). Please make sure your content is associated before managing emails attachements.', 'advancedeucompliance')
+				$this->l('Your legal content is not linked to any CMS page yet (see above section).
+				Please make sure your content is associated before managing emails attachements.', 'advancedeucompliance')
 			);
 		}
 
