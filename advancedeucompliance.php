@@ -220,7 +220,13 @@ class Advancedeucompliance extends Module
 
 		foreach ($legacyOptions as $module_name => $legacyOption) {
 			foreach (Core_Business_Payment_PaymentOption::convertLegacyOption($legacyOption) as $option) {
-				$newOptions[] = $option->setModuleName($module_name);
+				$option->setModuleName($module_name);
+				$to_be_cleaned = $option->getForm();
+				if ($to_be_cleaned) {
+					$cleaned = str_replace('@hiddenSubmit', '', $to_be_cleaned);
+					$option->setForm($cleaned);
+				}
+				$newOptions[] = $option;
 			}
 		}
 		
