@@ -27,7 +27,6 @@
     <div class="col-xs-12 col-md-12">
         <h2>{l s='Terms and Conditions' mod='advancedeucompliance'}</h2>
         <div class="tnc_box">
-            <p class="carrier_title">{l s='Terms of service' mod='advancedeucompliance'}</p>
             <p class="checkbox">
                 <input type="checkbox" name="cgv" id="cgv" value="1" {if $checkedTOS}checked="checked"{/if} />
                 <label for="cgv">{l s='I agree to the terms of service and the terms of revocation and will adhere to them unconditionally.' mod='advancedeucompliance'}</label>
