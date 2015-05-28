@@ -31,7 +31,7 @@
             {l s='Legal content management' mod='advancedeucompliance'}
         </div>
         <p>
-            {l s='Your country\'s legislation may require some specific legal information from you. For each of the topics below, indicate which of your CMS page contains the matching information:' mod='advancedeucompliance'}
+            {l s='Your country\'s legislation may require you to communicate some specific legal information. For each of the topics below, indicate which of your CMS pages contains the required information:' mod='advancedeucompliance'}
         </p>
         <br/>
         <div class="form-wrapper">

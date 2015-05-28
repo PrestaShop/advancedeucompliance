@@ -71,7 +71,7 @@ class Advancedeucompliance extends Module
 		$this->emails = $email;
 
 		$this->displayName = $this->l('Advanced EU Compliance');
-		$this->description = $this->l('This module helps European merchants to get compliant with their countries e-commerce laws.');
+		$this->description = $this->l('This module helps European merchants in getting compliant with applicable e-commerce law.');
 		$this->confirmUninstall = $this->l('Are you sure you want to uninstall this module?');
 
 		/* Init errors var */
@@ -217,9 +217,9 @@ class Advancedeucompliance extends Module
 	{
 		$legacyOptions = Hook::exec('displayPaymentEU', array(), null, true);
 		$newOptions = array();
-		Media::addJsDef(array('aeuc_tos_err_str' => $this->l('You need to agree to our Terms Of Service (ToS) before going further!',
+		Media::addJsDef(array('aeuc_tos_err_str' => $this->l('You must agree to our Terms of Service before going any further!',
 								 'advancedeucompliance')));
-		Media::addJsDef(array('aeuc_submit_err_str' => $this->l('Something went wrong. If the problem persists, contact us.',
+		Media::addJsDef(array('aeuc_submit_err_str' => $this->l('Something went wrong. If the problem persists, please contact us.',
 								 'advancedeucompliance')));
 		foreach ($legacyOptions as $module_name => $legacyOption) {
 
@@ -1008,7 +1008,7 @@ class Advancedeucompliance extends Module
 						'name' => 'AEUC_FEAT_TELL_A_FRIEND',
 						'is_bool' => true,
 						'desc' => $this->l('Make sure you comply with your local legislation before enabling:
-						it can be regarded as an unsolicited commercial email.'),
+						it can be considered as an unsolicited commercial email.'),
 						'hint' => $this->l('If enabled, the \'Send to a Friend\' module allows customers to send to a
 						friend an email with a link to a product\'s page.', 'advancedeucompliance'),
 						'values' => array(
@@ -1032,7 +1032,7 @@ class Advancedeucompliance extends Module
 						'name' => 'AEUC_FEAT_REORDER',
 						'is_bool' => true,
 						'desc' => $this->l('Make sure you comply with your local legislation before enabling:
-						it can be regarded as inertia selling.', 'advancedeucompliance'),
+						it can be considered as unsolicited goods.', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -1056,7 +1056,7 @@ class Advancedeucompliance extends Module
 						'is_bool' => true,
 						'desc' => $this->l('To address some of the latest European legal requirements,
 						the advanced checkout page displays additional information (terms of service, payment methods,
-						etc) in one single page.', 'advancedeucompliance'),
+						etc) as a single page.', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -1072,9 +1072,10 @@ class Advancedeucompliance extends Module
 					),
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Use average tax of cart products for Shipping and Wrapping'),
+						'label' => $this->l('Average tax for shipping and wrapping'),
 						'name' => 'PS_ATCP_SHIPWRAP',
 						'is_bool' => true,
+						'desc' => $this->l('When enabled, tax for shipping and wrapping costs is an average of all the taxes applying to the products in the cart.', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
@@ -1168,7 +1169,7 @@ class Advancedeucompliance extends Module
 		if (count($cms_roles_associated) != count($cms_roles_full)) {
 			$incomplete_cms_role_association_warning = $this->displayWarning(
 				$this->l('Your legal content is not linked to any CMS page yet (see above section).
-				Please make sure your content is associated before managing emails attachements.', 'advancedeucompliance')
+				Please make sure your content is associated before managing email attachments.', 'advancedeucompliance')
 			);
 		}
 
