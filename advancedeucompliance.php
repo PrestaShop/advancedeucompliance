@@ -217,7 +217,10 @@ class Advancedeucompliance extends Module
 	{
 		$legacyOptions = Hook::exec('displayPaymentEU', array(), null, true);
 		$newOptions = array();
-
+		Media::addJsDef(array('aeuc_tos_err_str' => $this->l('You need to agree to our Terms Of Service (ToS) before going further!',
+								 'advancedeucompliance')));
+		Media::addJsDef(array('aeuc_submit_err_str' => $this->l('Something went wrong. If the problem persists, contact us.',
+								 'advancedeucompliance')));
 		foreach ($legacyOptions as $module_name => $legacyOption) {
 
 			if (is_null($legacyOption) || $legacyOption === false) {
