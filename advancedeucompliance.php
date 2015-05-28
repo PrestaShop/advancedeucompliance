@@ -217,9 +217,9 @@ class Advancedeucompliance extends Module
 	{
 		$legacyOptions = Hook::exec('displayPaymentEU', array(), null, true);
 		$newOptions = array();
-		Media::addJsDef(array('aeuc_tos_err_str' => $this->l('You need to agree to our Terms Of Service (ToS) before going further!',
+		Media::addJsDef(array('aeuc_tos_err_str' => $this->l('You must agree to our Terms of Service before going any further!',
 								 'advancedeucompliance')));
-		Media::addJsDef(array('aeuc_submit_err_str' => $this->l('Something went wrong. If the problem persists, contact us.',
+		Media::addJsDef(array('aeuc_submit_err_str' => $this->l('Something went wrong. If the problem persists, please contact us.',
 								 'advancedeucompliance')));
 		foreach ($legacyOptions as $module_name => $legacyOption) {
 
@@ -1072,9 +1072,10 @@ class Advancedeucompliance extends Module
 					),
 					array(
 						'type' => 'switch',
-						'label' => $this->l('Use average tax of cart products for Shipping and Wrapping'),
+						'label' => $this->l('Average tax for shipping and wrapping'),
 						'name' => 'PS_ATCP_SHIPWRAP',
 						'is_bool' => true,
+						'desc' => $this->l('When enabled, tax for shipping and wrapping costs is an average of all the taxes applying to the products in the cart.', 'advancedeucompliance'),
 						'values' => array(
 							array(
 								'id' => 'active_on',
