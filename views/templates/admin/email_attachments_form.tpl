@@ -31,7 +31,7 @@
             {l s='Email attachment associations' mod='advancedeucompliance'}
         </div>
         <p>
-            {l s='Email attachements allow you to include in your shop\'s emails PDF files containing content from the Legal Content Management section above. ' mod='advancedeucompliance'}
+            {l s='Email attachments allow you to include in your shop\'s email PDF files which contains information from the Legal Content Management section above. ' mod='advancedeucompliance'}
         <p>
         </p>
             {l s='For each type of email, define which content you would like to attach.' mod='advancedeucompliance'}
