@@ -373,9 +373,25 @@ class Advancedeucompliance extends Module
         /* Handle Product Combinations label */
         if ($param['type'] == 'before_price' && (bool)Configuration::get('AEUC_LABEL_SPECIFIC_PRICE') === true) {
             if ($product->hasAttributes()) {
-                $smartyVars['before_price'] = array();
-                $smartyVars['before_price']['from_str_i18n'] = $this->l('From', 'advancedeucompliance');
-                return $this->dumpHookDisplayProductPriceBlock($smartyVars);
+                $need_display = false;
+                $combinations = $product->getAttributeCombinations($this->context->language->id);
+                if ($combinations && is_array($combinations)) {
+                    foreach ($combinations as $combination) {
+                        if ((float)$combination['price'] > 0) {
+                            $need_display = true;
+                            break;
+                        }
+                    }
+
+                    unset($combinations);
+
+                    if ($need_display) {
+                        $smartyVars['before_price'] = array();
+                        $smartyVars['before_price']['from_str_i18n'] = $this->l('From', 'advancedeucompliance');
+                        return $this->dumpHookDisplayProductPriceBlock($smartyVars);
+                    }
+                }
+                return;
             }
         }
 
