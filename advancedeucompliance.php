@@ -227,6 +227,8 @@ class Advancedeucompliance extends Module
                                                              'advancedeucompliance')));
         Media::addJsDef(array('aeuc_submit_err_str' => $this->l('Something went wrong. If the problem persists, please contact us.',
                                                                 'advancedeucompliance')));
+        Media::addJsDef(array('aeuc_no_pay_err_str' => $this->l('Select a payment option first.',
+                                                                'advancedeucompliance')));
         foreach ($legacyOptions as $module_name => $legacyOption) {
 
             if (!$legacyOption) {
