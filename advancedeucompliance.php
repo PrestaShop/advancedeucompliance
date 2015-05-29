@@ -114,8 +114,10 @@ class Advancedeucompliance extends Module
             $delivery_time_oos_values[(int)$lang->id] = $this->l('Delivery: 3 to 6 weeks');
         }
 
-        $this->processAeucFeatTellAFriend(false);
-        $this->processAeucFeatReorder(false);
+        $this->processAeucFeatTellAFriend(true);
+
+        $this->processAeucFeatReorder(true);
+
         $this->processAeucFeatAdvPaymentApi(false);
         $this->processAeucLabelRevocationTOS(false);
         $this->processAeucLabelSpecificPrice(true);
@@ -224,7 +226,7 @@ class Advancedeucompliance extends Module
                                                                 'advancedeucompliance')));
         foreach ($legacyOptions as $module_name => $legacyOption) {
 
-            if (is_null($legacyOption) || $legacyOption === false) {
+            if (!$legacyOption) {
                 continue;
             }
 
