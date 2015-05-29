@@ -440,7 +440,6 @@ class Advancedeucompliance extends Module
                         $smartyVars['ship']['link_ship_pay'] = $link_ship_pay;
                         $smartyVars['ship']['ship_str_i18n'] = $this->l('Shipping Excluded', 'advancedeucompliance');
                         $smartyVars['ship']['js_ship_fancybx'] = '<script type="text/javascript">
->>>>>>> 0072aafdb68a2aecfdeccf336b98a6098827f168
 																	$(document).ready(function(){
 																		if (!!$.prototype.fancybox)
 																			$("a.iframe").fancybox({
