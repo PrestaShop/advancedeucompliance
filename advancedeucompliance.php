@@ -335,7 +335,7 @@ class Advancedeucompliance extends Module
             $tpl_name = (string)$tpl_name_exploded[0];
 
         $id_lang = (int)$param['id_lang'];
-        $mail_id = AeucEmailEntity::getMailIdFromTplFilename($tpl_name);
+        $mail_id = AeucEmailEntity::getMailIdFromTplFilename($tpl_name.'.html');
 
         if (!isset($mail_id['id_mail']))
             return;
