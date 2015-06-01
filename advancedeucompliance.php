@@ -304,6 +304,8 @@ class Advancedeucompliance extends Module
                                                                 'advancedeucompliance')));
         Media::addJsDef(array('aeuc_no_pay_err_str' => $this->l('Select a payment option first.',
                                                                 'advancedeucompliance')));
+        Media::addJsDef(array('aeuc_virt_prod_err_str' => $this->l('Please check \'Revocation of virtual products\' box first !',
+                                                                    'advancedeucompliance')));
         foreach ($legacyOptions as $module_name => $legacyOption) {
 
             if (!$legacyOption) {
@@ -390,7 +392,7 @@ class Advancedeucompliance extends Module
         // Check first if LEGAL_REVOCATION CMS Role is been set before doing anything here
         $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
         $cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_REVOCATION);
-        
+
         if (!$has_tos_override_opt || !$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms == 0)
             return false;
 
@@ -424,6 +426,7 @@ class Advancedeucompliance extends Module
 
 		// Check if cart has virtual product
 		$has_virtual_product = (bool)Configuration::get('AEUC_LABEL_REVOCATION_VP') && $this->hasCartVirtualProduct($this->context->cart);
+        Media::addJsDef(array('aeuc_has_virtual_products' => (bool)$has_virtual_product));
 
         $this->context->smarty->assign(array(
 										   'conditions' => $has_tos_override_opt,

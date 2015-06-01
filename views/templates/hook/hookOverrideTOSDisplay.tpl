@@ -51,54 +51,16 @@
                 })
             </script>
         </div>
+
         {if $has_virtual_product}
-        <div class="tnc_box">
-            <p class="carrier_title">{l s='Revocation of virtual products' mod='advancedeucompliance'}</p>
-            <p class="checkbox">
-                <input type="checkbox" name="revocation_vp_terms_agreed" id="revocation_vp_terms_agreed" value="1"/>
-                <label for="revocation_vp_terms_agreed">{l s='I agree that the digital products in my cart can not be returned or refunded due to the nature of such products.' mod='advancedeucompliance'}</label>
-            </p>
-        </div>
-        <script type="text/javascript">
-            /*
-            *  we have to add new function on 'click' on #confirmOrder in themes/default-bootstrap/js/advanced-payment-api.js
-            */
-            $(document).ready(function() {
-                // unbind
-                $('#confirmOrder').unbind('click');
-
-                //new one
-                var has_virtual_product = true;
-                var handler = new PaymentOptionHandler();
-                $('#confirmOrder').on('click', function(event){
-                    /* Avoid any further action */
-                    event.preventDefault();
-                    event.stopPropagation();
-
-                    if (!handler.checkTOS())
-                    {
-                        alert('Please check TOS box first !')
-                        return;
-                    }
-
-                    if (has_virtual_product &&  !$('#revocation_vp_terms_agreed').is(':checked'))
-                    {
-                        alert('Please check \'Revocation of virtual products\' box first !')
-                        return;
-                    }
-
-                    var payment_details = handler.getSelectedPaymentOptionDetails();
-                    if (payment_details !== false && payment_details.action) {
-                        handler.submitPaymentOption(payment_details.action, payment_details.data);
-                    } else if (!payment_details.action && payment_details.has_form === true) {
-                        payment_details.form_to_submit.submit();
-                    } else {
-                        alert('An error occured please be sure you have properly selected your payment option!');
-                        return;
-                    }
-                });
-            });
-        </script>
+            <div class="tnc_box">
+                <p class="carrier_title">{l s='Revocation of virtual products' mod='advancedeucompliance'}</p>
+                <p class="checkbox">
+                    <input type="checkbox" name="revocation_vp_terms_agreed" id="revocation_vp_terms_agreed" value="1"/>
+                    <label for="revocation_vp_terms_agreed">{l s='I agree that the digital products in my cart can not be returned or refunded due to the nature of such products.' mod='advancedeucompliance'}</label>
+                </p>
+            </div>
         {/if}
+
     </div>
 </div>
