@@ -390,11 +390,9 @@ class Advancedeucompliance extends Module
         // Check first if LEGAL_REVOCATION CMS Role is been set before doing anything here
         $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
         $cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_REVOCATION);
-
-		/*
+        
         if (!$has_tos_override_opt || !$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms == 0)
             return false;
-		*/
 
         // Get IDs of CMS pages required
         $cms_conditions_id = (int)Configuration::get('PS_CONDITIONS_CMS_ID');
