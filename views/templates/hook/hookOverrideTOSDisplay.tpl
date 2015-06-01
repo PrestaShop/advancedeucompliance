@@ -25,7 +25,6 @@
 
 <div class="row">
     <div class="col-xs-12 col-md-12">
-        {*<h2>{l s='Terms and Conditions' mod='advancedeucompliance'}</h2>*}
         <div class="tnc_box">
             <p class="checkbox">
                 {if isset($conditions) && $conditions}
@@ -40,13 +39,6 @@
                     <label for="cgv">{l s='and'  mod='advancedeucompliance'}</label> <a href="{$link_revocations|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='terms of revocation' mod='advancedeucompliance'}</a>
                 {/if}
                 <label for="cgv">{l s='adhire to them unconditionally.'  mod='advancedeucompliance'}</label>
-
-                {*
-                <input type="checkbox" name="cgv" id="cgv" value="1" {if $checkedTOS}checked="checked"{/if} />
-                <label for="cgv">{l s='I agree to the terms of service and the terms of revocation and will adhere to them unconditionally.' mod='advancedeucompliance'}</label>
-                <a href="{$link_conditions|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='(Read the Terms of Service)' mod='advancedeucompliance'}</a>
-                <a href="{$link_revocations|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='(Read the Terms of Revocation)' mod='advancedeucompliance'}</a>
-                *}
             </p>
             <script type="text/javascript">
                 $(document).ready(function(){
