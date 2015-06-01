@@ -22,4 +22,8 @@
  *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  *  International Registered Trademark & Property of PrestaShop SA
  *}
-<p>{$cart_text|escape:'htmlall'}</p>
+<tr>
+    <td colspan="{$colspan_total}" class="total_price_container text-left">
+        <p>{$cart_text|escape:'htmlall'}</p>
+     </td>
+</tr>

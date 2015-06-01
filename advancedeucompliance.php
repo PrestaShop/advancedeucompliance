@@ -457,11 +457,14 @@ class Advancedeucompliance extends Module
 
 	public function hookDisplayAfterShoppingCartBlock($params)
 	{
+
 		$cart_text = Configuration::get('AEUC_SHOPPING_CART_TEXT_AFTER', Context::getContext()->language->id);
 
-		if ($cart_text)
+		if ($cart_text && isset($params['colspan_total']))
 		{
-			$this->context->smarty->assign('cart_text', $cart_text);
+			$this->context->smarty->assign(array('cart_text' => $cart_text,
+                                               'colspan_total' => (int)$params['colspan_total']
+                                           ));
 
 			return $this->display(__FILE__, 'displayShoppingCartAfterBlock.tpl');
 		}
