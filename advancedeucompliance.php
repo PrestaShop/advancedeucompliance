@@ -177,7 +177,6 @@ class Advancedeucompliance extends Module
         $this->processAeucLabelCombinationFrom(true);
 
         return Configuration::updateValue('AEUC_FEAT_TELL_A_FRIEND', false) &&
-               Configuration::updateValue('AEUC_FEAT_REORDER', false) &&
                Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', false) &&
                Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $delivery_time_available_values) &&
                Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_OOS', $delivery_time_oos_values) &&
@@ -256,7 +255,6 @@ class Advancedeucompliance extends Module
         }
 
         return Configuration::deleteByName('AEUC_FEAT_TELL_A_FRIEND') &&
-               Configuration::deleteByName('AEUC_FEAT_REORDER') &&
                Configuration::deleteByName('AEUC_FEAT_ADV_PAYMENT_API') &&
                Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_AVAILABLE') &&
                Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_OOS') &&
@@ -862,21 +860,20 @@ class Advancedeucompliance extends Module
     {
         $staf_module = Module::getInstanceByName('sendtoafriend');
 
-        if ((bool)$is_option_active) {
+        if ((bool)$is_option_active && $staf_module->isEnabledForShopContext() === false) {
             $staf_module->enable();
-        } else {
+        } elseif (!(bool)$is_option_active && $staf_module->isEnabledForShopContext() === true) {
             $staf_module->disable();
         }
     }
 
     protected function processAeucFeatReorder($is_option_active)
     {
+
         if ((bool)$is_option_active) {
             Configuration::updateValue('PS_DISALLOW_HISTORY_REORDERING', false);
-            Configuration::updateValue('AEUC_FEAT_REORDER', true);
         } else {
             Configuration::updateValue('PS_DISALLOW_HISTORY_REORDERING', true);
-            Configuration::updateValue('AEUC_FEAT_REORDER', false);
         }
     }
 
@@ -1288,7 +1285,7 @@ class Advancedeucompliance extends Module
     {
         return array(
             'AEUC_FEAT_TELL_A_FRIEND' => Configuration::get('AEUC_FEAT_TELL_A_FRIEND'),
-            'AEUC_FEAT_REORDER' => Configuration::get('AEUC_FEAT_REORDER'),
+            'AEUC_FEAT_REORDER' => !Configuration::get('PS_DISALLOW_HISTORY_REORDERING'),
             'AEUC_FEAT_ADV_PAYMENT_API' => Configuration::get('AEUC_FEAT_ADV_PAYMENT_API'),
             'PS_ATCP_SHIPWRAP' => Configuration::get('PS_ATCP_SHIPWRAP'),
         );
