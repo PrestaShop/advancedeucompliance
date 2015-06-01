@@ -90,11 +90,14 @@ class Advancedeucompliance extends Module
     {
         return parent::install() &&
                $this->loadTables() &&
+			   $this->installHooks() &&
                $this->registerHook('header') &&
                $this->registerHook('displayProductPriceBlock') &&
                $this->registerHook('overrideTOSDisplay') &&
                $this->registerHook('actionEmailAddAfterContent') &&
                $this->registerHook('advancedPaymentOptions') &&
+			   $this->registerHook('displayAfterShoppingCartBlock') &&
+			   $this->registerHook('displayBeforeShoppingCartBlock') &&
                $this->createConfig();
     }
 
@@ -105,16 +108,59 @@ class Advancedeucompliance extends Module
                $this->unloadTables();
     }
 
+	public function installHooks()
+	{
+		$hooks = array(
+			'displayBeforeShoppingCartBlock' => array(
+				'name' => 'display before Shopping cart block',
+				'templates' => array()
+			),
+			'displayAfterShoppingCartBlock' => array(
+				'name' => 'display after Shopping cart block',
+				'templates' => array()
+			)
+		);
+
+		$return = true;
+
+		foreach ($hooks as $hook_name => $hook)
+		{
+
+			if (Hook::getIdByName($hook_name))
+				continue;
+
+			$new_hook = new Hook();
+			$new_hook->name = $hook_name;
+			$new_hook->title = $hook['name'];
+			$new_hook->position = true;
+			$new_hook->live_edit = false;
+
+			if (!$new_hook->add())
+			{
+				$return &= false;
+				$this->_errors[] = $this->l('Could not install new hook').': '.$hook_name;
+			}
+
+		}
+
+		return $return;
+	}
+
     public function createConfig()
     {
         $delivery_time_available_values = array();
         $delivery_time_oos_values = array();
+		$shopping_cart_text_before = array();
+		$shopping_cart_text_after = array();
+
         $langs_repository = $this->entity_manager->getRepository('Language');
         $langs = $langs_repository->findAll();
 
         foreach ($langs as $lang) {
             $delivery_time_available_values[(int)$lang->id] = $this->l('Delivery: 1 to 3 weeks');
             $delivery_time_oos_values[(int)$lang->id] = $this->l('Delivery: 3 to 6 weeks');
+			$shopping_cart_text_before[(int)$lang->id] = '';
+			$shopping_cart_text_after[(int)$lang->id] = '';
         }
 
         $this->processAeucFeatTellAFriend(true);
@@ -123,6 +169,7 @@ class Advancedeucompliance extends Module
 
         $this->processAeucFeatAdvPaymentApi(false);
         $this->processAeucLabelRevocationTOS(false);
+		$this->processAeucLabelRevocationVP(true);
         $this->processAeucLabelSpecificPrice(true);
         $this->processAeucLabelTaxIncExc(true);
         $this->processAeucLabelShippingIncExc(false);
@@ -138,8 +185,11 @@ class Advancedeucompliance extends Module
                Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', true) &&
                Configuration::updateValue('AEUC_LABEL_WEIGHT', true) &&
                Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', false) &&
+			   Configuration::updateValue('AEUC_LABEL_REVOCATION_VP', true) &&
                Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', false) &&
-               Configuration::updateValue('AEUC_LABEL_COMBINATION_FROM', true);
+               Configuration::updateValue('AEUC_LABEL_COMBINATION_FROM', true) &&
+			   Configuration::updateValue('AEUC_SHOPPING_CART_TEXT_BEFORE', $shopping_cart_text_before) &&
+			   Configuration::updateValue('AEUC_SHOPPING_CART_TEXT_AFTER', $shopping_cart_text_after);
     }
 
     public function unloadTables()
@@ -214,9 +264,34 @@ class Advancedeucompliance extends Module
                Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
                Configuration::deleteByName('AEUC_LABEL_WEIGHT') &&
                Configuration::deleteByName('AEUC_LABEL_REVOCATION_TOS') &&
+			   Configuration::deleteByName('AEUC_LABEL_REVOCATION_VP') &&
                Configuration::deleteByName('AEUC_LABEL_SHIPPING_INC_EXC') &&
-               Configuration::deleteByName('AEUC_LABEL_COMBINATION_FROM');
+               Configuration::deleteByName('AEUC_LABEL_COMBINATION_FROM') &&
+			   Configuration::deleteByName('AEUC_SHOPPING_CART_TEXT_BEFORE') &&
+			   Configuration::deleteByName('AEUC_SHOPPING_CART_TEXT_AFTER');
     }
+
+	/*
+		This method checks if cart has virtual products
+		It's better to add this method (as hasVirtualProduct) and add 'protected static $_hasVirtualProduct = array(); property
+		in Cart class in next version of prestashop.
+	*/
+
+	private function hasCartVirtualProduct(Cart $cart)
+	{
+		$products = $cart->getProducts();
+
+		if (!count($products))
+			return false;
+
+		foreach ($products as $product)
+		{
+			if ($product['is_virtual'])
+				return true;
+		}
+
+		return false;
+	}
 
     /* This hook is present to maintain backward compatibility */
     public function hookAdvancedPaymentOptions($param)
@@ -260,7 +335,7 @@ class Advancedeucompliance extends Module
             $tpl_name = (string)$tpl_name_exploded[0];
 
         $id_lang = (int)$param['id_lang'];
-        $mail_id = AeucEmailEntity::getMailIdFromTplFilename($tpl_name);
+        $mail_id = AeucEmailEntity::getMailIdFromTplFilename($tpl_name.'.html');
 
         if (!isset($mail_id['id_mail']))
             return;
@@ -316,8 +391,10 @@ class Advancedeucompliance extends Module
         $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
         $cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_REVOCATION);
 
+		/*
         if (!$has_tos_override_opt || !$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms == 0)
             return false;
+		*/
 
         // Get IDs of CMS pages required
         $cms_conditions_id = (int)Configuration::get('PS_CONDITIONS_CMS_ID');
@@ -347,15 +424,47 @@ class Advancedeucompliance extends Module
         else
             $link_revocations .= '&content_only=1';
 
+		// Check if cart has virtual product
+		$has_virtual_product = (bool)Configuration::get('AEUC_LABEL_REVOCATION_VP') && $this->hasCartVirtualProduct($this->context->cart);
+
         $this->context->smarty->assign(array(
+										   'conditions' => $has_tos_override_opt,
                                            'checkedTOS' => $checkedTos,
                                            'link_conditions' => $link_conditions,
-                                           'link_revocations' => $link_revocations
+                                           'link_revocations' => $link_revocations,
+										   'has_virtual_product' => $has_virtual_product
                                        ));
 
         $content = $this->context->smarty->fetch($this->local_path.'views/templates/hook/hookOverrideTOSDisplay.tpl');
         return $content;
     }
+
+	public function hookDisplayBeforeShoppingCartBlock($params)
+	{
+		if ($this->context->controller instanceof OrderOpcController || property_exists($this->context->controller, 'step') && $this->context->controller->step == 3)
+		{
+			$cart_text = Configuration::get('AEUC_SHOPPING_CART_TEXT_BEFORE', $this->context->language->id);
+
+			if ($cart_text)
+			{
+				$this->context->smarty->assign('cart_text', $cart_text);
+
+				return $this->display(__FILE__, 'displayShoppingCartBeforeBlock.tpl');
+			}
+		}
+	}
+
+	public function hookDisplayAfterShoppingCartBlock($params)
+	{
+		$cart_text = Configuration::get('AEUC_SHOPPING_CART_TEXT_AFTER', Context::getContext()->language->id);
+
+		if ($cart_text)
+		{
+			$this->context->smarty->assign('cart_text', $cart_text);
+
+			return $this->display(__FILE__, 'displayShoppingCartAfterBlock.tpl');
+		}
+	}
 
     public function hookDisplayProductPriceBlock($param)
     {
@@ -572,11 +681,23 @@ class Advancedeucompliance extends Module
                 $id_lang = (int)$exploded[$count - 1];
                 $i10n_inputs_received['AEUC_LABEL_DELIVERY_TIME_OOS'][$id_lang] = $received_values[$key_received];
             }
-
+			if (strripos($key_received, 'AEUC_SHOPPING_CART_TEXT_BEFORE') !== false) {
+				$exploded = explode('_', $key_received);
+				$count = count($exploded);
+				$id_lang = (int)$exploded[$count - 1];
+				$i10n_inputs_received['AEUC_SHOPPING_CART_TEXT_BEFORE'][$id_lang] = $received_values[$key_received];
+			}
+			if (strripos($key_received, 'AEUC_SHOPPING_CART_TEXT_AFTER') !== false) {
+				$exploded = explode('_', $key_received);
+				$count = count($exploded);
+				$id_lang = (int)$exploded[$count - 1];
+				$i10n_inputs_received['AEUC_SHOPPING_CART_TEXT_AFTER'][$id_lang] = $received_values[$key_received];
+			}
         }
 
         if (count($i10n_inputs_received) > 0) {
             $this->processAeucLabelDeliveryTime($i10n_inputs_received);
+			$this->processAeucShoppingCartText($i10n_inputs_received);
             $has_processed_something = true;
         }
 
@@ -600,6 +721,16 @@ class Advancedeucompliance extends Module
             Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_OOS', $i10n_inputs['AEUC_LABEL_DELIVERY_TIME_OOS']);
         }
     }
+
+	protected function processAeucShoppingCartText(array $i10n_inputs)
+	{
+		if (isset($i10n_inputs['AEUC_SHOPPING_CART_TEXT_BEFORE'])) {
+			Configuration::updateValue('AEUC_SHOPPING_CART_TEXT_BEFORE', $i10n_inputs['AEUC_SHOPPING_CART_TEXT_BEFORE']);
+		}
+		if (isset($i10n_inputs['AEUC_SHOPPING_CART_TEXT_AFTER'])) {
+			Configuration::updateValue('AEUC_SHOPPING_CART_TEXT_AFTER', $i10n_inputs['AEUC_SHOPPING_CART_TEXT_AFTER']);
+		}
+	}
 
     protected function processAeucLabelCombinationFrom($is_option_active)
     {
@@ -659,6 +790,15 @@ class Advancedeucompliance extends Module
             Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', false);
         }
     }
+
+	protected function processAeucLabelRevocationVP($is_option_active)
+	{
+		if ((bool)$is_option_active) {
+			Configuration::updateValue('AEUC_LABEL_REVOCATION_VP', true);
+		} else {
+			Configuration::updateValue('AEUC_LABEL_REVOCATION_VP', false);
+		}
+	}
 
     protected function processAeucLabelShippingIncExc($is_option_active)
     {
@@ -901,6 +1041,26 @@ class Advancedeucompliance extends Module
                                     )
                                 ),
                             ),
+							array(
+								'type' => 'switch',
+								'label' => $this->l('Revocation of vitual products', 'advancedeucompliance'),
+								'name' => 'AEUC_LABEL_REVOCATION_VP',
+								'is_bool' => true,
+								'desc' => $this->l('Include checkbox of agreement if cart has virtual product. ', 'advancedeucompliance'),
+								'disable' => true,
+								'values' => array(
+									array(
+										'id' => 'active_on',
+										'value' => true,
+										'label' => $this->l('Enabled', 'advancedeucompliance')
+									),
+									array(
+										'id' => 'active_off',
+										'value' => false,
+										'label' => $this->l('Disabled', 'advancedeucompliance')
+									)
+								),
+							),
                             array(
                                 'type' => 'switch',
                                 'label' => $this->l('\'From\' price label (when combinations)'),
@@ -924,6 +1084,21 @@ class Advancedeucompliance extends Module
                                     )
                                 ),
                             ),
+							array(
+								'type' => 'textarea',
+								'lang' => true,
+								'label' => $this->l('Shopping cart text 1', 'advancedeucompliance'),
+								'name' => 'AEUC_SHOPPING_CART_TEXT_BEFORE',
+								'desc' => $this->l('This text is displayed before the shopping cart block.', 'advancedeucompliance'),
+							),
+							array(
+								'type' => 'textarea',
+								'lang' => true,
+								'label' => $this->l('Shopping cart text 2', 'advancedeucompliance'),
+								'name' => 'AEUC_SHOPPING_CART_TEXT_AFTER',
+								'desc' => $this->l('This text is displayed after the shopping cart block.', 'advancedeucompliance'),
+							),
+
         ),
                                      'submit' => array(
                                          'title' => $this->l('Save', 'advancedeucompliance'),
@@ -939,12 +1114,17 @@ class Advancedeucompliance extends Module
     {
         $delivery_time_available_values = array();
         $delivery_time_oos_values = array();
+		$shopping_cart_text_before_values = array();
+		$shopping_cart_text_after_values = array();
+
         $langs = Language::getLanguages(false, false);
 
         foreach ($langs as $lang) {
             $tmp_id_lang = (int)$lang['id_lang'];
             $delivery_time_available_values[$tmp_id_lang] = Configuration::get('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $tmp_id_lang);
             $delivery_time_oos_values[$tmp_id_lang] = Configuration::get('AEUC_LABEL_DELIVERY_TIME_OOS', $tmp_id_lang);
+			$shopping_cart_text_before_values[$tmp_id_lang] = Configuration::get('AEUC_SHOPPING_CART_TEXT_BEFORE', $tmp_id_lang);
+			$shopping_cart_text_after_values[$tmp_id_lang] = Configuration::get('AEUC_SHOPPING_CART_TEXT_AFTER', $tmp_id_lang);
         }
 
         return array(
@@ -954,8 +1134,11 @@ class Advancedeucompliance extends Module
             'AEUC_LABEL_TAX_INC_EXC' => Configuration::get('AEUC_LABEL_TAX_INC_EXC'),
             'AEUC_LABEL_WEIGHT' => Configuration::get('AEUC_LABEL_WEIGHT'),
             'AEUC_LABEL_REVOCATION_TOS' => Configuration::get('AEUC_LABEL_REVOCATION_TOS'),
+			'AEUC_LABEL_REVOCATION_VP' => Configuration::get('AEUC_LABEL_REVOCATION_VP'),
             'AEUC_LABEL_SHIPPING_INC_EXC' => Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC'),
-            'AEUC_LABEL_COMBINATION_FROM' => Configuration::get('AEUC_LABEL_COMBINATION_FROM')
+            'AEUC_LABEL_COMBINATION_FROM' => Configuration::get('AEUC_LABEL_COMBINATION_FROM'),
+			'AEUC_SHOPPING_CART_TEXT_BEFORE' => $shopping_cart_text_before_values,
+			'AEUC_SHOPPING_CART_TEXT_AFTER' => $shopping_cart_text_after_values,
         );
     }
 
