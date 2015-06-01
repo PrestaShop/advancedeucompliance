@@ -391,6 +391,10 @@ class Advancedeucompliance extends Module
         $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
         $cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_REVOCATION);
 
+        // Check if cart has virtual product
+        $has_virtual_product = (bool)Configuration::get('AEUC_LABEL_REVOCATION_VP') && $this->hasCartVirtualProduct($this->context->cart);
+        Media::addJsDef(array('aeuc_has_virtual_products' => (bool)$has_virtual_product));
+
         if (!$has_tos_override_opt || !$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms == 0)
             return false;
 
@@ -422,11 +426,7 @@ class Advancedeucompliance extends Module
         else
             $link_revocations .= '&content_only=1';
 
-		// Check if cart has virtual product
-		$has_virtual_product = (bool)Configuration::get('AEUC_LABEL_REVOCATION_VP') && $this->hasCartVirtualProduct($this->context->cart);
-        Media::addJsDef(array('aeuc_has_virtual_products' => (bool)$has_virtual_product));
-
-        $this->context->smarty->assign(array(
+		$this->context->smarty->assign(array(
 										   'conditions' => $has_tos_override_opt,
                                            'checkedTOS' => $checkedTos,
                                            'link_conditions' => $link_conditions,
