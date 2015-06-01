@@ -304,7 +304,7 @@ class Advancedeucompliance extends Module
                                                                 'advancedeucompliance')));
         Media::addJsDef(array('aeuc_no_pay_err_str' => $this->l('Select a payment option first.',
                                                                 'advancedeucompliance')));
-        Media::addJsDef(array('aeuc_virt_prod_err_str' => $this->l('Please check \'Revocation of virtual products\' box first !',
+        Media::addJsDef(array('aeuc_virt_prod_err_str' => $this->l('Please check "Revocation of virtual products" box first !',
                                                                     'advancedeucompliance')));
         foreach ($legacyOptions as $module_name => $legacyOption) {
 
