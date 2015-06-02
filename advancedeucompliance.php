@@ -296,6 +296,7 @@ class Advancedeucompliance extends Module
     {
         $legacyOptions = Hook::exec('displayPaymentEU', array(), null, true);
         $newOptions = array();
+
         Media::addJsDef(array('aeuc_tos_err_str' => $this->l('You must agree to our Terms of Service before going any further!',
                                                              'advancedeucompliance')));
         Media::addJsDef(array('aeuc_submit_err_str' => $this->l('Something went wrong. If the problem persists, please contact us.',
@@ -303,25 +304,29 @@ class Advancedeucompliance extends Module
         Media::addJsDef(array('aeuc_no_pay_err_str' => $this->l('Select a payment option first.',
                                                                 'advancedeucompliance')));
         Media::addJsDef(array('aeuc_virt_prod_err_str' => $this->l('Please check "Revocation of virtual products" box first !',
-                                                                    'advancedeucompliance')));
-        foreach ($legacyOptions as $module_name => $legacyOption) {
+                                                                   'advancedeucompliance')));
+        if ($legacyOptions) {
+            foreach ($legacyOptions as $module_name => $legacyOption) {
 
-            if (!$legacyOption) {
-                continue;
-            }
-
-            foreach (Core_Business_Payment_PaymentOption::convertLegacyOption($legacyOption) as $option) {
-                $option->setModuleName($module_name);
-                $to_be_cleaned = $option->getForm();
-                if ($to_be_cleaned) {
-                    $cleaned = str_replace('@hiddenSubmit', '', $to_be_cleaned);
-                    $option->setForm($cleaned);
+                if (!$legacyOption) {
+                    continue;
                 }
-                $newOptions[] = $option;
-            }
-        }
 
-        return $newOptions;
+                foreach (Core_Business_Payment_PaymentOption::convertLegacyOption($legacyOption) as $option) {
+                    $option->setModuleName($module_name);
+                    $to_be_cleaned = $option->getForm();
+                    if ($to_be_cleaned) {
+                        $cleaned = str_replace('@hiddenSubmit', '', $to_be_cleaned);
+                        $option->setForm($cleaned);
+                    }
+                    $newOptions[] = $option;
+                }
+            }
+
+            return $newOptions;
+        } else {
+            return '';
+        }
     }
 
     public function hookActionEmailAddAfterContent($param)
