@@ -351,6 +351,7 @@ class Advancedeucompliance extends Module
             }
             return $newOptions;
         }
+        return null;
     }
 
     public function hookActionEmailAddAfterContent($param)
@@ -364,7 +365,7 @@ class Advancedeucompliance extends Module
             $tpl_name = (string)$tpl_name_exploded[0];
 
         $id_lang = (int)$param['id_lang'];
-        $mail_id = AeucEmailEntity::getMailIdFromTplFilename($tpl_name.'.html');
+        $mail_id = AeucEmailEntity::getMailIdFromTplFilename($tpl_name);
 
         if (!isset($mail_id['id_mail']))
             return;
