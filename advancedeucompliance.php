@@ -101,6 +101,30 @@ class Advancedeucompliance extends Module
                $this->createConfig();
     }
 
+    public function isThemeCompliant()
+    {
+        foreach ($this->getRequiredThemeTemplate() as $required_tpl) {
+
+            if (!is_file(_PS_THEME_DIR_.$required_tpl)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public function getRequiredThemeTemplate()
+    {
+        return array(
+            'order-address-advanced.tpl',
+            'order-carrier-advanced.tpl',
+            'order-carrier-opc-advanced.tpl',
+            'order-opc-advanced.tpl',
+            'order-opc-new-account-advanced.tpl',
+            'order-payment-advanced.tpl',
+            'shopping-cart-advanced.tpl'
+        );
+    }
+
     public function uninstall()
     {
         return parent::uninstall() &&
@@ -163,10 +187,9 @@ class Advancedeucompliance extends Module
 			$shopping_cart_text_after[(int)$lang->id] = '';
         }
 
+        /* Base settings */
         $this->processAeucFeatTellAFriend(true);
-
         $this->processAeucFeatReorder(true);
-
         $this->processAeucFeatAdvPaymentApi(false);
         $this->processAeucLabelRevocationTOS(false);
 		$this->processAeucLabelRevocationVP(true);
@@ -175,6 +198,8 @@ class Advancedeucompliance extends Module
         $this->processAeucLabelShippingIncExc(false);
         $this->processAeucLabelWeight(true);
         $this->processAeucLabelCombinationFrom(true);
+
+        $is_theme_compliant = $this->isThemeCompliant();
 
         return Configuration::updateValue('AEUC_FEAT_TELL_A_FRIEND', false) &&
                Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', false) &&
@@ -188,7 +213,8 @@ class Advancedeucompliance extends Module
                Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', false) &&
                Configuration::updateValue('AEUC_LABEL_COMBINATION_FROM', true) &&
 			   Configuration::updateValue('AEUC_SHOPPING_CART_TEXT_BEFORE', $shopping_cart_text_before) &&
-			   Configuration::updateValue('AEUC_SHOPPING_CART_TEXT_AFTER', $shopping_cart_text_after);
+			   Configuration::updateValue('AEUC_SHOPPING_CART_TEXT_AFTER', $shopping_cart_text_after) &&
+               Configuration::updateValue('AEUC_IS_THEME_COMPLIANT', (bool)$is_theme_compliant);
     }
 
     public function unloadTables()
@@ -266,7 +292,8 @@ class Advancedeucompliance extends Module
                Configuration::deleteByName('AEUC_LABEL_SHIPPING_INC_EXC') &&
                Configuration::deleteByName('AEUC_LABEL_COMBINATION_FROM') &&
 			   Configuration::deleteByName('AEUC_SHOPPING_CART_TEXT_BEFORE') &&
-			   Configuration::deleteByName('AEUC_SHOPPING_CART_TEXT_AFTER');
+			   Configuration::deleteByName('AEUC_SHOPPING_CART_TEXT_AFTER') &&
+               Configuration::deleteByName('AEUC_IS_THEME_COMPLIANT');
     }
 
 	/*
@@ -322,10 +349,7 @@ class Advancedeucompliance extends Module
                     $newOptions[] = $option;
                 }
             }
-
             return $newOptions;
-        } else {
-            return '';
         }
     }
 
@@ -620,6 +644,14 @@ class Advancedeucompliance extends Module
      */
     public function getContent()
     {
+        $theme_warning = null;
+        $this->refreshThemeStatus();
+        if ((bool)Configuration::get('AEUC_IS_THEME_COMPLIANT') === false) {
+            $theme_warning = $this->displayWarning($this->l('It seems that your current theme is not compliant with this module,
+            some mandatory templates are missing. Therefore you will not be able to save all the options available',
+            'advancedeucompliance'));
+        }
+
         $success_band = $this->_postProcess();
         $this->context->smarty->assign('module_dir', $this->_path);
         $this->context->smarty->assign('errors', $this->_errors);
@@ -630,7 +662,7 @@ class Advancedeucompliance extends Module
         $formLegalContentManager = $this->renderFormLegalContentManager();
         $formEmailAttachmentsManager = $this->renderFormEmailAttachmentsManager();
 
-        return $success_band . $formLabelsManager . $formFeaturesManager . $formLegalContentManager .
+        return $theme_warning . $success_band . $formLabelsManager . $formFeaturesManager . $formLegalContentManager .
                $formEmailAttachmentsManager;
     }
 
@@ -845,11 +877,28 @@ class Advancedeucompliance extends Module
         Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', (bool)$is_option_active);
     }
 
+    private function refreshThemeStatus()
+    {
+        if ((bool)Configuration::get('AEUC_IS_THEME_COMPLIANT') === false) {
+            $re_check = $this->isThemeCompliant();
+            if ($re_check === true) {
+                Configuration::updateValue('AEUC_IS_THEME_COMPLIANT', (bool)$re_check);
+            }
+        }
+    }
+
     protected function processAeucFeatAdvPaymentApi($is_option_active)
     {
+        $this->refreshThemeStatus();
+
         if ((bool)$is_option_active) {
-            Configuration::updateValue('PS_ADVANCED_PAYMENT_API', true);
-            Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', true);
+            if ((bool)Configuration::get('AEUC_IS_THEME_COMPLIANT')) {
+                Configuration::updateValue('PS_ADVANCED_PAYMENT_API', true);
+                Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', true);
+            } else {
+                $this->_errors[] = $this->l('Impossible to activate "Advanced Checkout Page" since your theme is not
+                compliant with this option','advancedeucompliance');
+            }
         } else {
             Configuration::updateValue('PS_ADVANCED_PAYMENT_API', false);
             Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', false);
