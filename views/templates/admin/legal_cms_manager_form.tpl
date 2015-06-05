@@ -33,7 +33,7 @@
         <p>
             {l s='Your country\'s legislation may require you to communicate some specific legal information to your customers.' mod='advancedeucompliance'}
         </p>
-        </p>
+        <p>
             {l s='For each of the topics below, indicate which of your CMS pages contains the required information:' mod='advancedeucompliance'}
         </p>
         <br/>

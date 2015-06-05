@@ -32,8 +32,8 @@
         </div>
         <p>
             {l s='Email attachments allow you to include in the footer of your shop\'s emails information from the Legal Content Management section above. ' mod='advancedeucompliance'}
-        <p>
         </p>
+        <p>
             {l s='For each type of email, define which content you would like to add.' mod='advancedeucompliance'}
         </p>
         {if $incomplete_cms_role_association_warning}
