@@ -56,3 +56,7 @@ div.aeuc_delivery_label {
     color: #554f58;
     font-size: 12px;
 }
+
+.content_price > span {
+	display:inline-block;
+}

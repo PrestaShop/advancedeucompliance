@@ -582,7 +582,7 @@ class Advancedeucompliance extends Module
 
                         $smartyVars['ship'] = array();
                         $smartyVars['ship']['link_ship_pay'] = $link_ship_pay;
-                        $smartyVars['ship']['ship_str_i18n'] = $this->l('Shipping Excluded', 'advancedeucompliance');
+                        $smartyVars['ship']['ship_str_i18n'] = $this->l('Shipping excluded', 'advancedeucompliance');
                         $smartyVars['ship']['js_ship_fancybx'] = '<script type="text/javascript">
 																	$(document).ready(function(){
 																		if (!!$.prototype.fancybox)
@@ -646,8 +646,8 @@ class Advancedeucompliance extends Module
         $theme_warning = null;
         $this->refreshThemeStatus();
         if ((bool)Configuration::get('AEUC_IS_THEME_COMPLIANT') === false) {
-            $theme_warning = $this->displayWarning($this->l('It seems that your current theme is not compliant with this module,
-            some mandatory templates are missing. Therefore you will not be able to save all the options available',
+            $theme_warning = $this->displayWarning($this->l('It seems that your current theme is not compatible with this module,
+            some mandatory templates are missing. You will not be able to use all the available options.',
             'advancedeucompliance'));
         }
 
@@ -805,7 +805,7 @@ class Advancedeucompliance extends Module
             $assoc_obj->id_cms_role = $assoc->id_cms_role;
 
             if (!$assoc_obj->save()) {
-                $this->_errors[] = $this->l('An email attachment to a CMS role has failed.', 'advancedeucompliance');
+                $this->_errors[] = $this->l('Failed to associate CMS content with an email template.', 'advancedeucompliance');
             }
         }
     }
@@ -893,8 +893,8 @@ class Advancedeucompliance extends Module
                 Configuration::updateValue('PS_ADVANCED_PAYMENT_API', true);
                 Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', true);
             } else {
-                $this->_errors[] = $this->l('Impossible to activate "Advanced Checkout Page" since your theme is not
-                compliant with this option','advancedeucompliance');
+                $this->_errors[] = $this->l('It is not possible to enable the "Advanced Checkout Page" as your theme is not
+                compatible with this option.','advancedeucompliance');
             }
         } else {
             Configuration::updateValue('PS_ADVANCED_PAYMENT_API', false);
@@ -1055,7 +1055,7 @@ class Advancedeucompliance extends Module
                                 'label' => $this->l('Product weight label', 'advancedeucompliance'),
                                 'name' => 'AEUC_LABEL_WEIGHT',
                                 'is_bool' => true,
-                                'desc' => $this->l('Display the weight of a product (when information is available).',
+                                'desc' => $this->l('Display the weight of a product (when information is available and product weighs more than 1kg).',
                                                    'advancedeucompliance'),
                                 'values' => array(
                                     array(
@@ -1095,10 +1095,10 @@ class Advancedeucompliance extends Module
                             ),
 							array(
 								'type' => 'switch',
-								'label' => $this->l('Revocation of vitual products', 'advancedeucompliance'),
+								'label' => $this->l('Revocation for virtual products', 'advancedeucompliance'),
 								'name' => 'AEUC_LABEL_REVOCATION_VP',
 								'is_bool' => true,
-								'desc' => $this->l('Include checkbox of agreement if cart has virtual product. ', 'advancedeucompliance'),
+								'desc' => $this->l('Add a mandatory checkbox when the cart contains a virtual product. Use it to ensure customers are aware that a virtual product cannot be returned.', 'advancedeucompliance'),
 								'disable' => true,
 								'values' => array(
 									array(
@@ -1139,16 +1139,16 @@ class Advancedeucompliance extends Module
 							array(
 								'type' => 'textarea',
 								'lang' => true,
-								'label' => $this->l('Shopping cart text 1', 'advancedeucompliance'),
+								'label' => $this->l('Upper shopping cart text', 'advancedeucompliance'),
 								'name' => 'AEUC_SHOPPING_CART_TEXT_BEFORE',
-								'desc' => $this->l('This text is displayed before the shopping cart block.', 'advancedeucompliance'),
+								'desc' => $this->l('Add a custom text above the shopping cart summary.', 'advancedeucompliance'),
 							),
 							array(
 								'type' => 'textarea',
 								'lang' => true,
-								'label' => $this->l('Shopping cart text 2', 'advancedeucompliance'),
+								'label' => $this->l('Lower shopping cart text 2', 'advancedeucompliance'),
 								'name' => 'AEUC_SHOPPING_CART_TEXT_AFTER',
-								'desc' => $this->l('This text is displayed after the shopping cart block.', 'advancedeucompliance'),
+								'desc' => $this->l('Add a custom text at the bottom of the shopping cart summary.', 'advancedeucompliance'),
 							),
 
         ),
@@ -1240,7 +1240,7 @@ class Advancedeucompliance extends Module
                         'name' => 'AEUC_FEAT_TELL_A_FRIEND',
                         'is_bool' => true,
                         'desc' => $this->l('Make sure you comply with your local legislation before enabling:
-						it can be considered as an unsolicited commercial email.'),
+						the emails sent by this feature can be considered as unsolicited commercial emails.'),
                         'hint' => $this->l('If enabled, the \'Send to a Friend\' module allows customers to send to a
 						friend an email with a link to a product\'s page.', 'advancedeucompliance'),
                         'values' => array(
