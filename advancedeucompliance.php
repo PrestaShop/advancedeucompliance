@@ -366,13 +366,11 @@ class Advancedeucompliance extends Module
 
         $id_lang = (int)$param['id_lang'];
         $mail_id = AeucEmailEntity::getMailIdFromTplFilename($tpl_name);
-
         if (!isset($mail_id['id_mail']))
             return;
 
         $mail_id = (int)$mail_id['id_mail'];
         $cms_role_ids = AeucCMSRoleEmailEntity::getCMSRoleIdsFromIdMail($mail_id);
-
         if (!$cms_role_ids)
             return;
 
@@ -382,7 +380,6 @@ class Advancedeucompliance extends Module
 
         $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
         $cms_roles = $cms_role_repository->findByIdCmsRole($tmp_cms_role_list);
-
         if (!$cms_roles)
             return;
 
@@ -402,6 +399,7 @@ class Advancedeucompliance extends Module
         $this->context->smarty->assign(array('cms_contents' => $cms_contents));
         $final_content = $this->context->smarty->fetch($this->local_path.'views/templates/hook/hook-email-wrapper.tpl');
         $param['template_html'] .= $final_content;
+
     }
 
     public function hookHeader($param)
@@ -818,13 +816,12 @@ class Advancedeucompliance extends Module
         $cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_REVOCATION);
         $cms_roles = $this->getCMSRoles();
 
-        if (!$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms == 0) {
-            $this->_errors[] =
-                sprintf($this->l('\'Revocation Terms within ToS\' label cannot be activated unless you associate "%s" role with a CMS Page.', 'advancedeucompliance'), (string)$cms_roles[Advancedeucompliance::LEGAL_REVOCATION]);
-            return;
-        }
-
         if ((bool)$is_option_active) {
+            if (!$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms == 0) {
+                $this->_errors[] =
+                    sprintf($this->l('\'Revocation Terms within ToS\' label cannot be activated unless you associate "%s" role with a CMS Page.', 'advancedeucompliance'), (string)$cms_roles[Advancedeucompliance::LEGAL_REVOCATION]);
+                return;
+            }
             Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', true);
         } else {
             Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', false);
@@ -847,13 +844,12 @@ class Advancedeucompliance extends Module
         $cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_SHIP_PAY);
         $cms_roles = $this->getCMSRoles();
 
-        if (!$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms === 0) {
-            $this->_errors[] =
-                sprintf($this->l('Shipping fees label cannot be activated unless you associate "%s" role with a CMS Page', 'advancedeucompliance'), (string)$cms_roles[Advancedeucompliance::LEGAL_SHIP_PAY]);
-            return;
-        }
-
         if ((bool)$is_option_active) {
+            if (!$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms === 0) {
+                $this->_errors[] =
+                    sprintf($this->l('Shipping fees label cannot be activated unless you associate "%s" role with a CMS Page', 'advancedeucompliance'), (string)$cms_roles[Advancedeucompliance::LEGAL_SHIP_PAY]);
+                return;
+            }
             Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', true);
         } else {
             Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', false);
