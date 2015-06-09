@@ -25,36 +25,45 @@
 
 <div class="row">
     <div class="col-xs-12 col-md-12">
-        <div class="tnc_box">
-            <p class="checkbox">
-                {if isset($conditions) && $conditions}
-                    <input type="checkbox" name="cgv" id="cgv" value="1" {if $checkedTOS}checked="checked"{/if}/>
-                {else}
-                    <input type="checkbox" name="cgv" id="cgv" value="1" checked style="display:none;"/>
-                {/if}
-                {if isset($link_conditions) && $link_conditions}
-                    <label for="cgv">{l s='I agree to the' mod='advancedeucompliance'}</label> <a href="{$link_conditions|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='terms of service'  mod='advancedeucompliance'}</a>
-                {/if}
-                {if isset($link_revocations) && $link_revocations}
-                    <label for="cgv">{l s='and'  mod='advancedeucompliance'}</label> <a href="{$link_revocations|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='terms of revocation' mod='advancedeucompliance'}</a>
-                {/if}
-                <label for="cgv">{l s='adhire to them unconditionally.'  mod='advancedeucompliance'}</label>
-            </p>
-            <script type="text/javascript">
-                $(document).ready(function(){
-                    if (!!$.prototype.fancybox)
-                        $("a.iframe").fancybox({
-                            'type': 'iframe',
-                            'width': 600,
-                            'height': 600
-                        });
-                })
-            </script>
-        </div>
+
+        {if $has_tos_override_opt}
+            <h2>{l s='Terms and Conditions'}</h2>
+            <div class="tnc_box">
+                <p class="checkbox">
+                    <input type="checkbox" name="cgv" id="cgv" value="1" {if isset($checkedTOS) && $checkedTOS}checked="checked"{/if}/>
+                    {if isset($link_conditions) && $link_conditions}
+                        <label for="cgv">{l s='I agree to the' mod='advancedeucompliance'}</label> <a href="{$link_conditions|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='terms of service'  mod='advancedeucompliance'}</a>
+                    {/if}
+                    {if isset($link_revocations) && $link_revocations}
+                        <label for="cgv">{l s='and'  mod='advancedeucompliance'}</label> <a href="{$link_revocations|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='terms of revocation' mod='advancedeucompliance'}</a>
+                    {/if}
+                    <label for="cgv">{l s='adhire to them unconditionally.'  mod='advancedeucompliance'}</label>
+                </p>
+                <script type="text/javascript">
+                    $(document).ready(function(){
+                        if (!!$.prototype.fancybox)
+                            $("a.iframe").fancybox({
+                                'type': 'iframe',
+                                'width': 600,
+                                'height': 600
+                            });
+                    })
+                </script>
+            </div>
+        {else}
+            <h2>{l s='Terms and Conditions'}</h2>
+            <div class="box">
+                <p class="checkbox">
+                    <input type="checkbox" name="cgv" id="cgv" value="1" {if $checkedTOS}checked="checked"{/if} />
+                    <label for="cgv">{l s='I agree to the terms of service and will adhere to them unconditionally.'}</label>
+                    <a href="{$link_conditions|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='(Read the Terms of Service)'}</a>
+                </p>
+            </div>
+        {/if}
+
 
         {if $has_virtual_product}
             <div class="tnc_box">
-                <p class="carrier_title">{l s='Revocation of virtual products' mod='advancedeucompliance'}</p>
                 <p class="checkbox">
                     <input type="checkbox" name="revocation_vp_terms_agreed" id="revocation_vp_terms_agreed" value="1"/>
                     <label for="revocation_vp_terms_agreed">{l s='I agree that the digital products in my cart can not be returned or refunded due to the nature of such products.' mod='advancedeucompliance'}</label>

@@ -192,7 +192,7 @@ class Advancedeucompliance extends Module
         $this->processAeucFeatReorder(true);
         $this->processAeucFeatAdvPaymentApi(false);
         $this->processAeucLabelRevocationTOS(false);
-		$this->processAeucLabelRevocationVP(true);
+		$this->processAeucLabelRevocationVP(false);
         $this->processAeucLabelSpecificPrice(true);
         $this->processAeucLabelTaxIncExc(true);
         $this->processAeucLabelShippingIncExc(false);
@@ -415,7 +415,7 @@ class Advancedeucompliance extends Module
     {
         $has_tos_override_opt = (bool)Configuration::get('AEUC_LABEL_REVOCATION_TOS');
         $cms_repository = $this->entity_manager->getRepository('CMS');
-        // Check first if LEGAL_REVOCATION CMS Role is been set before doing anything here
+        // Check first if LEGAL_REVOCATION CMS Role is set
         $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
         $cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_REVOCATION);
 
@@ -423,39 +423,46 @@ class Advancedeucompliance extends Module
         $has_virtual_product = (bool)Configuration::get('AEUC_LABEL_REVOCATION_VP') && $this->hasCartVirtualProduct($this->context->cart);
         Media::addJsDef(array('aeuc_has_virtual_products' => (bool)$has_virtual_product));
 
-        if (!$has_tos_override_opt || !$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms == 0)
-            return false;
+        $checkedTos = false;
+        $link_conditions = '';
+        $link_revocations = '';
 
-        // Get IDs of CMS pages required
-        $cms_conditions_id = (int)Configuration::get('PS_CONDITIONS_CMS_ID');
-        $cms_revocation_id = (int)$cms_page_associated->id_cms;
+        if ($has_tos_override_opt === true) {
+            // Get IDs of CMS pages required
+            $cms_conditions_id = (int)Configuration::get('PS_CONDITIONS_CMS_ID');
+            $cms_revocation_id = (int)$cms_page_associated->id_cms;
 
-        // Get misc vars
-        $id_lang = (int)$this->context->language->id;
-        $id_shop = (int)$this->context->shop->id;
-        $is_ssl_enabled = (bool)Configuration::get('PS_SSL_ENABLED');
-        $checkedTos = $this->context->cart->checkedTos ? true : false;
+            // Get misc vars
+            $id_lang = (int)$this->context->language->id;
+            $id_shop = (int)$this->context->shop->id;
+            $is_ssl_enabled = (bool)Configuration::get('PS_SSL_ENABLED');
+            $checkedTos = $this->context->cart->checkedTos ? true : false;
 
-        // Get CMS OBJs
-        $cms_conditions = $cms_repository->i10nFindOneById($cms_conditions_id, $id_lang, $id_shop);
-        $cms_revocations = $cms_repository->i10nFindOneById($cms_revocation_id, $id_lang, $id_shop);
+            // Get CMS OBJs
+            $cms_conditions = $cms_repository->i10nFindOneById($cms_conditions_id, $id_lang, $id_shop);
+            $cms_revocations = $cms_repository->i10nFindOneById($cms_revocation_id, $id_lang, $id_shop);
 
-        // Get links to these pages
-        $link_conditions = $this->context->link->getCMSLink($cms_conditions, $cms_conditions->link_rewrite, $is_ssl_enabled);
-        $link_revocations = $this->context->link->getCMSLink($cms_revocations, $cms_revocations->link_rewrite, $is_ssl_enabled);
+            // Get links to these pages
+            $link_conditions =
+                $this->context->link->getCMSLink($cms_conditions, $cms_conditions->link_rewrite, $is_ssl_enabled);
+            $link_revocations =
+                $this->context->link->getCMSLink($cms_revocations, $cms_revocations->link_rewrite, $is_ssl_enabled);
 
-        if (!strpos($link_conditions, '?'))
-            $link_conditions .= '?content_only=1';
-        else
-            $link_conditions .= '&content_only=1';
+            if (!strpos($link_conditions, '?')) {
+                $link_conditions .= '?content_only=1';
+            } else {
+                $link_conditions .= '&content_only=1';
+            }
 
-        if (!strpos($link_revocations, '?'))
-            $link_revocations .= '?content_only=1';
-        else
-            $link_revocations .= '&content_only=1';
+            if (!strpos($link_revocations, '?')) {
+                $link_revocations .= '?content_only=1';
+            } else {
+                $link_revocations .= '&content_only=1';
+            }
+        }
 
 		$this->context->smarty->assign(array(
-										   'conditions' => $has_tos_override_opt,
+										   'has_tos_override_opt' => $has_tos_override_opt,
                                            'checkedTOS' => $checkedTos,
                                            'link_conditions' => $link_conditions,
                                            'link_revocations' => $link_revocations,
@@ -812,6 +819,7 @@ class Advancedeucompliance extends Module
 
     protected function processAeucLabelRevocationTOS($is_option_active)
     {
+        // Check first if LEGAL_REVOCATION CMS Role has been set before doing anything here
         $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
         $cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_REVOCATION);
         $cms_roles = $this->getCMSRoles();
@@ -839,7 +847,7 @@ class Advancedeucompliance extends Module
 
     protected function processAeucLabelShippingIncExc($is_option_active)
     {
-        // Check first if LEGAL_REVOCATION CMS Role has been set before doing anything here
+        // Check first if LEGAL_SHIP_PAY CMS Role has been set before doing anything here
         $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
         $cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_SHIP_PAY);
         $cms_roles = $this->getCMSRoles();
