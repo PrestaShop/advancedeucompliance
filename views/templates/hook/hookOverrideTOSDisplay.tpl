@@ -27,18 +27,31 @@
     <div class="col-xs-12 col-md-12">
         <div class="tnc_box">
             <p class="checkbox">
-                {if isset($conditions) && $conditions}
+                {if isset($displayTOScheckbox) && $displayTOScheckbox}
                     <input type="checkbox" name="cgv" id="cgv" value="1" {if $checkedTOS}checked="checked"{/if}/>
+                    {if isset($link_conditions) && $link_conditions}
+                        <label for="cgv">{l s='I agree to the' mod='advancedeucompliance'}</label> <a href="{$link_conditions|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='terms of service'  mod='advancedeucompliance'}</a>
+                    {/if}
+                    {if isset($link_revocations) && $link_revocations}
+                        <label for="cgv">{l s='and' mod='advancedeucompliance'}</label> <a href="{$link_revocations|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='terms of revocation' mod='advancedeucompliance'}</a>
+                    {/if}
+                        <label for="cgv">{l s='adhire to them unconditionally.' mod='advancedeucompliance'}</label>
                 {else}
-                    <input type="checkbox" name="cgv" id="cgv" value="1" checked style="display:none;"/>
+                    <input type="checkbox" name="cgv" id="cgv" value="1" checked="checked" readonly="readonly" style="display:none;"/>
+                    {if isset($link_conditions) && $link_conditions}
+                       {l s='I agree to the' mod='advancedeucompliance'} <a href="{$link_conditions|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='terms of service'  mod='advancedeucompliance'}</a>
+                    {/if}
+                    {if isset($link_revocations) && $link_revocations}
+                        {l s='and' mod='advancedeucompliance'} <a href="{$link_revocations|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='terms of revocation' mod='advancedeucompliance'}</a>
+                    {/if}
+                    {l s='adhire to them unconditionally.' mod='advancedeucompliance'}
+                    <script type="text/javascript">
+                        $(document).ready(function(){
+                            $('#cgv').prop('checked',true);
+                            $.uniform.update();
+                        })
+                    </script>
                 {/if}
-                {if isset($link_conditions) && $link_conditions}
-                    <label for="cgv">{l s='I agree to the' mod='advancedeucompliance'}</label> <a href="{$link_conditions|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='terms of service'  mod='advancedeucompliance'}</a>
-                {/if}
-                {if isset($link_revocations) && $link_revocations}
-                    <label for="cgv">{l s='and'  mod='advancedeucompliance'}</label> <a href="{$link_revocations|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='terms of revocation' mod='advancedeucompliance'}</a>
-                {/if}
-                <label for="cgv">{l s='adhire to them unconditionally.'  mod='advancedeucompliance'}</label>
             </p>
             <script type="text/javascript">
                 $(document).ready(function(){

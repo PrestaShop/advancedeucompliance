@@ -192,6 +192,7 @@ class Advancedeucompliance extends Module
         $this->processAeucFeatReorder(true);
         $this->processAeucFeatAdvPaymentApi(false);
         $this->processAeucLabelRevocationTOS(false);
+		$this->processAeucCheckboxTOS(true);
 		$this->processAeucLabelRevocationVP(true);
         $this->processAeucLabelSpecificPrice(true);
         $this->processAeucLabelTaxIncExc(true);
@@ -209,6 +210,7 @@ class Advancedeucompliance extends Module
                Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', true) &&
                Configuration::updateValue('AEUC_LABEL_WEIGHT', true) &&
                Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', false) &&
+			   Configuration::updateValue('AEUC_CHECKBOX_TOS', true) &&
 			   Configuration::updateValue('AEUC_LABEL_REVOCATION_VP', true) &&
                Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', false) &&
                Configuration::updateValue('AEUC_LABEL_COMBINATION_FROM', true) &&
@@ -288,6 +290,7 @@ class Advancedeucompliance extends Module
                Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
                Configuration::deleteByName('AEUC_LABEL_WEIGHT') &&
                Configuration::deleteByName('AEUC_LABEL_REVOCATION_TOS') &&
+			   Configuration::deleteByName('AEUC_CHECKBOX_TOS') &&
 			   Configuration::deleteByName('AEUC_LABEL_REVOCATION_VP') &&
                Configuration::deleteByName('AEUC_LABEL_SHIPPING_INC_EXC') &&
                Configuration::deleteByName('AEUC_LABEL_COMBINATION_FROM') &&
@@ -441,20 +444,29 @@ class Advancedeucompliance extends Module
         $cms_revocations = $cms_repository->i10nFindOneById($cms_revocation_id, $id_lang, $id_shop);
 
         // Get links to these pages
-        $link_conditions = $this->context->link->getCMSLink($cms_conditions, $cms_conditions->link_rewrite, $is_ssl_enabled);
-        $link_revocations = $this->context->link->getCMSLink($cms_revocations, $cms_revocations->link_rewrite, $is_ssl_enabled);
+		$link_conditions = '';
+		if (Validate::isLoadedObject($cms_conditions))
+		{
+        	$link_conditions = $this->context->link->getCMSLink($cms_conditions, $cms_conditions->link_rewrite, $is_ssl_enabled);
 
-        if (!strpos($link_conditions, '?'))
-            $link_conditions .= '?content_only=1';
-        else
-            $link_conditions .= '&content_only=1';
+			if (!strpos($link_conditions, '?'))
+				$link_conditions .= '?content_only=1';
+			else
+				$link_conditions .= '&content_only=1';
+		}
 
-        if (!strpos($link_revocations, '?'))
-            $link_revocations .= '?content_only=1';
-        else
-            $link_revocations .= '&content_only=1';
+		$link_revocations = '';
+		if (Validate::isLoadedObject($cms_revocations)) {
+        	$link_revocations = $this->context->link->getCMSLink($cms_revocations, $cms_revocations->link_rewrite, $is_ssl_enabled);
+
+			if (!strpos($link_revocations, '?'))
+				$link_revocations .= '?content_only=1';
+			else
+				$link_revocations .= '&content_only=1';
+		}
 
 		$this->context->smarty->assign(array(
+										   'displayTOScheckbox' => (bool)Configuration::get('AEUC_CHECKBOX_TOS'),
 										   'conditions' => $has_tos_override_opt,
                                            'checkedTOS' => $checkedTos,
                                            'link_conditions' => $link_conditions,
@@ -828,6 +840,15 @@ class Advancedeucompliance extends Module
         }
     }
 
+	protected function processAeucCheckboxTOS($is_option_active)
+	{
+		if ((bool)$is_option_active) {
+			Configuration::updateValue('AEUC_CHECKBOX_TOS', true);
+		} else {
+			Configuration::updateValue('AEUC_CHECKBOX_TOS', false);
+		}
+	}
+
 	protected function processAeucLabelRevocationVP($is_option_active)
 	{
 		if ((bool)$is_option_active) {
@@ -1095,6 +1116,27 @@ class Advancedeucompliance extends Module
                             ),
 							array(
 								'type' => 'switch',
+								'label' => $this->l('Checkbox within ToS', 'advancedeucompliance'),
+								'name' => 'AEUC_CHECKBOX_TOS',
+								'is_bool' => true,
+								'desc' => $this->l('Add checkbox for the Terms of Services.
+								Use it to ensure customers agree to the Terms of Services and Revocation Terms. "Revocation Terms within ToS" must be enabled.', 'advancedeucompliance'),
+								'disable' => true,
+								'values' => array(
+									array(
+										'id' => 'active_on',
+										'value' => true,
+										'label' => $this->l('Enabled', 'advancedeucompliance')
+									),
+									array(
+										'id' => 'active_off',
+										'value' => false,
+										'label' => $this->l('Disabled', 'advancedeucompliance')
+									)
+								),
+							),
+							array(
+								'type' => 'switch',
 								'label' => $this->l('Revocation for virtual products', 'advancedeucompliance'),
 								'name' => 'AEUC_LABEL_REVOCATION_VP',
 								'is_bool' => true,
@@ -1186,6 +1228,7 @@ class Advancedeucompliance extends Module
             'AEUC_LABEL_TAX_INC_EXC' => Configuration::get('AEUC_LABEL_TAX_INC_EXC'),
             'AEUC_LABEL_WEIGHT' => Configuration::get('AEUC_LABEL_WEIGHT'),
             'AEUC_LABEL_REVOCATION_TOS' => Configuration::get('AEUC_LABEL_REVOCATION_TOS'),
+			'AEUC_CHECKBOX_TOS' => Configuration::get('AEUC_CHECKBOX_TOS'),
 			'AEUC_LABEL_REVOCATION_VP' => Configuration::get('AEUC_LABEL_REVOCATION_VP'),
             'AEUC_LABEL_SHIPPING_INC_EXC' => Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC'),
             'AEUC_LABEL_COMBINATION_FROM' => Configuration::get('AEUC_LABEL_COMBINATION_FROM'),
