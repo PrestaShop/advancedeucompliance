@@ -8,7 +8,7 @@ $_MODULE['<{advancedeucompliance}prestashop>advancedeucompliance_bb8956c67b82c74
 $_MODULE['<{advancedeucompliance}prestashop>advancedeucompliance_cac77d4c7de337f13ad1e89a8cecbc7f'] = 'Lieferzeit 1-2 Werktage';
 $_MODULE['<{advancedeucompliance}prestashop>advancedeucompliance_eeb992239a8454067cd7a47bbf0df359'] = 'Lieferzeit 7-10 Werktage';
 $_MODULE['<{advancedeucompliance}prestashop>advancedeucompliance_5da618e8e4b89c66fe86e32cdafde142'] = 'Ab';
-$_MODULE['<{advancedeucompliance}prestashop>advancedeucompliance_9060587edeb01a63e3d3edc959678d1e'] = 'Vor';
+$_MODULE['<{advancedeucompliance}prestashop>advancedeucompliance_9060587edeb01a63e3d3edc959678d1e'] = 'Vorher';
 $_MODULE['<{advancedeucompliance}prestashop>advancedeucompliance_f4a0d7cb0cd45214c8ca5912c970de13'] = 'inkl. MwSt.';
 $_MODULE['<{advancedeucompliance}prestashop>advancedeucompliance_befcac0f9644a7abee43e69f49252ac4'] = 'zzgl. MwSt.';
 $_MODULE['<{advancedeucompliance}prestashop>advancedeucompliance_4447fbcef6305fd7554d4c8a00b211b6'] = 'zzgl. Versandkosten';
