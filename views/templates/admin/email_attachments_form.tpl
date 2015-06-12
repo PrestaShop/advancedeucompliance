@@ -36,11 +36,6 @@
         <p>
             {l s='For each type of email, define which content you would like to add.' mod='advancedeucompliance'}
         </p>
-        {if $incomplete_cms_role_association_warning}
-            <p>
-                {$incomplete_cms_role_association_warning}
-            </p>
-        {/if}
         <br/>
         <div class="form-wrapper">
             <table class="table accesses">

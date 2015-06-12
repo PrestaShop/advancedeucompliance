@@ -1398,17 +1398,8 @@ class Advancedeucompliance extends Module
         $cms_roles_aeuc = $this->getCMSRoles();
         $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
         $cms_roles_associated = $cms_role_repository->getCMSRolesAssociated();
-        $cms_roles_full = $cms_role_repository->findByName(array_keys($cms_roles_aeuc));
-        $incomplete_cms_role_association_warning = false;
         $legal_options = array();
         $cleaned_mails_names = array();
-
-        if (count($cms_roles_associated) != count($cms_roles_full)) {
-            $incomplete_cms_role_association_warning = $this->displayWarning(
-                $this->l('Your legal content is not linked to any CMS page yet (see above section).
-				Please make sure your content is associated before managing email attachments.', 'advancedeucompliance')
-            );
-        }
 
         foreach ($cms_roles_associated as $role) {
             $list_id_mail_assoc = AeucCMSRoleEmailEntity::getIdEmailFromCMSRoleId((int)$role->id);
@@ -1431,7 +1422,6 @@ class Advancedeucompliance extends Module
 
         $this->context->smarty->assign(array(
                                            'has_assoc' => $cms_roles_associated,
-                                           'incomplete_cms_role_association_warning' => $incomplete_cms_role_association_warning,
                                            'mails_available' => $cleaned_mails_names,
                                            'legal_options' => $legal_options
                                        ));
