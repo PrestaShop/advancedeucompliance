@@ -1386,7 +1386,7 @@ class Advancedeucompliance extends Module
         $this->context->smarty->assign(array(
                                            'cms_roles_assoc' => $cms_roles_assoc,
                                            'cms_pages' => $cms_pages,
-                                           'form_action' => '#',
+                                           'form_action' =>  $this->context->link->getAdminLink('AdminModules').'&configure='.$this->name,
                                            'add_cms_link' => $this->context->link->getAdminLink('AdminCMS')
                                        ));
         $content = $this->context->smarty->fetch($this->local_path.'views/templates/admin/legal_cms_manager_form.tpl');
@@ -1423,7 +1423,8 @@ class Advancedeucompliance extends Module
         $this->context->smarty->assign(array(
                                            'has_assoc' => $cms_roles_associated,
                                            'mails_available' => $cleaned_mails_names,
-                                           'legal_options' => $legal_options
+                                           'legal_options' => $legal_options,
+                                           'form_action' => $this->context->link->getAdminLink('AdminModules').'&configure='.$this->name
                                        ));
 
         $content = $this->context->smarty->fetch($this->local_path.'views/templates/admin/email_attachments_form.tpl');

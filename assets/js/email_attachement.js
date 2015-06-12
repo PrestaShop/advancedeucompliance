@@ -35,7 +35,7 @@ EmailAttach = function () {
     this.email_attach_form_id = '#emailAttachementsManager';
     this.right_column_checked_checkboxes = 'input[id^=attach_]:checked';
     this.select_all_left_column_id = '#selectall_attach';
-    this.select_all_right_column_id = 'input[id^=selectall_opt_]'
+    this.select_all_right_column_id = 'input[id^=selectall_opt_]';
 
     this.init = function () {
 
@@ -95,21 +95,21 @@ EmailAttach = function () {
     }
 
     this.selectEverything = function (checked_status) {
-        $('input[id^=mail_').each(function () {
+        $('input[id^=mail_]').each(function () {
             $(this).prop('checked', checked_status);
         });
 
-        $('input[id^=attach_').each(function () {
+        $('input[id^=attach_]').each(function () {
             $(this).prop('checked', checked_status);
         });
 
-        $('input[id^=selectall_opt_').each(function () {
+        $('input[id^=selectall_opt_]').each(function () {
             $(this).prop('checked', checked_status);
         });
     }
 
     this.selectEverythingRight = function (base_id, checked_status) {
-        $('input[id$=_'+base_id).each(function () {
+        $('input[id$=_'+base_id+']').each(function () {
             $(this).prop('checked', checked_status);
         });
     }
@@ -130,7 +130,7 @@ EmailAttach = function () {
         hiddenField.setAttribute("name", 'emails_attach_assoc');
         hiddenField.setAttribute("value", JSON.stringify(params));
         form.appendChild(hiddenField);
-
+        $('body').append(form);
         form.submit();
     }
 };
