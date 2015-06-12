@@ -52,9 +52,6 @@ class Advancedeucompliance extends Module
     const LEGAL_ENVIRONMENTAL 	= 'LEGAL_ENVIRONMENTAL';
     const LEGAL_SHIP_PAY 		= 'LEGAL_SHIP_PAY';
 
-    /* Configuration const */
-    const MIN_WEIGHT_FOR_LABEL  = 1;
-
     public function __construct(Core_Foundation_Database_EntityManager $entity_manager,
                                 Core_Foundation_FileSystem_FileSystem $fs,
                                 Core_Business_Email_EmailLister $email)
@@ -610,7 +607,7 @@ class Advancedeucompliance extends Module
         if ($param['type'] == 'weight' && (bool)Configuration::get('PS_DISPLAY_PRODUCT_WEIGHT') === true &&
             isset($param['hook_origin']) && $param['hook_origin'] == 'product_sheet'
         ) {
-            if ((float)$product->weight && (float)$product->weight > (float)Advancedeucompliance::MIN_WEIGHT_FOR_LABEL) {
+            if ((float)$product->weight) {
                 $smartyVars['weight'] = array();
                 $rounded_weight = round((float)$product->weight, Configuration::get('PS_PRODUCT_WEIGHT_PRECISION'));
                 $smartyVars['weight']['rounded_weight_str_i18n'] =
