@@ -637,6 +637,8 @@ class Advancedeucompliance extends Module
 
     private function dumpHookDisplayProductPriceBlock(array $smartyVars)
     {
+        /* Clear related templates caches */
+        Tools::clearCache(Context::getContext()->smarty, _PS_THEME_DIR_.'product.tpl');
         $this->context->smarty->assign(array('smartyVars' => $smartyVars));
         return $this->context->smarty->fetch($this->local_path .
                                              'views/templates/hook/hookDisplayProductPriceBlock.tpl');
