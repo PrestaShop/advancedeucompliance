@@ -864,18 +864,6 @@ class Advancedeucompliance extends Module
 
     protected function processAeucLabelTaxIncExc($is_option_active)
     {
-        $id_lang = (int)Configuration::get('PS_LANG_DEFAULT');
-        $countries = Country::getCountries($id_lang, true, false, false);
-        foreach ($countries as $id_country => $country_details) {
-            $country = new Country((int)$country_details['id_country']);
-            if (Validate::isLoadedObject($country)) {
-                $country->display_tax_label = !(int)$is_option_active;
-                if (!$country->update()) {
-                    $this->_errors[] =
-                        $this->l('A country could not be updated for \'Tax inc./excl.\' label', 'advancedeucompliance');
-                }
-            }
-        }
         Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', (bool)$is_option_active);
     }
 
