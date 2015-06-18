@@ -915,11 +915,19 @@ class Advancedeucompliance extends Module
     protected function processAeucFeatTellAFriend($is_option_active)
     {
         $staf_module = Module::getInstanceByName('sendtoafriend');
+        if ($staf_module) {
 
-        if ((bool)$is_option_active && $staf_module->isEnabledForShopContext() === false) {
-            $staf_module->enable();
-        } elseif (!(bool)$is_option_active && $staf_module->isEnabledForShopContext() === true) {
-            $staf_module->disable();
+            if ((bool)$is_option_active) {
+                Configuration::updateValue('AEUC_FEAT_TELL_A_FRIEND', true);
+                if ($staf_module->isEnabledForShopContext() === false) {
+                    $staf_module->enable();
+                }
+            } elseif (!(bool)$is_option_active) {
+                Configuration::updateValue('AEUC_FEAT_TELL_A_FRIEND', false);
+                if ($staf_module->isEnabledForShopContext() === true) {
+                    $staf_module->disable();
+                }
+            }
         }
     }
 
