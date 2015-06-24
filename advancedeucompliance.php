@@ -85,7 +85,7 @@ class Advancedeucompliance extends Module
      */
     public function install()
     {
-        return parent::install() &&
+        $return = parent::install() &&
                $this->loadTables() &&
 			   $this->installHooks() &&
                $this->registerHook('header') &&
@@ -96,6 +96,10 @@ class Advancedeucompliance extends Module
 			   $this->registerHook('displayAfterShoppingCartBlock') &&
 			   $this->registerHook('displayBeforeShoppingCartBlock') &&
                $this->createConfig();
+
+		$this->emptyTemplatesCache();
+
+		return (bool)$return;
     }
 
     public function isThemeCompliant()
@@ -635,10 +639,14 @@ class Advancedeucompliance extends Module
         return;
     }
 
+	private function emptyTemplatesCache()
+	{
+		$this->_clearCache('product.tpl');
+		$this->_clearCache('product-list.tpl');
+	}
+
     private function dumpHookDisplayProductPriceBlock(array $smartyVars)
     {
-        /* Clear related templates caches */
-        Tools::clearCache(Context::getContext()->smarty, _PS_THEME_DIR_.'product.tpl');
         $this->context->smarty->assign(array('smartyVars' => $smartyVars));
         return $this->context->smarty->fetch($this->local_path .
                                              'views/templates/hook/hookDisplayProductPriceBlock.tpl');
@@ -746,7 +754,7 @@ class Advancedeucompliance extends Module
         }
 
         if ($has_processed_something) {
-            $this->_clearCache('product.tpl');
+            $this->emptyTemplatesCache();
             return (count($this->_errors) ? $this->displayError($this->_errors) : '') .
                    (count($this->_warnings) ? $this->displayWarning($this->_warnings) : '') .
                    $this->displayConfirmation($this->l('Settings saved successfully!'));
