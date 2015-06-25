@@ -1,4 +1,4 @@
-/**
+{**
  * 2007-2015 PrestaShop
  *
  * NOTICE OF LICENSE
@@ -21,51 +21,13 @@
  *  @copyright  2007-2015 PrestaShop SA
  *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  *  International Registered Trademark & Property of PrestaShop SA
- */
+ *}
 
-span.aeuc_from_label {
-    color: #554f58;
-    font-size: 12px;
-}
-
-span.aeuc_before_label {
-    color: #554f58;
-    font-size: 12px;
-}
-
-span.aeuc_tax_label {
-    color: #554f58;
-    font-size: 12px;
-}
-
-span.aeuc_tax_label_shopping_cart {
-    color: #554f58 !important;
-    font-size: 12px !important;
-}
-
-span.aeuc_tax_label_blockcart {
-    color: #fff !important;
-}
-
-div.aeuc_shipping_label {
-    color: #554f58;
-    font-size: 12px;
-    text-decoration: underline;
-    background-color: white;
-    display: inline-block;
-    padding: 1px 5px;
-}
-
-div.aeuc_weight_label {
-    color: #554f58;
-    font-size: 12px;
-}
-
-div.aeuc_delivery_label {
-    color: #554f58;
-    font-size: 12px;
-}
-
-.content_price > span {
-	display:inline-block;
-}
+{if isset($smartyVars)}
+    {* "Tax Inc/Exc" Price Hook templating *}
+    {if isset($smartyVars.price) && isset($smartyVars.price.tax_str_i18n)}
+        <span class="aeuc_tax_label_shopping_cart">
+            {$smartyVars.price.tax_str_i18n}
+        </span>
+    {/if}
+{/if}

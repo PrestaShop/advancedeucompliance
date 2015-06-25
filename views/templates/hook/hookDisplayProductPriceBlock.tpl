@@ -40,7 +40,11 @@
 
     {* "Tax Inc/Exc" Price Hook templating *}
     {if isset($smartyVars.price) && isset($smartyVars.price.tax_str_i18n)}
-        <span class="aeuc_tax_label">
+        <span class={if isset($smartyVars.price.css_class)}
+                        "{$smartyVars.price.css_class}"
+                    {else}
+                        "aeuc_tax_label"
+                    {/if}>
             {$smartyVars.price.tax_str_i18n}
         </span>
     {/if}

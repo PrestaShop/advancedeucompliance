@@ -86,16 +86,17 @@ class Advancedeucompliance extends Module
     public function install()
     {
         $return = parent::install() &&
-               $this->loadTables() &&
-			   $this->installHooks() &&
-               $this->registerHook('header') &&
-               $this->registerHook('displayProductPriceBlock') &&
-               $this->registerHook('overrideTOSDisplay') &&
-               $this->registerHook('actionEmailAddAfterContent') &&
-               $this->registerHook('advancedPaymentOptions') &&
-			   $this->registerHook('displayAfterShoppingCartBlock') &&
-			   $this->registerHook('displayBeforeShoppingCartBlock') &&
-               $this->createConfig();
+				$this->loadTables() &&
+				$this->installHooks() &&
+				$this->registerHook('header') &&
+				$this->registerHook('displayProductPriceBlock') &&
+				$this->registerHook('overrideTOSDisplay') &&
+				$this->registerHook('actionEmailAddAfterContent') &&
+				$this->registerHook('advancedPaymentOptions') &&
+				$this->registerHook('displayAfterShoppingCartBlock') &&
+				$this->registerHook('displayBeforeShoppingCartBlock') &&
+				$this->registerHook('displayCartTotalPriceLabel') &&
+				$this->createConfig();
 
 		$this->emptyTemplatesCache();
 
@@ -319,6 +320,31 @@ class Advancedeucompliance extends Module
 		return false;
 	}
 
+	public function hookDisplayCartTotalPriceLabel($param)
+	{
+		if ((bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true) {
+
+			if ((bool)Configuration::get('PS_TAX') === true) {
+				$smartyVars['price']['tax_str_i18n'] = $this->l('Tax included', 'advancedeucompliance');
+			} else {
+				$smartyVars['price']['tax_str_i18n'] = $this->l('Tax excluded', 'advancedeucompliance');
+			}
+		}
+
+		if (isset($param['from'])) {
+			if ($param['from'] == 'shopping_cart') {
+				$smartyVars['css_class'] = 'aeuc_tax_label_shopping_cart';
+			}
+			if ($param['from'] == 'blockcart') {
+				$smartyVars['css_class'] = 'aeuc_tax_label_blockcart';
+			}
+		}
+
+		$this->context->smarty->assign(array('smartyVars' => $smartyVars));
+		return $this->context->smarty->fetch($this->local_path .
+											'views/templates/hook/displayCartTotalPriceLabel.tpl');
+	}
+
     /* This hook is present to maintain backward compatibility */
     public function hookAdvancedPaymentOptions($param)
     {
@@ -406,7 +432,9 @@ class Advancedeucompliance extends Module
     public function hookHeader($param)
     {
         if (isset($this->context->controller->php_self) && ($this->context->controller->php_self === 'index' ||
-                                                            $this->context->controller->php_self === 'product')) {
+                                                            $this->context->controller->php_self === 'product' ||
+															$this->context->controller->php_self === 'order' ||
+															$this->context->controller->php_self === 'order-opc')) {
             $this->context->controller->addCSS($this->_path.'assets/css/aeuc_front.css', 'all');
         }
 
@@ -565,6 +593,10 @@ class Advancedeucompliance extends Module
                 } else {
                     $smartyVars['price']['tax_str_i18n'] = $this->l('Tax excluded', 'advancedeucompliance');
                 }
+
+				if (isset($param['from']) && $param['from'] == 'blockcart') {
+					$smartyVars['price']['css_class'] = 'aeuc_tax_label_blockcart';
+				}
             }
             if ((bool)Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC') === true) {
 
