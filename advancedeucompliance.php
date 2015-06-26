@@ -585,6 +585,7 @@ class Advancedeucompliance extends Module
         /* Handle taxes  Inc./Exc. and Shipping Inc./Exc.*/
         if ($param['type'] == 'price')	{
             $smartyVars['price'] = array();
+			$need_shipping_label = true;
 
             if ((bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true) {
 
@@ -596,9 +597,10 @@ class Advancedeucompliance extends Module
 
 				if (isset($param['from']) && $param['from'] == 'blockcart') {
 					$smartyVars['price']['css_class'] = 'aeuc_tax_label_blockcart';
+					$need_shipping_label = false;
 				}
             }
-            if ((bool)Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC') === true) {
+            if ((bool)Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC') === true && $need_shipping_label === true) {
 
                 if (!$product->is_virtual) {
                     $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
