@@ -748,7 +748,8 @@ class Advancedeucompliance extends Module
             array_keys(array_merge($this->getConfigFormLabelsManagerValues(), $this->getConfigFormFeaturesManagerValues()));
 
         $post_keys_complex = array('AEUC_legalContentManager',
-                                   'AEUC_emailAttachmentsManager'
+                                   'AEUC_emailAttachmentsManager',
+                                   'PS_PRODUCT_WEIGHT_PRECISION'
         );
 
         $i10n_inputs_received = array();
@@ -822,6 +823,18 @@ class Advancedeucompliance extends Module
             return (count($this->_errors) ? $this->displayError($this->_errors) : '') .
                    (count($this->_warnings) ? $this->displayWarning($this->_warnings) : '') . '';
         }
+    }
+
+    protected function processPsProductWeightPrecision($option_value)
+    {
+        $option_value = (int)$option_value;
+
+        /* Avoid negative values */
+        if ($option_value < 0) {
+            $option_value = 0;
+        }
+
+        Configuration::updateValue('PS_PRODUCT_WEIGHT_PRECISION', (int)$option_value);
     }
 
     protected function processAeucLabelDeliveryTime(array $i10n_inputs)
@@ -1150,8 +1163,9 @@ class Advancedeucompliance extends Module
                                                            'label'   => $this->l('Product weight label', 'advancedeucompliance'),
                                                            'name'    => 'AEUC_LABEL_WEIGHT',
                                                            'is_bool' => true,
-                                                           'desc'    => $this->l('Display the weight of a product (when information is available and product weighs more than 1kg).',
-                                                                                 'advancedeucompliance'),
+
+                                                           'desc'    => sprintf($this->l('Display the weight of a product (when information is available and product weighs more than 1 %s).',
+                                                                                         'advancedeucompliance'), Configuration::get('PS_WEIGHT_UNIT')),
                                                            'values'  => array(
                                                                array(
                                                                    'id'    => 'active_on',
@@ -1164,6 +1178,16 @@ class Advancedeucompliance extends Module
                                                                    'label' => $this->l('Disabled', 'advancedeucompliance')
                                                                )
                                                            ),
+                                                       ),
+                                                       array(
+                                                           'type'  => 'text',
+                                                           'label' => $this->l('Product weight precision', 'advancedeucompliance'),
+                                                           'name'  => 'PS_PRODUCT_WEIGHT_PRECISION',
+                                                           'desc'  => sprintf($this->l('Select precision level for product weight display (e.g: 1 %s / 1.01 %s)',
+                                                                                       'advancedeucompliance'),
+                                                                              Configuration::get('PS_WEIGHT_UNIT'),
+                                                                              Configuration::get('PS_WEIGHT_UNIT')),
+                                                           'hint'  => $this->l('This value can\'t be negative', 'advancedeucompliance'),
                                                        ),
                                                        array(
                                                            'type'    => 'switch',
@@ -1286,6 +1310,7 @@ class Advancedeucompliance extends Module
             'AEUC_LABEL_COMBINATION_FROM'        => Configuration::get('AEUC_LABEL_COMBINATION_FROM'),
             'AEUC_SHOPPING_CART_TEXT_BEFORE'     => $shopping_cart_text_before_values,
             'AEUC_SHOPPING_CART_TEXT_AFTER'      => $shopping_cart_text_after_values,
+            'PS_PRODUCT_WEIGHT_PRECISION'        => Configuration::get('PS_PRODUCT_WEIGHT_PRECISION')
         );
     }
 
