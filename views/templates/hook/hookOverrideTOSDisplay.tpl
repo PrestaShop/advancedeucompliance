@@ -27,7 +27,7 @@
     <div class="col-xs-12 col-md-12">
 
         {if $has_tos_override_opt}
-            <h2>{l s='Terms and Conditions'}</h2>
+            <h2>{l s='Terms and Conditions' mod='advancedeucompliance'}</h2>
             <div class="tnc_box">
                 <p class="checkbox">
                     <input type="checkbox" name="cgv" id="cgv" value="1" {if isset($checkedTOS) && $checkedTOS}checked="checked"{/if}/>
@@ -51,12 +51,12 @@
                 </script>
             </div>
         {else}
-            <h2>{l s='Terms and Conditions'}</h2>
+            <h2>{l s='Terms and Conditions' mod='advancedeucompliance'}</h2>
             <div class="box">
                 <p class="checkbox">
                     <input type="checkbox" name="cgv" id="cgv" value="1" {if $checkedTOS}checked="checked"{/if} />
-                    <label for="cgv">{l s='I agree to the terms of service and will adhere to them unconditionally.'}</label>
-                    <a href="{$link_conditions|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='(Read the Terms of Service)'}</a>
+                    <label for="cgv">{l s='I agree to the terms of service and will adhere to them unconditionally.'  mod='advancedeucompliance'}</label>
+                    <a href="{$link_conditions|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='(Read the Terms of Service).' mod='advancedeucompliance'}</a>
                 </p>
             </div>
         {/if}
