@@ -692,8 +692,6 @@ class Advancedeucompliance extends Module
 
             return $this->dumpHookDisplayProductPriceBlock($smartyVars);
         }
-
-        return;
     }
 
     private function emptyTemplatesCache()
