@@ -331,6 +331,7 @@ class Advancedeucompliance extends Module
 
     public function hookDisplayCartTotalPriceLabel($param)
     {
+        $smartyVars = array();
         if ((bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true) {
 
             if ((bool)Configuration::get('PS_TAX') === true) {
