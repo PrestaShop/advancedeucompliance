@@ -455,7 +455,7 @@ class Advancedeucompliance extends Module
                                                             $this->context->controller->php_self === 'order' ||
                                                             $this->context->controller->php_self === 'order-opc')
         ) {
-            $this->context->controller->addCSS($this->_path . 'assets/css/aeuc_front.css', 'all');
+            $this->context->controller->addCSS($this->_path . 'views/css/aeuc_front.css', 'all');
         }
 
     }
@@ -726,7 +726,7 @@ class Advancedeucompliance extends Module
         $success_band = $this->_postProcess();
         $this->context->smarty->assign('module_dir', $this->_path);
         $this->context->smarty->assign('errors', $this->_errors);
-        $this->context->controller->addCSS($this->_path . 'assets/css/configure.css', 'all');
+        $this->context->controller->addCSS($this->_path . 'views/css/configure.css', 'all');
         // Render all required form for each 'part'
         $formLabelsManager = $this->renderFormLabelsManager();
         $formFeaturesManager = $this->renderFormFeaturesManager();
@@ -1545,7 +1545,7 @@ class Advancedeucompliance extends Module
 
         $content = $this->context->smarty->fetch($this->local_path . 'views/templates/admin/email_attachments_form.tpl');
         // Insert JS in the page
-        $this->context->controller->addJS(($this->_path) . 'assets/js/email_attachement.js');
+        $this->context->controller->addJS(($this->_path) . 'views/js/email_attachement.js');
 
         return $content;
     }
