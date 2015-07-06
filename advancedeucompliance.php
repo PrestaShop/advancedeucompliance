@@ -453,7 +453,8 @@ class Advancedeucompliance extends Module
         if (isset($this->context->controller->php_self) && ($this->context->controller->php_self === 'index' ||
                                                             $this->context->controller->php_self === 'product' ||
                                                             $this->context->controller->php_self === 'order' ||
-                                                            $this->context->controller->php_self === 'order-opc')
+                                                            $this->context->controller->php_self === 'order-opc' ||
+                                                            $this->context->controller->php_self === 'category')
         ) {
             $this->context->controller->addCSS($this->_path . 'views/css/aeuc_front.css', 'all');
         }
