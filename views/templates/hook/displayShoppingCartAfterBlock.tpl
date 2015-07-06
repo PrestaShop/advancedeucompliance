@@ -24,6 +24,6 @@
  *}
 <tr>
     <td colspan="{$colspan_total}" class="total_price_container text-left">
-        <p>{$cart_text|escape:'htmlall'}</p>
+        <p class="aeuc_bottom_text_msg">{$cart_text|escape:'htmlall'}</p>
      </td>
 </tr>

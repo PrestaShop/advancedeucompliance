@@ -22,4 +22,4 @@
  *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  *  International Registered Trademark & Property of PrestaShop SA
  *}
-<p>{$cart_text|escape:'htmlall'}</p>
+<p class="aeuc_top_text_msg">{$cart_text|escape:'htmlall'}</p>
