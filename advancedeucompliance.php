@@ -311,7 +311,6 @@ class Advancedeucompliance extends Module
         It's better to add this method (as hasVirtualProduct) and add 'protected static $_hasVirtualProduct = array(); property
         in Cart class in next version of prestashop.
     */
-
     private function hasCartVirtualProduct(Cart $cart)
     {
         $products = $cart->getProducts();
@@ -472,6 +471,7 @@ class Advancedeucompliance extends Module
         // Check if cart has virtual product
         $has_virtual_product = (bool)Configuration::get('AEUC_LABEL_REVOCATION_VP') && $this->hasCartVirtualProduct($this->context->cart);
         Media::addJsDef(array('aeuc_has_virtual_products' => (bool)$has_virtual_product));
+        $this->context->controller->addJS($this->_path . 'views/js/fo_aeuc_tnc.js', true);
 
         $checkedTos = false;
         $link_conditions = '';

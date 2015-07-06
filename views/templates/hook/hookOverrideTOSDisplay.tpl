@@ -39,16 +39,6 @@
                     {/if}
                     <label for="cgv">{l s='adhire to them unconditionally.'  mod='advancedeucompliance'}</label>
                 </p>
-                <script type="text/javascript">
-                    $(document).ready(function(){
-                        if (!!$.prototype.fancybox)
-                            $("a.iframe").fancybox({
-                                'type': 'iframe',
-                                'width': 600,
-                                'height': 600
-                            });
-                    })
-                </script>
             </div>
         {else}
             <h2>{l s='Terms and Conditions' mod='advancedeucompliance'}</h2>
