@@ -23,17 +23,12 @@
  *  International Registered Trademark & Property of PrestaShop SA
  */
 
-span.aeuc_from_label {
-    color: #554f58;
-    font-size: 12px;
-}
-
-span.aeuc_before_label {
-    color: #554f58;
-    font-size: 12px;
-}
-
-span.aeuc_tax_label {
+span.aeuc_from_label,
+span.aeuc_before_label,
+span.aeuc_tax_label,
+div.aeuc_shipping_label,
+div.aeuc_weight_label,
+div.aeuc_delivery_label{
     color: #554f58;
     font-size: 12px;
 }
@@ -48,22 +43,10 @@ span.aeuc_tax_label_blockcart {
 }
 
 div.aeuc_shipping_label {
-    color: #554f58;
-    font-size: 12px;
     text-decoration: underline;
     background-color: white;
     display: inline-block;
     padding: 1px 5px;
-}
-
-div.aeuc_weight_label {
-    color: #554f58;
-    font-size: 12px;
-}
-
-div.aeuc_delivery_label {
-    color: #554f58;
-    font-size: 12px;
 }
 
 .content_price > span {
