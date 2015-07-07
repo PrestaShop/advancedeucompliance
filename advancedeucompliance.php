@@ -74,7 +74,7 @@ class Advancedeucompliance extends Module
         $this->emails = $email;
 
         $this->displayName = $this->l('Advanced EU Compliance');
-        $this->description = $this->l('This module helps European merchants in getting compliant with applicable e-commerce law.');
+        $this->description = $this->l('This module helps European merchants comply with applicable e-commerce laws.');
         $this->confirmUninstall = $this->l('Are you sure you want to uninstall this module?');
 
         /* Init errors var */
@@ -1096,15 +1096,13 @@ class Advancedeucompliance extends Module
                                                              'lang'  => true,
                                                              'label' => $this->l('Estimated delivery time label (available products)', 'advancedeucompliance'),
                                                              'name'  => 'AEUC_LABEL_DELIVERY_TIME_AVAILABLE',
-                                                             'desc'  => $this->l('Indicate the estimated delivery time for your in-stock products.
-						Leave the field empty to disable.', 'advancedeucompliance'),
+                                                             'desc'  => $this->l('Indicate the estimated delivery time for your in-stock products. Leave the field empty to disable.', 'advancedeucompliance'),
                                                        ),
                                                        array('type'  => 'text',
                                                              'lang'  => true,
                                                              'label' => $this->l('Estimated delivery time label (out-of-stock products)', 'advancedeucompliance'),
                                                              'name'  => 'AEUC_LABEL_DELIVERY_TIME_OOS',
-                                                             'desc'  => $this->l('Indicate the estimated delivery time for your out-of-stock products.
-						Leave the field empty to disable.', 'advancedeucompliance'),
+                                                             'desc'  => $this->l('Indicate the estimated delivery time for your out-of-stock products. Leave the field empty to disable.', 'advancedeucompliance'),
                                                        ),
                                                        array('type'    => 'switch',
                                                              'label'   => $this->l('\'Before\' Base price label', 'advancedeucompliance'),
@@ -1125,8 +1123,7 @@ class Advancedeucompliance extends Module
                                                              'label'   => $this->l('Tax \'inc./excl.\' label', 'advancedeucompliance'),
                                                              'name'    => 'AEUC_LABEL_TAX_INC_EXC',
                                                              'is_bool' => true,
-                                                             'desc'    => $this->l('Display whether the tax is included next to the product price
-						(\'Tax included/excluded\' label).', 'advancedeucompliance'),
+                                                             'desc'    => $this->l('Display whether the tax is included next to the product price (\'Tax included/excluded\' label).', 'advancedeucompliance'),
                                                              'values'  => array(array('id'    => 'active_on',
                                                                                       'value' => true,
                                                                                       'label' => $this->l('Enabled', 'advancedeucompliance')
@@ -1141,10 +1138,8 @@ class Advancedeucompliance extends Module
                                                              'label'   => $this->l('Shipping fees \'Inc./Excl.\' label', 'advancedeucompliance'),
                                                              'name'    => 'AEUC_LABEL_SHIPPING_INC_EXC',
                                                              'is_bool' => true,
-                                                             'desc'    => $this->l('Display whether the shipping fees are included, next to the product
-						price (\'Shipping fees included / excluded\').', 'advancedeucompliance'),
-                                                             'hint'    => $this->l('If enabled, make sure the Shipping terms are associated with a CMS page
-						below (Legal Content Management). The label will link to this content.', 'advancedeucompliance'),
+                                                             'desc'    => $this->l('Display whether the shipping fees are included, next to the product price (\'Shipping included / excluded\').', 'advancedeucompliance'),
+                                                             'hint'    => $this->l('If enabled, make sure the Shipping terms are associated with a CMS page below (Legal Content Management). The label will link to this content.', 'advancedeucompliance'),
                                                              'values'  => array(
                                                                  array(
                                                                      'id'    => 'active_on',
@@ -1181,23 +1176,21 @@ class Advancedeucompliance extends Module
                                                        ),
                                                        array(
                                                            'type'  => 'text',
-                                                           'label' => $this->l('Product weight precision', 'advancedeucompliance'),
+                                                           'label' => $this->l('Decimals for product weight', 'advancedeucompliance'),
                                                            'name'  => 'PS_PRODUCT_WEIGHT_PRECISION',
-                                                           'desc'  => sprintf($this->l('Select precision level for product weight display (e.g: 1 %s / 1.01 %s)',
+                                                           'desc'  => sprintf($this->l('Choose how many decimals to display for the product weight (e.g: 1 %s with 0 decimal, or 1.01 %s with 2 decimals)',
                                                                                        'advancedeucompliance'),
                                                                               Configuration::get('PS_WEIGHT_UNIT'),
                                                                               Configuration::get('PS_WEIGHT_UNIT')),
-                                                           'hint'  => $this->l('This value can\'t be negative', 'advancedeucompliance'),
+                                                           'hint'  => $this->l('This value must be positive.', 'advancedeucompliance'),
                                                        ),
                                                        array(
                                                            'type'    => 'switch',
                                                            'label'   => $this->l('Revocation Terms within ToS', 'advancedeucompliance'),
                                                            'name'    => 'AEUC_LABEL_REVOCATION_TOS',
                                                            'is_bool' => true,
-                                                           'desc'    => $this->l('Include content from the Revocation Terms CMS page within the
-						Terms of Services (ToS). ', 'advancedeucompliance'),
-                                                           'hint'    => $this->l('If enabled, make sure the Revocation Terms are associated with a CMS page
-						below (Legal Content Management).', 'advancedeucompliance'),
+                                                           'desc'    => $this->l('Include content from the Revocation Terms CMS page within the Terms of Services (ToS).', 'advancedeucompliance'),
+                                                           'hint'    => $this->l('If enabled, make sure the Revocation Terms are associated with a CMS page below (Legal Content Management).', 'advancedeucompliance'),
                                                            'disable' => true,
                                                            'values'  => array(
                                                                array(
@@ -1239,8 +1232,7 @@ class Advancedeucompliance extends Module
                                                            'is_bool' => true,
                                                            'desc'    => $this->l('Display a \'From\' label before the price on products with combinations.',
                                                                                  'advancedeucompliance'),
-                                                           'hint'    => $this->l('As prices can vary from a combination to another, this label indicates
-						that the final price may be higher.', 'advancedeucompliance'),
+                                                           'hint'    => $this->l('As prices can vary from a combination to another, this label indicates that the final price may be higher.', 'advancedeucompliance'),
                                                            'disable' => true,
                                                            'values'  => array(
                                                                array(
@@ -1265,7 +1257,7 @@ class Advancedeucompliance extends Module
                                                        array(
                                                            'type'  => 'textarea',
                                                            'lang'  => true,
-                                                           'label' => $this->l('Lower shopping cart text 2', 'advancedeucompliance'),
+                                                           'label' => $this->l('Lower shopping cart text', 'advancedeucompliance'),
                                                            'name'  => 'AEUC_SHOPPING_CART_TEXT_AFTER',
                                                            'desc'  => $this->l('Add a custom text at the bottom of the shopping cart summary.', 'advancedeucompliance'),
                                                        ),
