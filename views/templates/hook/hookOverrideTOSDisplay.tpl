@@ -37,7 +37,7 @@
                     {if isset($link_revocations) && $link_revocations}
                         <label for="cgv">{l s='and'  mod='advancedeucompliance'}</label> <a href="{$link_revocations|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='terms of revocation' mod='advancedeucompliance'}</a>
                     {/if}
-                    <label for="cgv">{l s='adhire to them unconditionally.'  mod='advancedeucompliance'}</label>
+                    <label for="cgv">{l s='adhere to them unconditionally.'  mod='advancedeucompliance'}</label>
                 </p>
             </div>
         {else}
