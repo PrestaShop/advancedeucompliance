@@ -1125,8 +1125,7 @@ class Advancedeucompliance extends Module
                                                              'label'   => $this->l('Tax \'inc./excl.\' label', 'advancedeucompliance'),
                                                              'name'    => 'AEUC_LABEL_TAX_INC_EXC',
                                                              'is_bool' => true,
-                                                             'desc'    => $this->l('Display whether the tax is included next to the product price
-						(\'Tax included/excluded\' label).', 'advancedeucompliance'),
+                                                             'desc'    => $this->l('Display whether the tax is included next to the product price (\'Tax included/excluded\' label).', 'advancedeucompliance'),
                                                              'values'  => array(array('id'    => 'active_on',
                                                                                       'value' => true,
                                                                                       'label' => $this->l('Enabled', 'advancedeucompliance')
@@ -1141,10 +1140,8 @@ class Advancedeucompliance extends Module
                                                              'label'   => $this->l('Shipping fees \'Inc./Excl.\' label', 'advancedeucompliance'),
                                                              'name'    => 'AEUC_LABEL_SHIPPING_INC_EXC',
                                                              'is_bool' => true,
-                                                             'desc'    => $this->l('Display whether the shipping fees are included, next to the product
-						price (\'Shipping fees included / excluded\').', 'advancedeucompliance'),
-                                                             'hint'    => $this->l('If enabled, make sure the Shipping terms are associated with a CMS page
-						below (Legal Content Management). The label will link to this content.', 'advancedeucompliance'),
+                                                             'desc'    => $this->l('Display whether the shipping fees are included, next to the product	price (\'Shipping fees included / excluded\').', 'advancedeucompliance'),
+                                                             'hint'    => $this->l('If enabled, make sure the Shipping terms are associated with a CMS page below (Legal Content Management). The label will link to this content.', 'advancedeucompliance'),
                                                              'values'  => array(
                                                                  array(
                                                                      'id'    => 'active_on',
