@@ -28,13 +28,13 @@
     <div class="panel">
         <div class="panel-heading">
             <i class="icon-envelope"></i>
-            {l s='Email attachment associations' mod='advancedeucompliance'}
+            {l s='Email content inclusion' mod='advancedeucompliance'}
         </div>
         <p>
-            {l s='Email attachments allow you to include in the footer of your shop\'s emails information from the Legal Content Management section above. ' mod='advancedeucompliance'}
+            {l s='This section allows you to include information from the Legal Content Management section above at the bottom of your shop\'s emails. ' mod='advancedeucompliance'}
         </p>
         <p>
-            {l s='For each type of email, define which content you would like to add.' mod='advancedeucompliance'}
+            {l s='For each type of email, you can define which content you would like to include.' mod='advancedeucompliance'}
         </p>
         <br/>
         <div class="form-wrapper">
