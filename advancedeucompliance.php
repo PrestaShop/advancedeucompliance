@@ -1419,10 +1419,10 @@ class Advancedeucompliance extends Module
                     ),
                     array(
                         'type'    => 'switch',
-                        'label'   => $this->l('Average tax for shipping and wrapping'),
+                        'label'   => $this->l('Proportionate tax for shipping and wrapping'),
                         'name'    => 'PS_ATCP_SHIPWRAP',
                         'is_bool' => true,
-                        'desc'    => $this->l('When enabled, tax for shipping and wrapping costs is an average of all the taxes applying to the products in the cart.', 'advancedeucompliance'),
+                        'desc'    => $this->l('When enabled, tax for shipping and wrapping costs will be calculated proportionate to taxes applying to the products in the cart.', 'advancedeucompliance'),
                         'values'  => array(
                             array(
                                 'id'    => 'active_on',
