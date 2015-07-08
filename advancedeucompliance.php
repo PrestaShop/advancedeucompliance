@@ -361,8 +361,6 @@ class Advancedeucompliance extends Module
         $legacyOptions = Hook::exec('displayPaymentEU', array(), null, true);
         $newOptions = array();
 
-
-
         Media::addJsDef(array('aeuc_tos_err_str' => Tools::htmlentitiesUTF8($this->l('You must agree to our Terms of Service before going any further!',
                                                              'advancedeucompliance'))));
         Media::addJsDef(array('aeuc_submit_err_str' => Tools::htmlentitiesUTF8($this->l('Something went wrong. If the problem persists, please contact us.',
@@ -683,8 +681,9 @@ class Advancedeucompliance extends Module
         /* Handle Estimated delivery time label */
         if ($param['type'] == 'after_price') {
             $context_id_lang = $this->context->language->id;
-            $is_product_available = (Product::getRealQuantity($product->id) >= 1) ? true : false;
+            $is_product_available = (StockAvailable::getQuantityAvailableByProduct($product->id) >= 1 ? true : false);
             $smartyVars['after_price'] = array();
+
             if ($is_product_available) {
                 $contextualized_content =
                     Configuration::get('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', (int)$context_id_lang);
