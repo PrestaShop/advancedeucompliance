@@ -1354,7 +1354,7 @@ class Advancedeucompliance extends Module
                         'name'    => 'AEUC_FEAT_TELL_A_FRIEND',
                         'is_bool' => true,
                         'desc'    => $this->l('Make sure you comply with your local legislation before enabling:
-						the emails sent by this feature can be considered as unsolicited commercial emails.'),
+						the emails sent by this feature can be considered as unsolicited commercial emails.', 'advancedeucompliance'),
                         'hint'    => $this->l('If enabled, the \'Send to a Friend\' module allows customers to send to a
 						friend an email with a link to a product\'s page.', 'advancedeucompliance'),
                         'values'  => array(
@@ -1418,7 +1418,7 @@ class Advancedeucompliance extends Module
                     ),
                     array(
                         'type'    => 'switch',
-                        'label'   => $this->l('Proportionate tax for shipping and wrapping'),
+                        'label'   => $this->l('Proportionate tax for shipping and wrapping', 'advancedeucompliance'),
                         'name'    => 'PS_ATCP_SHIPWRAP',
                         'is_bool' => true,
                         'desc'    => $this->l('When enabled, tax for shipping and wrapping costs will be calculated proportionate to taxes applying to the products in the cart.', 'advancedeucompliance'),
