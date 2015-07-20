@@ -362,13 +362,13 @@ class Advancedeucompliance extends Module
         $newOptions = array();
 
         Media::addJsDef(array('aeuc_tos_err_str' => Tools::htmlentitiesUTF8($this->l('You must agree to our Terms of Service before going any further!',
-                                                             'advancedeucompliance'))));
+                                                                                     'advancedeucompliance'))));
         Media::addJsDef(array('aeuc_submit_err_str' => Tools::htmlentitiesUTF8($this->l('Something went wrong. If the problem persists, please contact us.',
-                                                                'advancedeucompliance'))));
+                                                                                        'advancedeucompliance'))));
         Media::addJsDef(array('aeuc_no_pay_err_str' => Tools::htmlentitiesUTF8($this->l('Select a payment option first.',
-                                                                'advancedeucompliance'))));
+                                                                                        'advancedeucompliance'))));
         Media::addJsDef(array('aeuc_virt_prod_err_str' => Tools::htmlentitiesUTF8($this->l('Please check "Revocation of virtual products" box first !',
-                                                                   'advancedeucompliance'))));
+                                                                                           'advancedeucompliance'))));
         if ($legacyOptions) {
             foreach ($legacyOptions as $module_name => $legacyOption) {
 
@@ -1471,7 +1471,7 @@ class Advancedeucompliance extends Module
 
         foreach ($cms_roles as $cms_role) {
 
-            if ((int)$cms_role->id_cms !== 0) {
+            if ((int)$cms_role->id_cms > 0) {
                 $cms_entity = $cms_repository->findOne((int)$cms_role->id_cms);
                 $assoc_cms_name = $cms_entity->meta_title[(int)$id_lang];
             } else {
@@ -1488,7 +1488,7 @@ class Advancedeucompliance extends Module
         $fake_object = new stdClass();
         $fake_object->id = 0;
         $fake_object->meta_title = $this->l('-- Select associated CMS page -- ', 'advancedeucompliance');
-        $cms_pages[0] = $fake_object;
+        $cms_pages[-1] = $fake_object;
         unset($fake_object);
 
         $this->context->smarty->assign(array(
