@@ -46,9 +46,12 @@
 
                         <div class="col-lg-9">
                             <select class="form-control fixed-width-xxl" name="CMSROLE_{$id_cms_role}" id="CMSROLE_{$id_cms_role}">
-                            {foreach from=$cms_pages item=cms_page}
-                                <option value="{$cms_page->id}" {if $cms_role_assoc['id_cms'] == $cms_page->id}selected{/if}>{$cms_page->meta_title}</option>
-                            {/foreach}
+                                <option value="{$cms_pages[-1]->id}" {if $cms_role_assoc['id_cms'] == $cms_pages[-1]->id}selected{/if}>{$cms_pages[-1]->meta_title}</option>
+                                {foreach from=$cms_pages key=item_key item=cms_page}
+                                    {if $item_key !== -1}
+                                        <option value="{$cms_page->id}" {if $cms_role_assoc['id_cms'] == $cms_page->id}selected{/if}>{$cms_page->meta_title}</option>
+                                    {/if}
+                                {/foreach}
                             </select>
                         </div>
                     </div>
