@@ -137,6 +137,12 @@ class Advancedeucompliance extends Module
                $this->unloadTables();
     }
 
+    public function disable()
+    {
+        $is_adv_api_disabled = (bool)Configuration::updateValue('PS_ADVANCED_PAYMENT_API', false);
+        return parent::disable() && $is_adv_api_disabled;
+    }
+
     public function installHooks()
     {
         $hooks = array(
@@ -303,7 +309,8 @@ class Advancedeucompliance extends Module
                Configuration::deleteByName('AEUC_LABEL_COMBINATION_FROM') &&
                Configuration::deleteByName('AEUC_SHOPPING_CART_TEXT_BEFORE') &&
                Configuration::deleteByName('AEUC_SHOPPING_CART_TEXT_AFTER') &&
-               Configuration::deleteByName('AEUC_IS_THEME_COMPLIANT');
+               Configuration::deleteByName('AEUC_IS_THEME_COMPLIANT') &&
+               Configuration::updateValue('PS_ADVANCED_PAYMENT_API', false);
     }
 
     /*
