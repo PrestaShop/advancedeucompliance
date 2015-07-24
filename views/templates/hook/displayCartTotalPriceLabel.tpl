@@ -27,7 +27,7 @@
     {* "Tax Inc/Exc" Price Hook templating *}
     {if isset($smartyVars.price) && isset($smartyVars.price.tax_str_i18n)}
         <span class="aeuc_tax_label_shopping_cart">
-            {$smartyVars.price.tax_str_i18n}
+            {$smartyVars.price.tax_str_i18n|escape:'htmlall'}
         </span>
     {/if}
 {/if}

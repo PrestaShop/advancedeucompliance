@@ -23,7 +23,7 @@
  *  International Registered Trademark & Property of PrestaShop SA
  *}
 
-<form id="emailAttachementsManager" class="defaultForm form-horizontal" action="{$form_action}" method="POST" enctype="multipart/form-data" novalidate>
+<form id="emailAttachementsManager" class="defaultForm form-horizontal" action="{$form_action|escape:'url'}" method="POST" enctype="multipart/form-data" novalidate>
     <input type="hidden" name="AEUC_emailAttachmentsManager" value="1">
     <div class="panel">
         <div class="panel-heading">
@@ -51,8 +51,8 @@
                     {foreach from=$legal_options item=option}
                         <th class="center fixed-width-xs">
                             <span class="title_box">
-                                 <input id="selectall_opt_{$option.id}" type="checkbox"/>
-                                {$option.name}
+                                 <input id="selectall_opt_{$option.id|intval}" type="checkbox"/>
+                                {$option.name|escape:'htmlall'}
                             </span>
                         </th>
                     {/foreach}
@@ -61,10 +61,10 @@
                 <tbody>
                 {foreach from=$mails_available item=mail}
                     <tr>
-                        <td><input id="mail_{$mail.id_mail}" class="select-all-for-mail" type="checkbox"/></th>&nbsp;{$mail.display_name}</td>
+                        <td><input id="mail_{$mail.id_mail|intval}" class="select-all-for-mail" type="checkbox"/></th>&nbsp;{$mail.display_name|escape:'htmlall'}</td>
                         {foreach from=$legal_options item=option}
                             <td class="center">
-                                <input name="attach_{$mail.id_mail}_{$option.id}" id="attach_{$mail.id_mail}_{$option.id}" type="checkbox"
+                                <input name="attach_{$mail.id_mail|intval}_{$option.id|intval}" id="attach_{$mail.id_mail|intval}_{$option.id|intval}" type="checkbox"
                                 {if in_array($mail.id_mail, $option.list_id_mail_assoc)}
                                     checked="true"
                                 {/if}

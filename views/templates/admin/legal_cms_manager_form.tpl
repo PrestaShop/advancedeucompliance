@@ -23,7 +23,7 @@
  *  International Registered Trademark & Property of PrestaShop SA
  *}
 
-<form id="legalCMSManager" class="defaultForm form-horizontal" action="{$form_action}" method="POST" enctype="multipart/form-data" novalidate>
+<form id="legalCMSManager" class="defaultForm form-horizontal" action="{$form_action|escape:'url'}" method="POST" enctype="multipart/form-data" novalidate>
     <input type="hidden" name="AEUC_legalContentManager" value="1">
     <div class="panel">
         <div class="panel-heading">
@@ -41,15 +41,15 @@
                 {foreach from=$cms_roles_assoc key=id_cms_role item=cms_role_assoc}
                     <div class="form-group">
                         <label class="control-label col-lg-3">
-                            {$cms_role_assoc['role_title']}
+                            {$cms_role_assoc['role_title']|escape:'htmlall'}
                         </label>
 
                         <div class="col-lg-9">
-                            <select class="form-control fixed-width-xxl" name="CMSROLE_{$id_cms_role}" id="CMSROLE_{$id_cms_role}">
-                                <option value="{$cms_pages[-1]->id}" {if $cms_role_assoc['id_cms'] == $cms_pages[-1]->id}selected{/if}>{$cms_pages[-1]->meta_title}</option>
+                            <select class="form-control fixed-width-xxl" name="CMSROLE_{$id_cms_role|intval}" id="CMSROLE_{$id_cms_role|intval}">
+                                <option value="{$cms_pages[-1]->id|intval}" {if $cms_role_assoc['id_cms'] == $cms_pages[-1]->id}selected{/if}>{$cms_pages[-1]->meta_title|escape:'htmlall'}</option>
                                 {foreach from=$cms_pages key=item_key item=cms_page}
                                     {if $item_key !== -1}
-                                        <option value="{$cms_page->id}" {if $cms_role_assoc['id_cms'] == $cms_page->id}selected{/if}>{$cms_page->meta_title}</option>
+                                        <option value="{$cms_page->id|intval}" {if $cms_role_assoc['id_cms'] == $cms_page->id}selected{/if}>{$cms_page->meta_title|escape:'htmlall'}</option>
                                     {/if}
                                 {/foreach}
                             </select>
@@ -61,7 +61,7 @@
             <button type="submit" class="btn btn-default pull-right">
                 <i class="process-icon-save"></i>  {l s='Save' mod='advancedeucompliance'}
             </button>
-            <a href="{$add_cms_link|escape:'html':'UTF-8'}" class="btn btn-default">
+            <a href="{$add_cms_link|escape:'url':'UTF-8'}" class="btn btn-default">
                 <i class="process-icon-plus"></i> {l s='Add new CMS Page' mod='advancedeucompliance'}
             </a>
         </div>
