@@ -485,32 +485,33 @@ class Advancedeucompliance extends Module
         $link_conditions = '';
         $link_revocations = '';
 
+        // Get IDs of CMS pages required
+        $cms_conditions_id = (int)Configuration::get('PS_CONDITIONS_CMS_ID');
+        $cms_revocation_id = (int)$cms_page_associated->id_cms;
+
+        // Get misc vars
+        $id_lang = (int)$this->context->language->id;
+        $id_shop = (int)$this->context->shop->id;
+        $is_ssl_enabled = (bool)Configuration::get('PS_SSL_ENABLED');
+        $checkedTos = $this->context->cart->checkedTos ? true : false;
+
+        // Get CMS OBJs
+        $cms_conditions = $cms_repository->i10nFindOneById($cms_conditions_id, $id_lang, $id_shop);
+        $link_conditions =
+            $this->context->link->getCMSLink($cms_conditions, $cms_conditions->link_rewrite, $is_ssl_enabled);
+
+        if (!strpos($link_conditions, '?')) {
+            $link_conditions .= '?content_only=1';
+        } else {
+            $link_conditions .= '&content_only=1';
+        }
+
         if ($has_tos_override_opt === true) {
-            // Get IDs of CMS pages required
-            $cms_conditions_id = (int)Configuration::get('PS_CONDITIONS_CMS_ID');
-            $cms_revocation_id = (int)$cms_page_associated->id_cms;
 
-            // Get misc vars
-            $id_lang = (int)$this->context->language->id;
-            $id_shop = (int)$this->context->shop->id;
-            $is_ssl_enabled = (bool)Configuration::get('PS_SSL_ENABLED');
-            $checkedTos = $this->context->cart->checkedTos ? true : false;
-
-            // Get CMS OBJs
-            $cms_conditions = $cms_repository->i10nFindOneById($cms_conditions_id, $id_lang, $id_shop);
             $cms_revocations = $cms_repository->i10nFindOneById($cms_revocation_id, $id_lang, $id_shop);
-
-            // Get links to these pages
-            $link_conditions =
-                $this->context->link->getCMSLink($cms_conditions, $cms_conditions->link_rewrite, $is_ssl_enabled);
+            // Get links to revocation page
             $link_revocations =
                 $this->context->link->getCMSLink($cms_revocations, $cms_revocations->link_rewrite, $is_ssl_enabled);
-
-            if (!strpos($link_conditions, '?')) {
-                $link_conditions .= '?content_only=1';
-            } else {
-                $link_conditions .= '&content_only=1';
-            }
 
             if (!strpos($link_revocations, '?')) {
                 $link_revocations .= '?content_only=1';
