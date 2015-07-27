@@ -23,7 +23,7 @@
  *  International Registered Trademark & Property of PrestaShop SA
  *}
 
-<form id="legalCMSManager" class="defaultForm form-horizontal" action="{$form_action|escape:'url'}" method="POST" enctype="multipart/form-data" novalidate>
+<form id="legalCMSManager" class="defaultForm form-horizontal" action="{$form_action}" method="POST" enctype="multipart/form-data" novalidate>
     <input type="hidden" name="AEUC_legalContentManager" value="1">
     <div class="panel">
         <div class="panel-heading">
@@ -61,7 +61,7 @@
             <button type="submit" class="btn btn-default pull-right">
                 <i class="process-icon-save"></i>  {l s='Save' mod='advancedeucompliance'}
             </button>
-            <a href="{$add_cms_link|escape:'url':'UTF-8'}" class="btn btn-default">
+            <a href="{$add_cms_link}" class="btn btn-default">
                 <i class="process-icon-plus"></i> {l s='Add new CMS Page' mod='advancedeucompliance'}
             </a>
         </div>

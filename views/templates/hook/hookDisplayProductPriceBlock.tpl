@@ -53,7 +53,7 @@
     {if isset($smartyVars.ship) && isset($smartyVars.ship.link_ship_pay) &&
     isset($smartyVars.ship.ship_str_i18n) && isset($smartyVars.ship.js_ship_fancybx)}
         <div class="aeuc_shipping_label">
-            <a href="{$smartyVars.ship.link_ship_pay|escape:'url'}" class="iframe">
+            <a href="{$smartyVars.ship.link_ship_pay}" class="iframe">
                 {$smartyVars.ship.ship_str_i18n|escape:'htmlall'}
             </a>
             {$smartyVars.ship.js_ship_fancybx|escape:'javascript'}
