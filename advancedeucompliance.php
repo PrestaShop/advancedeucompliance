@@ -137,7 +137,7 @@ class Advancedeucompliance extends Module
                $this->unloadTables();
     }
 
-    public function disable()
+    public function disable($force_all = false)
     {
         $is_adv_api_disabled = (bool)Configuration::updateValue('PS_ADVANCED_PAYMENT_API', false);
         return parent::disable() && $is_adv_api_disabled;
