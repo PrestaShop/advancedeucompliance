@@ -61,7 +61,7 @@ class Advancedeucompliance extends Module
 
         $this->name = 'advancedeucompliance';
         $this->tab = 'administration';
-        $this->version = '1.3.3';
+        $this->version = '1.4.0';
         $this->author = 'PrestaShop';
         $this->need_instance = 0;
         $this->bootstrap = true;
