@@ -23,7 +23,7 @@
  *  International Registered Trademark & Property of PrestaShop SA
  *}
 
-<form id="emailAttachementsManager" class="defaultForm form-horizontal" action="{$form_action|escape:'url'}" method="POST" enctype="multipart/form-data" novalidate>
+<form id="emailAttachementsManager" class="defaultForm form-horizontal" action="{$form_action}" method="POST" enctype="multipart/form-data" novalidate>
     <input type="hidden" name="AEUC_emailAttachmentsManager" value="1">
     <div class="panel">
         <div class="panel-heading">

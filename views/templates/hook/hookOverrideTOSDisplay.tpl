@@ -32,6 +32,7 @@
                 <p class="checkbox">
                     <input type="checkbox" name="cgv" id="cgv" value="1" {if isset($checkedTOS) && $checkedTOS}checked="checked"{/if}/>
                     {if isset($link_conditions) && $link_conditions}
+
                         <label for="cgv">{l s='I agree to the' mod='advancedeucompliance'}</label> <a href="{$link_conditions|escape:'html':'UTF-8'}" class="iframe" rel="nofollow">{l s='terms of service'  mod='advancedeucompliance'}</a>
                     {/if}
                     {if isset($link_revocations) && $link_revocations}
