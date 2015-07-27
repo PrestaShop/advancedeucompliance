@@ -30,7 +30,7 @@
             <tr>
                 <td style="width:20px;padding:7px 0">&nbsp;</td>
                 <td style="padding:7px 0">
-                    {$content}
+                    {$content|cleanHtml}
                 </td>
                 <td style="width:20px;padding:7px 0">&nbsp;</td>
             </tr>

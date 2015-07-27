@@ -27,25 +27,25 @@
     {* "From" Price Hook templating *}
     {if isset($smartyVars.before_price) && isset($smartyVars.before_price.from_str_i18n)}
         <span class="aeuc_from_label">
-            {$smartyVars.before_price.from_str_i18n}
+            {$smartyVars.before_price.from_str_i18n|escape:'htmlall'}
         </span>
     {/if}
 
     {* "Before" Price Hook templating *}
     {if isset($smartyVars.old_price) && isset($smartyVars.old_price.before_str_i18n)}
         <span class="aeuc_before_label">
-            {$smartyVars.old_price.before_str_i18n}
+            {$smartyVars.old_price.before_str_i18n|escape:'htmlall'}
         </span>
     {/if}
 
     {* "Tax Inc/Exc" Price Hook templating *}
     {if isset($smartyVars.price) && isset($smartyVars.price.tax_str_i18n)}
         <span class={if isset($smartyVars.price.css_class)}
-                        "{$smartyVars.price.css_class}"
+                        "{$smartyVars.price.css_class|escape:'htmlall'}"
                     {else}
                         "aeuc_tax_label"
                     {/if}>
-            {$smartyVars.price.tax_str_i18n}
+            {$smartyVars.price.tax_str_i18n|escape:'htmlall'}
         </span>
     {/if}
 
@@ -53,24 +53,24 @@
     {if isset($smartyVars.ship) && isset($smartyVars.ship.link_ship_pay) &&
     isset($smartyVars.ship.ship_str_i18n) && isset($smartyVars.ship.js_ship_fancybx)}
         <div class="aeuc_shipping_label">
-            <a href="{$smartyVars.ship.link_ship_pay}" class="iframe">
-                {$smartyVars.ship.ship_str_i18n}
+            <a href="{$smartyVars.ship.link_ship_pay|escape:'url'}" class="iframe">
+                {$smartyVars.ship.ship_str_i18n|escape:'htmlall'}
             </a>
-            {$smartyVars.ship.js_ship_fancybx}
+            {$smartyVars.ship.js_ship_fancybx|escape:'javascript'}
         </div>
     {/if}
 
     {* "Weight" Price Hook templating *}
     {if isset($smartyVars.weight) && isset($smartyVars.weight.rounded_weight_str_i18n)}
         <div class="aeuc_weight_label">
-            {$smartyVars.weight.rounded_weight_str_i18n}
+            {$smartyVars.weight.rounded_weight_str_i18n|escape:'htmlall'}
         </div>
     {/if}
 
     {* "Delivery Estimation" Price Hook templating *}
     {if isset($smartyVars.after_price) && isset($smartyVars.after_price.delivery_str_i18n)}
         <div class="aeuc_delivery_label">
-            {$smartyVars.after_price.delivery_str_i18n}
+            {$smartyVars.after_price.delivery_str_i18n|escape:'htmlall'}
         </div>
     {/if}
 {/if}
