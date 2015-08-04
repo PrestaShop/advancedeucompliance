@@ -55,6 +55,8 @@ $_MODULE['<{advancedeucompliance}prestashop>legal_cms_manager_form_c47ab33401ead
 $_MODULE['<{advancedeucompliance}prestashop>legal_cms_manager_form_c9cc8cce247e49bae79f15173ce97354'] = 'Speichern';
 $_MODULE['<{advancedeucompliance}prestashop>legal_cms_manager_form_bc6cae5795433bf5d5052485128f080c'] = 'CMS-Seite hinzufügen';
 $_MODULE['<{advancedeucompliance}prestashop>hookoverridetosdisplay_97abaa921b2270031573362f57aad4a4'] = 'Allgemeine Geschäftsbedingungen (AGB)';
-$_MODULE['<{advancedeucompliance}prestashop>hookoverridetosdisplay_1aeb4fe3551d16cc0d39f858f37f367a'] = 'Ich habe die Allgemeine Geschäftsbedingungen und das Widerspruchsrecht zur Kenntnis genommen und Stimme uneingeschränkt zu.';
+$_MODULE['<{advancedeucompliance}prestashop>hookoverridetosdisplay_1aeb4fe3551d16cc0d39f858f37f367a'] = 'Ich habe die Allgemeine Geschäftsbedingungen und das Widerspruchsrecht zur Kenntnis genommen und stimme uneingeschränkt zu.';
 $_MODULE['<{advancedeucompliance}prestashop>hookoverridetosdisplay_d53afd7ef9af5405df040482add9b153'] = '(AGB lesen)';
 $_MODULE['<{advancedeucompliance}prestashop>hookoverridetosdisplay_1a239a965f9b37cf7786a6bfdf38055c'] = '(Widerspruchsrecht lesen)';
+$_MODULE['<{advancedeucompliance}prestashop>hookoverridetosdisplay_34f1e293041593ba9867658178b3ec19'] = 'Ich habe die [1]Allgemeine Geschäftsbedingungen (AGB)[/1] zur Kenntnis genommen und stimme uneingeschränkt zu.';
+$_MODULE['<{advancedeucompliance}prestashop>hookoverridetosdisplay_5594dc635672facca12fc9181139eb2a'] = 'Ich habe die [1]Allgemeine Geschäftsbedingungen[/1] und das [2]Widerspruchsrecht[/2] zur Kenntnis genommen und stimme uneingeschränkt zu.';
