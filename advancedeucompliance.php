@@ -579,7 +579,7 @@ class Advancedeucompliance extends Module
         $smartyVars = array();
 
         /* Handle Product Combinations label */
-        if ($param['type'] == 'before_price' && (bool)Configuration::get('AEUC_LABEL_SPECIFIC_PRICE') === true) {
+        if ($param['type'] == 'before_price' && (bool)Configuration::get('AEUC_LABEL_COMBINATION_FROM') === true) {
             if ($product->hasAttributes()) {
                 $need_display = false;
                 $combinations = $product->getAttributeCombinations($this->context->language->id);
