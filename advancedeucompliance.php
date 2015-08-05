@@ -478,7 +478,9 @@ class Advancedeucompliance extends Module
 
         // Check if cart has virtual product
         $has_virtual_product = (bool)Configuration::get('AEUC_LABEL_REVOCATION_VP') && $this->hasCartVirtualProduct($this->context->cart);
-        Media::addJsDef(array('aeuc_has_virtual_products' => (bool)$has_virtual_product));
+        Media::addJsDef(array('aeuc_has_virtual_products' => (bool)$has_virtual_product,
+                              'aeuc_virt_prod_err_str' => Tools::htmlentitiesUTF8($this->l('Please check "Revocation of virtual products" box first !',
+                                                                                           'advancedeucompliance'))));
         $this->context->controller->addJS($this->_path . 'views/js/fo_aeuc_tnc.js', true);
 
         $checkedTos = false;
