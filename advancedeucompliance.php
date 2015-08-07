@@ -124,7 +124,7 @@ class Advancedeucompliance extends Module
     public function getRequiredThemeTemplate()
     {
         return array(
-            'order-address-adanced.tpl',
+            'order-address-advanced.tpl',
             'order-carrier-advanced.tpl',
             'order-carrier-opc-advanced.tpl',
             'order-opc-advanced.tpl',
