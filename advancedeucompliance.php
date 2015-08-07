@@ -486,7 +486,9 @@ class Advancedeucompliance extends Module
         Media::addJsDef(array('aeuc_has_virtual_products' => (bool)$has_virtual_product,
                               'aeuc_virt_prod_err_str' => Tools::htmlentitiesUTF8($this->l('Please check "Revocation of virtual products" box first !',
                                                                                            'advancedeucompliance'))));
-        $this->context->controller->addJS($this->_path . 'views/js/fo_aeuc_tnc.js', true);
+        if ($has_tos_override_opt || (bool)Configuration::get('AEUC_LABEL_REVOCATION_VP')) {
+            $this->context->controller->addJS($this->_path . 'views/js/fo_aeuc_tnc.js', true);
+        }
 
         $checkedTos = false;
         $link_conditions = '';
