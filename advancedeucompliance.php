@@ -39,6 +39,7 @@ class Advancedeucompliance extends Module
     private   $entity_manager;
     private   $filesystem;
     private   $emails;
+    private   $missing_templates = array();
     protected $_errors;
     protected $_warnings;
 
@@ -107,20 +108,23 @@ class Advancedeucompliance extends Module
 
     public function isThemeCompliant()
     {
+        $return = true;
+
         foreach ($this->getRequiredThemeTemplate() as $required_tpl) {
 
             if (!is_file(_PS_THEME_DIR_ . $required_tpl)) {
-                return false;
+                $this->missing_templates[] = $required_tpl;
+                $return = false;
             }
         }
 
-        return true;
+        return $return;
     }
 
     public function getRequiredThemeTemplate()
     {
         return array(
-            'order-address-advanced.tpl',
+            'order-address-adanced.tpl',
             'order-carrier-advanced.tpl',
             'order-carrier-opc-advanced.tpl',
             'order-opc-advanced.tpl',
@@ -725,12 +729,27 @@ class Advancedeucompliance extends Module
     {
         $theme_warning = null;
         $this->refreshThemeStatus();
+        $success_band = $this->_postProcess();
         if ((bool)Configuration::get('AEUC_IS_THEME_COMPLIANT') === false) {
-            $theme_warning = $this->displayWarning($this->l('It seems that your current theme is not compatible with this module, some mandatory templates are missing. You will not be able to use all the available options.',
-                                                            'advancedeucompliance'));
+            $missing = '<ul>';
+            foreach ($this->missing_templates as $missing_tpl) {
+                $missing .= '<li>'.$missing_tpl.' '.$this->l('missing').'</li>';
+            }
+            $missing .= '</ul><br/>';
+            $discard_warning_link = $this->context->link->getAdminLink('AdminModules', false) .
+                                    '&configure='.$this->name.
+                                    '&tab_module='.$this->tab.
+                                    '&module_name='.$this->name.
+                                    '&discard_tpl_warn=1'.
+                                    '&token='.Tools::getAdminTokenLite('AdminModules');
+            $missing .= '<a href="'.$discard_warning_link.'" type="button">'.$this->l('Hide this, I know what I am doing.',
+                                                                                      'advancedeucompliance').
+                        '</a>';
+            $theme_warning = $this->displayWarning($this->l('It seems that your current theme is not compatible with this module, some mandatory templates are missing. It is possible some options may not work as expected.',
+                                                            'advancedeucompliance').$missing);
+
         }
 
-        $success_band = $this->_postProcess();
         $this->context->smarty->assign('module_dir', $this->_path);
         $this->context->smarty->assign('errors', $this->_errors);
         $this->context->controller->addCSS($this->_path . 'views/css/configure.css', 'all');
@@ -756,7 +775,8 @@ class Advancedeucompliance extends Module
 
         $post_keys_complex = array('AEUC_legalContentManager',
                                    'AEUC_emailAttachmentsManager',
-                                   'PS_PRODUCT_WEIGHT_PRECISION'
+                                   'PS_PRODUCT_WEIGHT_PRECISION',
+                                   'discard_tpl_warn'
         );
 
         $i10n_inputs_received = array();
@@ -768,6 +788,7 @@ class Advancedeucompliance extends Module
                 $is_option_active = Tools::getValue($key_received);
                 $key = Tools::strtolower($key_received);
                 $key = Tools::toCamelCase($key);
+
                 if (method_exists($this, 'process' . $key)) {
 
                     $this->{'process' . $key}($is_option_active);
@@ -971,6 +992,11 @@ class Advancedeucompliance extends Module
         }
     }
 
+    protected function processDiscardTplWarn()
+    {
+        Configuration::updateValue('AEUC_IS_THEME_COMPLIANT', true);
+    }
+
     protected function processAeucFeatAdvPaymentApi($is_option_active)
     {
         $this->refreshThemeStatus();
@@ -1080,7 +1106,7 @@ class Advancedeucompliance extends Module
         $helper->submit_action = 'submitAEUC_labelsManager';
         $helper->currentIndex =
             $this->context->link->getAdminLink('AdminModules', false) . '&configure=' . $this->name . '&tab_module=' .
-            $this->tab . '&module_name=' . $this->name;
+            $this->tab . '&module_name=' . $this->name . '&token=' . Tools::getAdminTokenLite('AdminModules');
         $helper->token = Tools::getAdminTokenLite('AdminModules');
 
         $helper->tpl_vars =
