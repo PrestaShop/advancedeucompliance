@@ -457,12 +457,17 @@ class Advancedeucompliance extends Module
 
     public function hookHeader($param)
     {
-        if (isset($this->context->controller->php_self) && ($this->context->controller->php_self === 'index' ||
-                                                            $this->context->controller->php_self === 'product' ||
-                                                            $this->context->controller->php_self === 'order' ||
-                                                            $this->context->controller->php_self === 'order-opc' ||
-                                                            $this->context->controller->php_self === 'category')
-        ) {
+        $css_required = array(
+            'index',
+            'product',
+            'order',
+            'order-opc',
+            'category',
+            'products-comparison',
+
+        );
+
+        if (isset($this->context->controller->php_self) && in_array($this->context->controller->php_self, $css_required)) {
             $this->context->controller->addCSS($this->_path . 'views/css/aeuc_front.css', 'all');
         }
 
