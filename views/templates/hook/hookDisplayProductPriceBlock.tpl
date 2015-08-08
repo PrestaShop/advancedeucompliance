@@ -54,9 +54,9 @@
     isset($smartyVars.ship.ship_str_i18n) && isset($smartyVars.ship.js_ship_fancybx)}
         <div class="aeuc_shipping_label">
             <a href="{$smartyVars.ship.link_ship_pay}" class="iframe">
-                {$smartyVars.ship.ship_str_i18n|escape:'htmlall'}
+                {$smartyVars.ship.ship_str_i18n}
             </a>
-            {$smartyVars.ship.js_ship_fancybx|escape:'javascript'}
+            {$smartyVars.ship.js_ship_fancybx}
         </div>
     {/if}
 
