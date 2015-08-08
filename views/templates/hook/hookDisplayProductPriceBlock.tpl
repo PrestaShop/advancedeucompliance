@@ -56,7 +56,6 @@
             <a href="{$smartyVars.ship.link_ship_pay}" class="iframe">
                 {$smartyVars.ship.ship_str_i18n|escape:'htmlall'}
             </a>
-            {$smartyVars.ship.js_ship_fancybx|escape:'javascript'}
         </div>
     {/if}
 
