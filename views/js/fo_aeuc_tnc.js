@@ -43,11 +43,13 @@ $(document).ready(function(){
         if (aeuc_has_virtual_products === true && aeuc_controller.checkVirtualProductRevocation() === false)
         {
             var to_display = $('<div/>').html(aeuc_virt_prod_err_str).text();
-            alert(to_display);
+            $.fancybox(to_display,{
+                minWidth: 'auto',
+                minHeight: 'auto'
+            });
             return;
         }
-
-        $(this).submit();
+        $("#form").submit();
     });
 
 });
