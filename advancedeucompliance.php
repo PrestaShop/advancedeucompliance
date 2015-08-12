@@ -35,13 +35,13 @@ include_once dirname(__FILE__) . '/entities/AeucEmailEntity.php';
 class Advancedeucompliance extends Module
 {
     /* Class members */
-    protected $config_form = false;
+    protected   $config_form = false;
     protected   $entity_manager;
     protected   $filesystem;
     protected   $emails;
-    private   $missing_templates = array();
-    protected $_errors;
-    protected $_warnings;
+    private     $missing_templates = array();
+    protected   $_errors;
+    protected   $_warnings;
 
     /* Constants used for LEGAL/CMS Management */
     const LEGAL_NO_ASSOC        = 'NO_ASSOC';
