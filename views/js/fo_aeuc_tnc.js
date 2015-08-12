@@ -24,10 +24,43 @@
  */
 
 $(document).ready(function(){
-    if (!!$.prototype.fancybox)
+
+    aeuc_controller = new AEUC_Controller();
+
+    if (!!$.prototype.fancybox) {
         $("a.iframe").fancybox({
             'type': 'iframe',
             'width': 600,
             'height': 600
         });
-})
+    }
+
+    $('button[name="processCarrier"]').click(function(event){
+        /* Avoid any further action */
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (aeuc_has_virtual_products === true && aeuc_controller.checkVirtualProductRevocation() === false)
+        {
+            var to_display = $('<div/>').html(aeuc_virt_prod_err_str).text();
+            $.fancybox(to_display,{
+                minWidth: 'auto',
+                minHeight: 'auto'
+            });
+            return;
+        }
+        $("#form").submit();
+    });
+
+});
+
+var AEUC_Controller = function() {
+
+    this.checkVirtualProductRevocation = function() {
+        if ($('#revocation_vp_terms_agreed').prop('checked')) {
+            return true;
+        }
+
+        return false;
+    }
+};

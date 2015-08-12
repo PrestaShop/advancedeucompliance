@@ -39,6 +39,7 @@ class Advancedeucompliance extends Module
     private   $entity_manager;
     private   $filesystem;
     private   $emails;
+    private   $missing_templates = array();
     protected $_errors;
     protected $_warnings;
 
@@ -107,14 +108,17 @@ class Advancedeucompliance extends Module
 
     public function isThemeCompliant()
     {
+        $return = true;
+
         foreach ($this->getRequiredThemeTemplate() as $required_tpl) {
 
             if (!is_file(_PS_THEME_DIR_ . $required_tpl)) {
-                return false;
+                $this->missing_templates[] = $required_tpl;
+                $return = false;
             }
         }
 
-        return true;
+        return $return;
     }
 
     public function getRequiredThemeTemplate()
@@ -457,12 +461,17 @@ class Advancedeucompliance extends Module
 
     public function hookHeader($param)
     {
-        if (isset($this->context->controller->php_self) && ($this->context->controller->php_self === 'index' ||
-                                                            $this->context->controller->php_self === 'product' ||
-                                                            $this->context->controller->php_self === 'order' ||
-                                                            $this->context->controller->php_self === 'order-opc' ||
-                                                            $this->context->controller->php_self === 'category')
-        ) {
+        $css_required = array(
+            'index',
+            'product',
+            'order',
+            'order-opc',
+            'category',
+            'products-comparison',
+
+        );
+
+        if (isset($this->context->controller->php_self) && in_array($this->context->controller->php_self, $css_required)) {
             $this->context->controller->addCSS($this->_path . 'views/css/aeuc_front.css', 'all');
         }
 
@@ -478,8 +487,12 @@ class Advancedeucompliance extends Module
 
         // Check if cart has virtual product
         $has_virtual_product = (bool)Configuration::get('AEUC_LABEL_REVOCATION_VP') && $this->hasCartVirtualProduct($this->context->cart);
-        Media::addJsDef(array('aeuc_has_virtual_products' => (bool)$has_virtual_product));
-        $this->context->controller->addJS($this->_path . 'views/js/fo_aeuc_tnc.js', true);
+        Media::addJsDef(array('aeuc_has_virtual_products' => (bool)$has_virtual_product,
+                              'aeuc_virt_prod_err_str' => Tools::htmlentitiesUTF8($this->l('Please check "Revocation of virtual products" box first !',
+                                                                                           'advancedeucompliance'))));
+        if ($has_tos_override_opt || (bool)Configuration::get('AEUC_LABEL_REVOCATION_VP')) {
+            $this->context->controller->addJS($this->_path . 'views/js/fo_aeuc_tnc.js', true);
+        }
 
         $checkedTos = false;
         $link_conditions = '';
@@ -579,7 +592,7 @@ class Advancedeucompliance extends Module
         $smartyVars = array();
 
         /* Handle Product Combinations label */
-        if ($param['type'] == 'before_price' && (bool)Configuration::get('AEUC_LABEL_SPECIFIC_PRICE') === true) {
+        if ($param['type'] == 'before_price' && (bool)Configuration::get('AEUC_LABEL_COMBINATION_FROM') === true) {
             if ($product->hasAttributes()) {
                 $need_display = false;
                 $combinations = $product->getAttributeCombinations($this->context->language->id);
@@ -655,16 +668,6 @@ class Advancedeucompliance extends Module
                         $smartyVars['ship'] = array();
                         $smartyVars['ship']['link_ship_pay'] = $link_ship_pay;
                         $smartyVars['ship']['ship_str_i18n'] = $this->l('Shipping excluded', 'advancedeucompliance');
-                        $smartyVars['ship']['js_ship_fancybx'] = '<script type="text/javascript">
-																	$(document).ready(function(){
-																		if (!!$.prototype.fancybox)
-																			$("a.iframe").fancybox({
-																				"type": "iframe",
-																				"width": 600,
-																				"height": 600
-																			});
-																	})
-																</script>';
                     }
                 }
             }
@@ -726,12 +729,27 @@ class Advancedeucompliance extends Module
     {
         $theme_warning = null;
         $this->refreshThemeStatus();
+        $success_band = $this->_postProcess();
         if ((bool)Configuration::get('AEUC_IS_THEME_COMPLIANT') === false) {
-            $theme_warning = $this->displayWarning($this->l('It seems that your current theme is not compatible with this module, some mandatory templates are missing. You will not be able to use all the available options.',
-                                                            'advancedeucompliance'));
+            $missing = '<ul>';
+            foreach ($this->missing_templates as $missing_tpl) {
+                $missing .= '<li>'.$missing_tpl.' '.$this->l('missing').'</li>';
+            }
+            $missing .= '</ul><br/>';
+            $discard_warning_link = $this->context->link->getAdminLink('AdminModules', false) .
+                                    '&configure='.$this->name.
+                                    '&tab_module='.$this->tab.
+                                    '&module_name='.$this->name.
+                                    '&discard_tpl_warn=1'.
+                                    '&token='.Tools::getAdminTokenLite('AdminModules');
+            $missing .= '<a href="'.$discard_warning_link.'" type="button">'.$this->l('Hide this, I know what I am doing.',
+                                                                                      'advancedeucompliance').
+                        '</a>';
+            $theme_warning = $this->displayWarning($this->l('It seems that your current theme is not compatible with this module, some mandatory templates are missing. It is possible some options may not work as expected.',
+                                                            'advancedeucompliance').$missing);
+
         }
 
-        $success_band = $this->_postProcess();
         $this->context->smarty->assign('module_dir', $this->_path);
         $this->context->smarty->assign('errors', $this->_errors);
         $this->context->controller->addCSS($this->_path . 'views/css/configure.css', 'all');
@@ -757,7 +775,8 @@ class Advancedeucompliance extends Module
 
         $post_keys_complex = array('AEUC_legalContentManager',
                                    'AEUC_emailAttachmentsManager',
-                                   'PS_PRODUCT_WEIGHT_PRECISION'
+                                   'PS_PRODUCT_WEIGHT_PRECISION',
+                                   'discard_tpl_warn'
         );
 
         $i10n_inputs_received = array();
@@ -769,6 +788,7 @@ class Advancedeucompliance extends Module
                 $is_option_active = Tools::getValue($key_received);
                 $key = Tools::strtolower($key_received);
                 $key = Tools::toCamelCase($key);
+
                 if (method_exists($this, 'process' . $key)) {
 
                     $this->{'process' . $key}($is_option_active);
@@ -972,6 +992,11 @@ class Advancedeucompliance extends Module
         }
     }
 
+    protected function processDiscardTplWarn()
+    {
+        Configuration::updateValue('AEUC_IS_THEME_COMPLIANT', true);
+    }
+
     protected function processAeucFeatAdvPaymentApi($is_option_active)
     {
         $this->refreshThemeStatus();
@@ -1081,7 +1106,7 @@ class Advancedeucompliance extends Module
         $helper->submit_action = 'submitAEUC_labelsManager';
         $helper->currentIndex =
             $this->context->link->getAdminLink('AdminModules', false) . '&configure=' . $this->name . '&tab_module=' .
-            $this->tab . '&module_name=' . $this->name;
+            $this->tab . '&module_name=' . $this->name . '&token=' . Tools::getAdminTokenLite('AdminModules');
         $helper->token = Tools::getAdminTokenLite('AdminModules');
 
         $helper->tpl_vars =

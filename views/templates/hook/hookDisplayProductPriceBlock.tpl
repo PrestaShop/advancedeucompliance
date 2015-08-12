@@ -51,12 +51,21 @@
 
     {* "Shipping CMS content" Price Hook templating *}
     {if isset($smartyVars.ship) && isset($smartyVars.ship.link_ship_pay) &&
-    isset($smartyVars.ship.ship_str_i18n) && isset($smartyVars.ship.js_ship_fancybx)}
+    isset($smartyVars.ship.ship_str_i18n)}
         <div class="aeuc_shipping_label">
             <a href="{$smartyVars.ship.link_ship_pay}" class="iframe">
                 {$smartyVars.ship.ship_str_i18n|escape:'htmlall'}
             </a>
-            {$smartyVars.ship.js_ship_fancybx|escape:'javascript'}
+            <script type="text/javascript">
+                $(document).ready(function(){
+                    if (!!$.prototype.fancybox)
+                        $("a.iframe").fancybox({
+                            "type": "iframe",
+                            "width": 600,
+                            "height": 600
+                        });
+                })
+            </script>
         </div>
     {/if}
 
