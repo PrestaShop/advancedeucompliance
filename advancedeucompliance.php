@@ -36,9 +36,9 @@ class Advancedeucompliance extends Module
 {
     /* Class members */
     protected $config_form = false;
-    private   $entity_manager;
-    private   $filesystem;
-    private   $emails;
+    protected   $entity_manager;
+    protected   $filesystem;
+    protected   $emails;
     private   $missing_templates = array();
     protected $_errors;
     protected $_warnings;
