@@ -58,7 +58,6 @@
                         </label>
                     {else}
                         <label for="cgv">
-                            puet
                             {l s='I agree to the terms of service and to the terms of revocation and will adhere to them unconditionally' mod='advancedeucompliance'}
                         </label>
                     {/if}
