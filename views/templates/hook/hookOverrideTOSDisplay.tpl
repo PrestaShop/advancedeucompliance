@@ -33,10 +33,7 @@
                     <input type="checkbox" name="cgv" id="cgv" value="1" {if isset($checkedTOS) && $checkedTOS}checked="checked"{/if}/>
                     {if isset($link_conditions) && $link_conditions && isset($link_revocations) && $link_revocations}
                         <label for="cgv">
-                            {l s='I agree to the [1]terms of service[/1] and to the [2]terms of revocation[/2] and will adhere to them unconditionally.'
-                            tags=['<a href="'|cat:{$link_conditions|escape:'html':'UTF-8'}|cat:'" class="iframe" rel="nofollow">',
-                            '<a href="'|cat:{$link_revocations|escape:'html':'UTF-8'}|cat:'" class="iframe" rel="nofollow">']
-                            mod='advancedeucompliance'}
+                            {l s='I agree to the [1]terms of service[/1] and to the [2]terms of revocation[/2] and will adhere to them unconditionally.' tags=['<a href="'|cat:{$link_conditions|escape:'html':'UTF-8'}|cat:'" class="iframe" rel="nofollow">','<a href="'|cat:{$link_revocations|escape:'html':'UTF-8'}|cat:'" class="iframe" rel="nofollow">'] mod='advancedeucompliance'}
                         </label>
                     {else}
                         <label for="cgv">
@@ -52,13 +49,10 @@
                     <input type="checkbox" name="cgv" id="cgv" value="1" {if $checkedTOS}checked="checked"{/if} />
                     {if isset($link_conditions) && $link_conditions}
                         <label for="cgv">
-                            {l s='I agree to the terms of service and will adhere to them unconditionally. [1](Read the Terms of Service)[/1].'
-                            tags=['<a href="'|cat:{$link_conditions|escape:'html':'UTF-8'}|cat:'" class="iframe" rel="nofollow">']
-                            mod='advancedeucompliance'}
+                            {l s='I agree to the terms of service and will adhere to them unconditionally. [1](Read the Terms of Service)[/1].' tags=['<a href="'|cat:{$link_conditions|escape:'html':'UTF-8'}|cat:'" class="iframe" rel="nofollow">'] mod='advancedeucompliance'}
                         </label>
                     {else}
                         <label for="cgv">
-                            puet
                             {l s='I agree to the terms of service and to the terms of revocation and will adhere to them unconditionally' mod='advancedeucompliance'}
                         </label>
                     {/if}
