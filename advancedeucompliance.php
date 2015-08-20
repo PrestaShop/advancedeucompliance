@@ -362,8 +362,8 @@ class Advancedeucompliance extends Module
 
         $this->context->smarty->assign(array('smartyVars' => $smartyVars));
 
-        return $this->context->smarty->fetch($this->local_path .
-                                             'views/templates/hook/displayCartTotalPriceLabel.tpl');
+
+        return $this->display(__FILE__, 'displayCartTotalPriceLabel.tpl');
     }
 
     /* This hook is present to maintain backward compatibility */
@@ -454,8 +454,7 @@ class Advancedeucompliance extends Module
         }
 
         $this->context->smarty->assign(array('cms_contents' => $cms_contents));
-        $final_content = $this->context->smarty->fetch($this->local_path . 'views/templates/hook/hook-email-wrapper.tpl');
-        $param['template_html'] .= $final_content;
+        $param['template_html'] .= $this->display(__FILE__, 'hook-email-wrapper.tpl');
 
     }
 
@@ -541,9 +540,7 @@ class Advancedeucompliance extends Module
                                            'has_virtual_product'  => $has_virtual_product
                                        ));
 
-        $content = $this->context->smarty->fetch($this->local_path . 'views/templates/hook/hookOverrideTOSDisplay.tpl');
-
-        return $content;
+        return $this->display(__FILE__, 'hookOverrideTOSDisplay.tpl');
     }
 
     public function hookDisplayBeforeShoppingCartBlock($params)
@@ -718,8 +715,7 @@ class Advancedeucompliance extends Module
     {
         $this->context->smarty->assign(array('smartyVars' => $smartyVars));
 
-        return $this->context->smarty->fetch($this->local_path .
-                                             'views/templates/hook/hookDisplayProductPriceBlock.tpl');
+        return $this->display(__FILE__, 'hookDisplayProductPriceBlock.tpl');
     }
 
     /**
@@ -1569,9 +1565,8 @@ class Advancedeucompliance extends Module
                                            'form_action'     => $this->context->link->getAdminLink('AdminModules') . '&configure=' . $this->name,
                                            'add_cms_link'    => $this->context->link->getAdminLink('AdminCMS')
                                        ));
-        $content = $this->context->smarty->fetch($this->local_path . 'views/templates/admin/legal_cms_manager_form.tpl');
 
-        return $content;
+        return $this->display(__FILE__, 'views/templates/admin/legal_cms_manager_form.tpl');
     }
 
     protected function renderFormEmailAttachmentsManager()
@@ -1608,10 +1603,9 @@ class Advancedeucompliance extends Module
                                            'form_action'     => $this->context->link->getAdminLink('AdminModules') . '&configure=' . $this->name
                                        ));
 
-        $content = $this->context->smarty->fetch($this->local_path . 'views/templates/admin/email_attachments_form.tpl');
         // Insert JS in the page
         $this->context->controller->addJS(($this->_path) . 'views/js/email_attachement.js');
 
-        return $content;
+        return $this->display(__FILE__, 'views/templates/admin/email_attachments_form.tpl');
     }
 }
