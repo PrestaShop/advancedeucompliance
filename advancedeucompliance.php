@@ -152,18 +152,23 @@ class Advancedeucompliance extends Module
     {
         $return = true;
         $module_to_check = array(
-                'bankwire', 'cheque', 'paypal',
-                'adyen', 'hipay', 'cashondelivery', 'sofortbanking',
-                'pigmbhpaymill', 'ogone', 'moneybookers',
-                'syspay'
-            );
+            'bankwire', 'cheque', 'paypal',
+            'adyen', 'hipay', 'cashondelivery', 'sofortbanking',
+            'pigmbhpaymill', 'ogone', 'moneybookers',
+            'syspay'
+        );
         $display_payment_eu_hook_id = (int)Hook::getIdByName('displayPaymentEu');
         $already_hooked_modules_ids = array_keys(Hook::getModulesFromHook($display_payment_eu_hook_id));
 
         foreach ($module_to_check as $module_name) {
-            // Check if module is not already hooked on it and that module exists
-            if (($module = Module::getInstanceByName($module_name)) !== false && !in_array($module->id, $already_hooked_modules_ids)) {
-                $return &= $module->registerHook('displayPaymentEu');
+
+            if (($module = Module::getInstanceByName($module_name)) !== false &&
+                Module::isInstalled($module_name) &&
+                $module->active &&
+                !in_array($module->id, $already_hooked_modules_ids) &&
+                !$module->isRegisteredInHook('displayPaymentEu') ) {
+
+                    $return &= $module->registerHook('displayPaymentEu');
             }
         }
 
