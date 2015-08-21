@@ -40,5 +40,6 @@ function upgrade_module_1_5_0($module)
     $new_hook->position = true;
     $new_hook->live_edit = false;
 
-    return (bool)$new_hook->add();
+    return (bool)$new_hook->add() &&
+           (bool)$module->registerModulesBackwardCompatHook();
 }

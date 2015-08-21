@@ -91,6 +91,7 @@ class Advancedeucompliance extends Module
         $return = parent::install() &&
                   $this->loadTables() &&
                   $this->installHooks() &&
+                  $this->registerModulesBackwardCompatHook() &&
                   $this->registerHook('header') &&
                   $this->registerHook('displayProductPriceBlock') &&
                   $this->registerHook('overrideTOSDisplay') &&
@@ -145,6 +146,28 @@ class Advancedeucompliance extends Module
     {
         $is_adv_api_disabled = (bool)Configuration::updateValue('PS_ADVANCED_PAYMENT_API', false);
         return parent::disable() && $is_adv_api_disabled;
+    }
+
+    public function registerModulesBackwardCompatHook()
+    {
+        $return = true;
+        $module_to_check = array(
+                'bankwire', 'cheque', 'paypal',
+                'adyen', 'hipay', 'cashondelivery', 'sofortbanking',
+                'pigmbhpaymill', 'ogone', 'moneybookers',
+                'syspay'
+            );
+        $display_payment_eu_hook_id = (int)Hook::getIdByName('displayPaymentEu');
+        $already_hooked_modules_ids = array_keys(Hook::getModulesFromHook($display_payment_eu_hook_id));
+
+        foreach ($module_to_check as $module_name) {
+            // Check if module is not already hooked on it and that module exists
+            if (($module = Module::getInstanceByName($module_name)) !== false && !in_array($module->id, $already_hooked_modules_ids)) {
+                $return &= $module->registerHook('displayPaymentEu');
+            }
+        }
+
+        return $return;
     }
 
     public function installHooks()
