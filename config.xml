@@ -2,7 +2,7 @@
 <module>
 	<name>advancedeucompliance</name>
 	<displayName><![CDATA[Advanced EU Compliance]]></displayName>
-	<version><![CDATA[1.4.0]]></version>
+	<version><![CDATA[1.5.0]]></version>
 	<description><![CDATA[This module helps European merchants in getting compliant with applicable e-commerce law.]]></description>
 	<author><![CDATA[PrestaShop]]></author>
 	<tab><![CDATA[administration]]></tab>
