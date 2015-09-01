@@ -27,7 +27,7 @@
 if (!defined('_PS_VERSION_'))
     exit;
 
-function upgrade_module_1_5_0($module)
+function upgrade_module_1_5_1($module)
 {
     if (Hook::getIdByName('displayPaymentEu')) {
         return true;
