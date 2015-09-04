@@ -372,14 +372,10 @@ class Advancedeucompliance extends Module
         $legacyOptions = Hook::exec('displayPaymentEU', array(), null, true);
         $newOptions = array();
 
-        Media::addJsDef(array('aeuc_tos_err_str' => Tools::htmlentitiesUTF8($this->l('You must agree to our Terms of Service before going any further!',
-                                                                                     'advancedeucompliance'))));
-        Media::addJsDef(array('aeuc_submit_err_str' => Tools::htmlentitiesUTF8($this->l('Something went wrong. If the problem persists, please contact us.',
-                                                                                        'advancedeucompliance'))));
-        Media::addJsDef(array('aeuc_no_pay_err_str' => Tools::htmlentitiesUTF8($this->l('Select a payment option first.',
-                                                                                        'advancedeucompliance'))));
-        Media::addJsDef(array('aeuc_virt_prod_err_str' => Tools::htmlentitiesUTF8($this->l('Please check "Revocation of virtual products" box first !',
-                                                                                           'advancedeucompliance'))));
+        Media::addJsDef(array('aeuc_tos_err_str' => Tools::htmlentitiesUTF8($this->l('You must agree to our Terms of Service before going any further!','advancedeucompliance'))));
+        Media::addJsDef(array('aeuc_submit_err_str' => Tools::htmlentitiesUTF8($this->l('Something went wrong. If the problem persists, please contact us.','advancedeucompliance'))));
+        Media::addJsDef(array('aeuc_no_pay_err_str' => Tools::htmlentitiesUTF8($this->l('Select a payment option first.','advancedeucompliance'))));
+        Media::addJsDef(array('aeuc_virt_prod_err_str' => Tools::htmlentitiesUTF8($this->l('Please check "Revocation of virtual products" box first !','advancedeucompliance'))));
         if ($legacyOptions) {
             foreach ($legacyOptions as $module_name => $legacyOption) {
 
@@ -487,8 +483,7 @@ class Advancedeucompliance extends Module
         // Check if cart has virtual product
         $has_virtual_product = (bool)Configuration::get('AEUC_LABEL_REVOCATION_VP') && $this->hasCartVirtualProduct($this->context->cart);
         Media::addJsDef(array('aeuc_has_virtual_products' => (bool)$has_virtual_product,
-                              'aeuc_virt_prod_err_str' => Tools::htmlentitiesUTF8($this->l('Please check "Revocation of virtual products" box first !',
-                                                                                           'advancedeucompliance'))));
+                              'aeuc_virt_prod_err_str' => Tools::htmlentitiesUTF8($this->l('Please check "Revocation of virtual products" box first !','advancedeucompliance'))));
         if ($has_tos_override_opt || (bool)Configuration::get('AEUC_LABEL_REVOCATION_VP')) {
             $this->context->controller->addJS($this->_path . 'views/js/fo_aeuc_tnc.js', true);
         }
@@ -729,7 +724,7 @@ class Advancedeucompliance extends Module
         if ((bool)Configuration::get('AEUC_IS_THEME_COMPLIANT') === false) {
             $missing = '<ul>';
             foreach ($this->missing_templates as $missing_tpl) {
-                $missing .= '<li>'.$missing_tpl.' '.$this->l('missing').'</li>';
+                $missing .= '<li>'.$missing_tpl.' '.$this->l('missing','advancedeucompliance').'</li>';
             }
             $missing .= '</ul><br/>';
             $discard_warning_link = $this->context->link->getAdminLink('AdminModules', false) .
@@ -738,11 +733,9 @@ class Advancedeucompliance extends Module
                                     '&module_name='.$this->name.
                                     '&discard_tpl_warn=1'.
                                     '&token='.Tools::getAdminTokenLite('AdminModules');
-            $missing .= '<a href="'.$discard_warning_link.'" type="button">'.$this->l('Hide this, I know what I am doing.',
-                                                                                      'advancedeucompliance').
+            $missing .= '<a href="'.$discard_warning_link.'" type="button">'.$this->l('Hide this, I know what I am doing.','advancedeucompliance').
                         '</a>';
-            $theme_warning = $this->displayWarning($this->l('It seems that your current theme is not compatible with this module, some mandatory templates are missing. It is possible some options may not work as expected.',
-                                                            'advancedeucompliance').$missing);
+            $theme_warning = $this->displayWarning($this->l('It seems that your current theme is not compatible with this module, some mandatory templates are missing. It is possible some options may not work as expected.','advancedeucompliance').$missing);
 
         }
 
@@ -931,8 +924,7 @@ class Advancedeucompliance extends Module
         if ((bool)$is_option_active) {
             if (!$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms == 0) {
                 $this->_errors[] =
-                    sprintf($this->l('\'Revocation Terms within ToS\' label cannot be activated unless you associate "%s" role with a CMS Page.',
-                                     'advancedeucompliance'), (string)$cms_roles[Advancedeucompliance::LEGAL_REVOCATION]);
+                    sprintf($this->l('\'Revocation Terms within ToS\' label cannot be activated unless you associate "%s" role with a CMS Page.','advancedeucompliance'), (string)$cms_roles[Advancedeucompliance::LEGAL_REVOCATION]);
 
                 return;
             }
@@ -961,8 +953,7 @@ class Advancedeucompliance extends Module
         if ((bool)$is_option_active) {
             if (!$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms === 0) {
                 $this->_errors[] =
-                    sprintf($this->l('Shipping fees label cannot be activated unless you associate "%s" role with a CMS Page',
-                                     'advancedeucompliance'), (string)$cms_roles[Advancedeucompliance::LEGAL_SHIP_PAY]);
+                    sprintf($this->l('Shipping fees label cannot be activated unless you associate "%s" role with a CMS Page','advancedeucompliance'), (string)$cms_roles[Advancedeucompliance::LEGAL_SHIP_PAY]);
 
                 return;
             }
@@ -1002,8 +993,7 @@ class Advancedeucompliance extends Module
                 Configuration::updateValue('PS_ADVANCED_PAYMENT_API', true);
                 Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', true);
             } else {
-                $this->_errors[] = $this->l('It is not possible to enable the "Advanced Checkout Page" as your theme is not compatible with this option.',
-                                            'advancedeucompliance');
+                $this->_errors[] = $this->l('It is not possible to enable the "Advanced Checkout Page" as your theme is not compatible with this option.','advancedeucompliance');
             }
         } else {
             Configuration::updateValue('PS_ADVANCED_PAYMENT_API', false);
@@ -1125,165 +1115,132 @@ class Advancedeucompliance extends Module
         ),
                                      'input'  => array(array('type'  => 'text',
                                                              'lang'  => true,
-                                                             'label' => $this->l('Estimated delivery time label (available products)',
-                                                                                 'advancedeucompliance'),
+                                                             'label' => $this->l('Estimated delivery time label (available products)','advancedeucompliance'),
                                                              'name'  => 'AEUC_LABEL_DELIVERY_TIME_AVAILABLE',
-                                                             'desc'  => $this->l('Indicate the estimated delivery time for your in-stock products. Leave the field empty to disable.',
-                                                                                 'advancedeucompliance'),
+                                                             'desc'  => $this->l('Indicate the estimated delivery time for your in-stock products. Leave the field empty to disable.','advancedeucompliance'),
                                                        ),
                                                        array('type'  => 'text',
                                                              'lang'  => true,
-                                                             'label' => $this->l('Estimated delivery time label (out-of-stock products)',
-                                                                                 'advancedeucompliance'),
+                                                             'label' => $this->l('Estimated delivery time label (out-of-stock products)','advancedeucompliance'),
                                                              'name'  => 'AEUC_LABEL_DELIVERY_TIME_OOS',
-                                                             'desc'  => $this->l('Indicate the estimated delivery time for your out-of-stock products. Leave the field empty to disable.',
-                                                                                 'advancedeucompliance'),
+                                                             'desc'  => $this->l('Indicate the estimated delivery time for your out-of-stock products. Leave the field empty to disable.','advancedeucompliance'),
                                                        ),
                                                        array('type'    => 'switch',
-                                                             'label'   => $this->l('\'Before\' Base price label',
-                                                                                   'advancedeucompliance'),
+                                                             'label'   => $this->l('\'Before\' Base price label','advancedeucompliance'),
                                                              'name'    => 'AEUC_LABEL_SPECIFIC_PRICE',
                                                              'is_bool' => true,
-                                                             'desc'    => $this->l('When a product is on sale, displays the base price with a \'Before\' label.',
-                                                                                   'advancedeucompliance'),
+                                                             'desc'    => $this->l('When a product is on sale, displays the base price with a \'Before\' label.','advancedeucompliance'),
                                                              'values'  => array(array('id'    => 'active_on',
                                                                                       'value' => true,
-                                                                                      'label' => $this->l('Enabled',
-                                                                                                          'advancedeucompliance')
+                                                                                      'label' => $this->l('Enabled','advancedeucompliance')
                                                                                 ),
                                                                                 array('id'    => 'active_off',
                                                                                       'value' => false,
-                                                                                      'label' => $this->l('Disabled',
-                                                                                                          'advancedeucompliance')
+                                                                                      'label' => $this->l('Disabled','advancedeucompliance')
                                                                                 )
                                                              ),
                                                        ),
                                                        array('type'    => 'switch',
-                                                             'label'   => $this->l('Tax \'inc./excl.\' label',
-                                                                                   'advancedeucompliance'),
+                                                             'label'   => $this->l('Tax \'inc./excl.\' label','advancedeucompliance'),
                                                              'name'    => 'AEUC_LABEL_TAX_INC_EXC',
                                                              'is_bool' => true,
-                                                             'desc'    => $this->l('Display whether the tax is included next to the product price (\'Tax included/excluded\' label).',
-                                                                                   'advancedeucompliance'),
+                                                             'desc'    => $this->l('Display whether the tax is included next to the product price (\'Tax included/excluded\' label).','advancedeucompliance'),
                                                              'values'  => array(array('id'    => 'active_on',
                                                                                       'value' => true,
-                                                                                      'label' => $this->l('Enabled',
-                                                                                                          'advancedeucompliance')
+                                                                                      'label' => $this->l('Enabled','advancedeucompliance')
                                                                                 ),
                                                                                 array('id'    => 'active_off',
                                                                                       'value' => false,
-                                                                                      'label' => $this->l('Disabled',
-                                                                                                          'advancedeucompliance')
+                                                                                      'label' => $this->l('Disabled','advancedeucompliance')
                                                                                 )
                                                              ),
                                                        ),
                                                        array('type'    => 'switch',
-                                                             'label'   => $this->l('Shipping fees \'Inc./Excl.\' label',
-                                                                                   'advancedeucompliance'),
+                                                             'label'   => $this->l('Shipping fees \'Inc./Excl.\' label','advancedeucompliance'),
                                                              'name'    => 'AEUC_LABEL_SHIPPING_INC_EXC',
                                                              'is_bool' => true,
-                                                             'desc'    => $this->l('Display whether the shipping fees are included, next to the product price (\'Shipping included / excluded\').',
-                                                                                   'advancedeucompliance'),
-                                                             'hint'    => $this->l('If enabled, make sure the Shipping terms are associated with a CMS page below (Legal Content Management). The label will link to this content.',
-                                                                                   'advancedeucompliance'),
+                                                             'desc'    => $this->l('Display whether the shipping fees are included, next to the product price (\'Shipping included / excluded\').','advancedeucompliance'),
+                                                             'hint'    => $this->l('If enabled, make sure the Shipping terms are associated with a CMS page below (Legal Content Management). The label will link to this content.','advancedeucompliance'),
                                                              'values'  => array(
                                                                  array(
                                                                      'id'    => 'active_on',
                                                                      'value' => true,
-                                                                     'label' => $this->l('Enabled',
-                                                                                         'advancedeucompliance')
+                                                                     'label' => $this->l('Enabled','advancedeucompliance')
                                                                  ),
                                                                  array(
                                                                      'id'    => 'active_off',
                                                                      'value' => false,
-                                                                     'label' => $this->l('Disabled',
-                                                                                         'advancedeucompliance')
+                                                                     'label' => $this->l('Disabled','advancedeucompliance')
                                                                  )
                                                              ),
                                                        ),
                                                        array(
                                                            'type'    => 'switch',
-                                                           'label'   => $this->l('Product weight label',
-                                                                                 'advancedeucompliance'),
+                                                           'label'   => $this->l('Product weight label','advancedeucompliance'),
                                                            'name'    => 'AEUC_LABEL_WEIGHT',
                                                            'is_bool' => true,
 
-                                                           'desc'    => sprintf($this->l('Display the weight of a product (when information is available and product weighs more than 1 %s).',
-                                                                                         'advancedeucompliance'), Configuration::get('PS_WEIGHT_UNIT')),
+                                                           'desc'    => sprintf($this->l('Display the weight of a product (when information is available and product weighs more than 1 %s).','advancedeucompliance'), Configuration::get('PS_WEIGHT_UNIT')),
                                                            'values'  => array(
                                                                array(
                                                                    'id'    => 'active_on',
                                                                    'value' => true,
-                                                                   'label' => $this->l('Enabled',
-                                                                                       'advancedeucompliance')
+                                                                   'label' => $this->l('Enabled','advancedeucompliance')
                                                                ),
                                                                array(
                                                                    'id'    => 'active_off',
                                                                    'value' => false,
-                                                                   'label' => $this->l('Disabled',
-                                                                                       'advancedeucompliance')
+                                                                   'label' => $this->l('Disabled','advancedeucompliance')
                                                                )
                                                            ),
                                                        ),
                                                        array(
                                                            'type'  => 'text',
-                                                           'label' => $this->l('Decimals for product weight',
-                                                                               'advancedeucompliance'),
+                                                           'label' => $this->l('Decimals for product weight','advancedeucompliance'),
                                                            'name'  => 'PS_PRODUCT_WEIGHT_PRECISION',
-                                                           'desc'  => sprintf($this->l('Choose how many decimals to display for the product weight (e.g: 1 %s with 0 decimal, or 1.01 %s with 2 decimals)',
-                                                                                       'advancedeucompliance'),
+                                                           'desc'  => sprintf($this->l('Choose how many decimals to display for the product weight (e.g: 1 %s with 0 decimal, or 1.01 %s with 2 decimals)','advancedeucompliance'),
                                                                               Configuration::get('PS_WEIGHT_UNIT'),
                                                                               Configuration::get('PS_WEIGHT_UNIT')),
-                                                           'hint'  => $this->l('This value must be positive.',
-                                                                               'advancedeucompliance'),
+                                                           'hint'  => $this->l('This value must be positive.','advancedeucompliance'),
                                                        ),
                                                        array(
                                                            'type'    => 'switch',
-                                                           'label'   => $this->l('Revocation Terms within ToS',
-                                                                                 'advancedeucompliance'),
+                                                           'label'   => $this->l('Revocation Terms within ToS','advancedeucompliance'),
                                                            'name'    => 'AEUC_LABEL_REVOCATION_TOS',
                                                            'is_bool' => true,
-                                                           'desc'    => $this->l('Include content from the Revocation Terms CMS page within the Terms of Services (ToS).',
-                                                                                 'advancedeucompliance'),
-                                                           'hint'    => $this->l('If enabled, make sure the Revocation Terms are associated with a CMS page below (Legal Content Management).',
-                                                                                 'advancedeucompliance'),
+                                                           'desc'    => $this->l('Include content from the Revocation Terms CMS page within the Terms of Services (ToS).','advancedeucompliance'),
+                                                           'hint'    => $this->l('If enabled, make sure the Revocation Terms are associated with a CMS page below (Legal Content Management).','advancedeucompliance'),
                                                            'disable' => true,
                                                            'values'  => array(
                                                                array(
                                                                    'id'    => 'active_on',
                                                                    'value' => true,
-                                                                   'label' => $this->l('Enabled',
-                                                                                       'advancedeucompliance')
+                                                                   'label' => $this->l('Enabled','advancedeucompliance')
                                                                ),
                                                                array(
                                                                    'id'    => 'active_off',
                                                                    'value' => false,
-                                                                   'label' => $this->l('Disabled',
-                                                                                       'advancedeucompliance')
+                                                                   'label' => $this->l('Disabled','advancedeucompliance')
                                                                )
                                                            ),
                                                        ),
                                                        array(
                                                            'type'    => 'switch',
-                                                           'label'   => $this->l('Revocation for virtual products',
-                                                                                 'advancedeucompliance'),
+                                                           'label'   => $this->l('Revocation for virtual products','advancedeucompliance'),
                                                            'name'    => 'AEUC_LABEL_REVOCATION_VP',
                                                            'is_bool' => true,
-                                                           'desc'    => $this->l('Add a mandatory checkbox when the cart contains a virtual product. Use it to ensure customers are aware that a virtual product cannot be returned.',
-                                                                                 'advancedeucompliance'),
+                                                           'desc'    => $this->l('Add a mandatory checkbox when the cart contains a virtual product. Use it to ensure customers are aware that a virtual product cannot be returned.','advancedeucompliance'),
                                                            'disable' => true,
                                                            'values'  => array(
                                                                array(
                                                                    'id'    => 'active_on',
                                                                    'value' => true,
-                                                                   'label' => $this->l('Enabled',
-                                                                                       'advancedeucompliance')
+                                                                   'label' => $this->l('Enabled','advancedeucompliance')
                                                                ),
                                                                array(
                                                                    'id'    => 'active_off',
                                                                    'value' => false,
-                                                                   'label' => $this->l('Disabled',
-                                                                                       'advancedeucompliance')
+                                                                   'label' => $this->l('Disabled','advancedeucompliance')
                                                                )
                                                            ),
                                                        ),
@@ -1292,43 +1249,35 @@ class Advancedeucompliance extends Module
                                                            'label'   => $this->l('\'From\' price label (when combinations)'),
                                                            'name'    => 'AEUC_LABEL_COMBINATION_FROM',
                                                            'is_bool' => true,
-                                                           'desc'    => $this->l('Display a \'From\' label before the price on products with combinations.',
-                                                                                 'advancedeucompliance'),
-                                                           'hint'    => $this->l('As prices can vary from a combination to another, this label indicates that the final price may be higher.',
-                                                                                 'advancedeucompliance'),
+                                                           'desc'    => $this->l('Display a \'From\' label before the price on products with combinations.','advancedeucompliance'),
+                                                           'hint'    => $this->l('As prices can vary from a combination to another, this label indicates that the final price may be higher.','advancedeucompliance'),
                                                            'disable' => true,
                                                            'values'  => array(
                                                                array(
                                                                    'id'    => 'active_on',
                                                                    'value' => true,
-                                                                   'label' => $this->l('Enabled',
-                                                                                       'advancedeucompliance')
+                                                                   'label' => $this->l('Enabled','advancedeucompliance')
                                                                ),
                                                                array(
                                                                    'id'    => 'active_off',
                                                                    'value' => false,
-                                                                   'label' => $this->l('Disabled',
-                                                                                       'advancedeucompliance')
+                                                                   'label' => $this->l('Disabled','advancedeucompliance')
                                                                )
                                                            ),
                                                        ),
                                                        array(
                                                            'type'  => 'textarea',
                                                            'lang'  => true,
-                                                           'label' => $this->l('Upper shopping cart text',
-                                                                               'advancedeucompliance'),
+                                                           'label' => $this->l('Upper shopping cart text','advancedeucompliance'),
                                                            'name'  => 'AEUC_SHOPPING_CART_TEXT_BEFORE',
-                                                           'desc'  => $this->l('Add a custom text above the shopping cart summary.',
-                                                                               'advancedeucompliance'),
+                                                           'desc'  => $this->l('Add a custom text above the shopping cart summary.','advancedeucompliance'),
                                                        ),
                                                        array(
                                                            'type'  => 'textarea',
                                                            'lang'  => true,
-                                                           'label' => $this->l('Lower shopping cart text',
-                                                                               'advancedeucompliance'),
+                                                           'label' => $this->l('Lower shopping cart text','advancedeucompliance'),
                                                            'name'  => 'AEUC_SHOPPING_CART_TEXT_AFTER',
-                                                           'desc'  => $this->l('Add a custom text at the bottom of the shopping cart summary.',
-                                                                               'advancedeucompliance'),
+                                                           'desc'  => $this->l('Add a custom text at the bottom of the shopping cart summary.','advancedeucompliance'),
                                                        ),
 
                                      ),
@@ -1421,10 +1370,8 @@ class Advancedeucompliance extends Module
                         'label'   => $this->l('Enable \'Tell A Friend\' feature', 'advancedeucompliance'),
                         'name'    => 'AEUC_FEAT_TELL_A_FRIEND',
                         'is_bool' => true,
-                        'desc'    => $this->l('Make sure you comply with your local legislation before enabling: the emails sent by this feature can be considered as unsolicited commercial emails.',
-                                              'advancedeucompliance'),
-                        'hint'    => $this->l('If enabled, the \'Send to a Friend\' module allows customers to send to a friend an email with a link to a product\'s page.',
-                                              'advancedeucompliance'),
+                        'desc'    => $this->l('Make sure you comply with your local legislation before enabling: the emails sent by this feature can be considered as unsolicited commercial emails.','advancedeucompliance'),
+                        'hint'    => $this->l('If enabled, the \'Send to a Friend\' module allows customers to send to a friend an email with a link to a product\'s page.','advancedeucompliance'),
                         'values'  => array(
                             array(
                                 'id'    => 'active_on',
@@ -1441,12 +1388,10 @@ class Advancedeucompliance extends Module
                     array(
                         'type'    => 'switch',
                         'label'   => $this->l('Enable \'Reordering\' feature', 'advancedeucompliance'),
-                        'hint'    => $this->l('If enabled, the \'Reorder\' option allows customers to reorder in one click from their Order History page.',
-                                              'advancedeucompliance'),
+                        'hint'    => $this->l('If enabled, the \'Reorder\' option allows customers to reorder in one click from their Order History page.','advancedeucompliance'),
                         'name'    => 'AEUC_FEAT_REORDER',
                         'is_bool' => true,
-                        'desc'    => $this->l('Make sure you comply with your local legislation before enabling: it can be considered as unsolicited goods.',
-                                              'advancedeucompliance'),
+                        'desc'    => $this->l('Make sure you comply with your local legislation before enabling: it can be considered as unsolicited goods.','advancedeucompliance'),
                         'values'  => array(
                             array(
                                 'id'    => 'active_on',
@@ -1463,12 +1408,10 @@ class Advancedeucompliance extends Module
                     array(
                         'type'    => 'switch',
                         'label'   => $this->l('Enable \'Advanced checkout page\''),
-                        'hint'    => $this->l('The advanced checkout page displays the following sections: payment methods, address summary, ToS agreement, cart summary, and an \'Order with Obligation to Pay\' button.',
-                                              'advancedeucompliance'),
+                        'hint'    => $this->l('The advanced checkout page displays the following sections: payment methods, address summary, ToS agreement, cart summary, and an \'Order with Obligation to Pay\' button.','advancedeucompliance'),
                         'name'    => 'AEUC_FEAT_ADV_PAYMENT_API',
                         'is_bool' => true,
-                        'desc'    => $this->l('To address some of the latest European legal requirements, the advanced checkout page displays additional information (terms of service, payment methods, etc) as a single page.',
-                                              'advancedeucompliance'),
+                        'desc'    => $this->l('To address some of the latest European legal requirements, the advanced checkout page displays additional information (terms of service, payment methods, etc) as a single page.','advancedeucompliance'),
                         'values'  => array(
                             array(
                                 'id'    => 'active_on',
@@ -1484,12 +1427,10 @@ class Advancedeucompliance extends Module
                     ),
                     array(
                         'type'    => 'switch',
-                        'label'   => $this->l('Proportionate tax for shipping and wrapping',
-                                              'advancedeucompliance'),
+                        'label'   => $this->l('Proportionate tax for shipping and wrapping','advancedeucompliance'),
                         'name'    => 'PS_ATCP_SHIPWRAP',
                         'is_bool' => true,
-                        'desc'    => $this->l('When enabled, tax for shipping and wrapping costs will be calculated proportionate to taxes applying to the products in the cart.',
-                                              'advancedeucompliance'),
+                        'desc'    => $this->l('When enabled, tax for shipping and wrapping costs will be calculated proportionate to taxes applying to the products in the cart.','advancedeucompliance'),
                         'values'  => array(
                             array(
                                 'id'    => 'active_on',
