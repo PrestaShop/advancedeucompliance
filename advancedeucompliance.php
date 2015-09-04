@@ -373,10 +373,10 @@ class Advancedeucompliance extends Module
         $newOptions = array();
 
         Media::addJsDef(array(
-            'aeuc_tos_err_str' => addcslashes($this->l('You must agree to our Terms of Service before going any further!','advancedeucompliance')),
-            'aeuc_submit_err_str' => addcslashes($this->l('Something went wrong. If the problem persists, please contact us.','advancedeucompliance')),
-            'aeuc_no_pay_err_str' => addcslashes($this->l('Select a payment option first.','advancedeucompliance')),
-            'aeuc_virt_prod_err_str' => addcslashes($this->l('Please check "Revocation of virtual products" box first !','advancedeucompliance'))
+            'aeuc_tos_err_str' => $this->l('You must agree to our Terms of Service before going any further!','advancedeucompliance'),
+            'aeuc_submit_err_str' => $this->l('Something went wrong. If the problem persists, please contact us.','advancedeucompliance'),
+            'aeuc_no_pay_err_str' => $this->l('Select a payment option first.','advancedeucompliance'),
+            'aeuc_virt_prod_err_str' => $this->l('Please check "Revocation of virtual products" box first !','advancedeucompliance')
         ));
         
         if ($legacyOptions) {
