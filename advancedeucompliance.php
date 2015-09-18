@@ -91,6 +91,7 @@ class Advancedeucompliance extends Module
         $return = parent::install() &&
                   $this->loadTables() &&
                   $this->installHooks() &&
+                  $this->registerModulesBackwardCompatHook() &&
                   $this->registerHook('header') &&
                   $this->registerHook('displayProductPriceBlock') &&
                   $this->registerHook('overrideTOSDisplay') &&
@@ -147,16 +148,47 @@ class Advancedeucompliance extends Module
         return parent::disable() && $is_adv_api_disabled;
     }
 
+    public function registerModulesBackwardCompatHook()
+    {
+        $return = true;
+        $module_to_check = array(
+            'bankwire', 'cheque', 'paypal',
+            'adyen', 'hipay', 'cashondelivery', 'sofortbanking',
+            'pigmbhpaymill', 'ogone', 'moneybookers',
+            'syspay'
+        );
+        $display_payment_eu_hook_id = (int)Hook::getIdByName('displayPaymentEu');
+        $already_hooked_modules_ids = array_keys(Hook::getModulesFromHook($display_payment_eu_hook_id));
+
+        foreach ($module_to_check as $module_name) {
+
+            if (($module = Module::getInstanceByName($module_name)) !== false &&
+                Module::isInstalled($module_name) &&
+                $module->active &&
+                !in_array($module->id, $already_hooked_modules_ids) &&
+                !$module->isRegisteredInHook('displayPaymentEu') ) {
+
+                    $return &= $module->registerHook('displayPaymentEu');
+            }
+        }
+
+        return $return;
+    }
+
     public function installHooks()
     {
         $hooks = array(
             'displayBeforeShoppingCartBlock' => array(
                 'name'      => 'display before Shopping cart block',
-                'templates' => array()
+                'description' => 'Display content after Shopping Cart'
             ),
             'displayAfterShoppingCartBlock'  => array(
                 'name'      => 'display after Shopping cart block',
-                'templates' => array()
+                'description' => 'Display content after Shopping Cart'
+            ),
+            'displayPaymentEu'  => array(
+                'name'      => 'Display EU payment options (helper)',
+                'description' => 'Hook to display payment options'
             )
         );
 
@@ -170,7 +202,8 @@ class Advancedeucompliance extends Module
 
             $new_hook = new Hook();
             $new_hook->name = $hook_name;
-            $new_hook->title = $hook['name'];
+            $new_hook->title = $hook_name;
+            $new_hook->description = $hook['description'];
             $new_hook->position = true;
             $new_hook->live_edit = false;
 
