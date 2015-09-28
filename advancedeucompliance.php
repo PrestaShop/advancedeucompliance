@@ -145,6 +145,7 @@ class Advancedeucompliance extends Module
     public function disable($force_all = false)
     {
         $is_adv_api_disabled = (bool)Configuration::updateValue('PS_ADVANCED_PAYMENT_API', false);
+        $is_adv_api_disabled &= (bool)Configuration::updateValue('PS_ATCP_SHIPWRAP', false);
         return parent::disable() && $is_adv_api_disabled;
     }
 
@@ -347,7 +348,8 @@ class Advancedeucompliance extends Module
                Configuration::deleteByName('AEUC_SHOPPING_CART_TEXT_BEFORE') &&
                Configuration::deleteByName('AEUC_SHOPPING_CART_TEXT_AFTER') &&
                Configuration::deleteByName('AEUC_IS_THEME_COMPLIANT') &&
-               Configuration::updateValue('PS_ADVANCED_PAYMENT_API', false);
+               Configuration::updateValue('PS_ADVANCED_PAYMENT_API', false) &&
+               Configuration::updateValue('PS_ATCP_SHIPWRAP', false);
     }
 
     /*
