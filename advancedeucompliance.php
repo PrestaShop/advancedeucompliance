@@ -749,6 +749,7 @@ class Advancedeucompliance extends Module
     private function dumpHookDisplayProductPriceBlock(array $smartyVars)
     {
         $this->context->smarty->assign(array('smartyVars' => $smartyVars));
+        $this->context->controller->addJS($this->_path . 'views/js/fo_aeuc_tnc.js', true);
 
         return $this->display(__FILE__, 'hookDisplayProductPriceBlock.tpl');
     }
