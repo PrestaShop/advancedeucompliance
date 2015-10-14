@@ -56,16 +56,6 @@
             <a href="{$smartyVars.ship.link_ship_pay}" class="iframe">
                 {$smartyVars.ship.ship_str_i18n|escape:'htmlall'}
             </a>
-            <script type="text/javascript">
-                $(document).ready(function(){
-                    if (!!$.prototype.fancybox)
-                        $("a.iframe").fancybox({
-                            "type": "iframe",
-                            "width": 600,
-                            "height": 600
-                        });
-                })
-            </script>
         </div>
     {/if}
 
