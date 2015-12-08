@@ -53,6 +53,10 @@ div.aeuc_shipping_label {
 	display:inline-block;
 }
 
+span.unvisible {
+	display: none; 
+}
+
 p.payment_selected > a.payment_module_adv {
     border: 1px solid #55c65e;
     border-radius: 4px;

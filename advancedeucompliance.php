@@ -62,7 +62,7 @@ class Advancedeucompliance extends Module
 
         $this->name = 'advancedeucompliance';
         $this->tab = 'administration';
-        $this->version = '1.5.0';
+        $this->version = '2.0.0';
         $this->author = 'PrestaShop';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -91,6 +91,7 @@ class Advancedeucompliance extends Module
         $return = parent::install() &&
                   $this->loadTables() &&
                   $this->installHooks() &&
+                  $this->registerModulesBackwardCompatHook() &&
                   $this->registerHook('header') &&
                   $this->registerHook('displayProductPriceBlock') &&
                   $this->registerHook('overrideTOSDisplay') &&
@@ -144,7 +145,35 @@ class Advancedeucompliance extends Module
     public function disable($force_all = false)
     {
         $is_adv_api_disabled = (bool)Configuration::updateValue('PS_ADVANCED_PAYMENT_API', false);
+        $is_adv_api_disabled &= (bool)Configuration::updateValue('PS_ATCP_SHIPWRAP', false);
         return parent::disable() && $is_adv_api_disabled;
+    }
+
+    public function registerModulesBackwardCompatHook()
+    {
+        $return = true;
+        $module_to_check = array(
+            'bankwire', 'cheque', 'paypal',
+            'adyen', 'hipay', 'cashondelivery', 'sofortbanking',
+            'pigmbhpaymill', 'ogone', 'moneybookers',
+            'syspay'
+        );
+        $display_payment_eu_hook_id = (int)Hook::getIdByName('displayPaymentEu');
+        $already_hooked_modules_ids = array_keys(Hook::getModulesFromHook($display_payment_eu_hook_id));
+
+        foreach ($module_to_check as $module_name) {
+
+            if (($module = Module::getInstanceByName($module_name)) !== false &&
+                Module::isInstalled($module_name) &&
+                $module->active &&
+                !in_array($module->id, $already_hooked_modules_ids) &&
+                !$module->isRegisteredInHook('displayPaymentEu') ) {
+
+                    $return &= $module->registerHook('displayPaymentEu');
+            }
+        }
+
+        return $return;
     }
 
     public function installHooks()
@@ -152,11 +181,15 @@ class Advancedeucompliance extends Module
         $hooks = array(
             'displayBeforeShoppingCartBlock' => array(
                 'name'      => 'display before Shopping cart block',
-                'templates' => array()
+                'description' => 'Display content after Shopping Cart'
             ),
             'displayAfterShoppingCartBlock'  => array(
                 'name'      => 'display after Shopping cart block',
-                'templates' => array()
+                'description' => 'Display content after Shopping Cart'
+            ),
+            'displayPaymentEu'  => array(
+                'name'      => 'Display EU payment options (helper)',
+                'description' => 'Hook to display payment options'
             )
         );
 
@@ -170,7 +203,8 @@ class Advancedeucompliance extends Module
 
             $new_hook = new Hook();
             $new_hook->name = $hook_name;
-            $new_hook->title = $hook['name'];
+            $new_hook->title = $hook_name;
+            $new_hook->description = $hook['description'];
             $new_hook->position = true;
             $new_hook->live_edit = false;
 
@@ -314,7 +348,8 @@ class Advancedeucompliance extends Module
                Configuration::deleteByName('AEUC_SHOPPING_CART_TEXT_BEFORE') &&
                Configuration::deleteByName('AEUC_SHOPPING_CART_TEXT_AFTER') &&
                Configuration::deleteByName('AEUC_IS_THEME_COMPLIANT') &&
-               Configuration::updateValue('PS_ADVANCED_PAYMENT_API', false);
+               Configuration::updateValue('PS_ADVANCED_PAYMENT_API', false) &&
+               Configuration::updateValue('PS_ATCP_SHIPWRAP', false);
     }
 
     /*
@@ -344,7 +379,11 @@ class Advancedeucompliance extends Module
         $smartyVars = array();
         if ((bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true) {
 
-            if ((bool)Configuration::get('PS_TAX') === true) {
+            $customer_default_group_id = (int)$this->context->customer->id_default_group;
+            $customer_default_group = new Group($customer_default_group_id);
+
+            if ((bool)Configuration::get('PS_TAX') === true &&
+                !(Validate::isLoadedObject($customer_default_group) && (bool)$customer_default_group->price_display_method === true)) {
                 $smartyVars['price']['tax_str_i18n'] = $this->l('Tax included', 'advancedeucompliance');
             } else {
                 $smartyVars['price']['tax_str_i18n'] = $this->l('Tax excluded', 'advancedeucompliance');
@@ -630,7 +669,11 @@ class Advancedeucompliance extends Module
 
             if ((bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true) {
 
-                if ((bool)Configuration::get('PS_TAX') === true) {
+                $customer_default_group_id = (int)$this->context->customer->id_default_group;
+                $customer_default_group = new Group($customer_default_group_id);
+
+                if ((bool)Configuration::get('PS_TAX') === true &&
+                    !(Validate::isLoadedObject($customer_default_group) && (bool)$customer_default_group->price_display_method === true)) {
                     $smartyVars['price']['tax_str_i18n'] = $this->l('Tax included', 'advancedeucompliance');
                 } else {
                     $smartyVars['price']['tax_str_i18n'] = $this->l('Tax excluded', 'advancedeucompliance');
@@ -714,6 +757,7 @@ class Advancedeucompliance extends Module
     private function dumpHookDisplayProductPriceBlock(array $smartyVars)
     {
         $this->context->smarty->assign(array('smartyVars' => $smartyVars));
+        $this->context->controller->addJS($this->_path . 'views/js/fo_aeuc_tnc.js', true);
 
         return $this->display(__FILE__, 'hookDisplayProductPriceBlock.tpl');
     }
