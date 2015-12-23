@@ -381,8 +381,9 @@ class Advancedeucompliance extends Module
 
             $customer_default_group_id = (int)$this->context->customer->id_default_group;
             $customer_default_group = new Group($customer_default_group_id);
-
-            if ((bool)Configuration::get('PS_TAX') === true &&
+            $display_tax_label = $this->context->country->display_tax_label;
+            
+            if ((bool)Configuration::get('PS_TAX') === true && ($display_tax_label) == true &&
                 !(Validate::isLoadedObject($customer_default_group) && (bool)$customer_default_group->price_display_method === true)) {
                 $smartyVars['price']['tax_str_i18n'] = $this->l('Tax included', 'advancedeucompliance');
             } else {
@@ -671,8 +672,9 @@ class Advancedeucompliance extends Module
 
                 $customer_default_group_id = (int)$this->context->customer->id_default_group;
                 $customer_default_group = new Group($customer_default_group_id);
+                $display_tax_label = $this->context->country->display_tax_label;
 
-                if ((bool)Configuration::get('PS_TAX') === true &&
+                if ((bool)Configuration::get('PS_TAX') === true && ($display_tax_label) == true &&
                     !(Validate::isLoadedObject($customer_default_group) && (bool)$customer_default_group->price_display_method === true)) {
                     $smartyVars['price']['tax_str_i18n'] = $this->l('Tax included', 'advancedeucompliance');
                 } else {
