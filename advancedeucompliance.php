@@ -730,7 +730,7 @@ class Advancedeucompliance extends Module
         }
 
         /* Handle Estimated delivery time label */
-        if ($param['type'] == 'after_price') {
+        if ($param['type'] == 'after_price' && !$product->is_virtual) {
             $context_id_lang = $this->context->language->id;
             $is_product_available = (StockAvailable::getQuantityAvailableByProduct($product->id) >= 1 ? true : false);
             $smartyVars['after_price'] = array();
