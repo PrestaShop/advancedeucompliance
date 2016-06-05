@@ -28,6 +28,16 @@
 
         {if $has_tos_override_opt}
             <h2>{l s='Terms and Conditions' mod='advancedeucompliance'}</h2>
+
+        {if $has_virtual_product}
+            <div class="tnc_box">
+                <p class="checkbox">
+                    <input type="checkbox" name="revocation_vp_terms_agreed" id="revocation_vp_terms_agreed" value="1"/>
+                    <label for="revocation_vp_terms_agreed">{l s='I agree that the digital products in my cart can not be returned or refunded due to the nature of such products.' mod='advancedeucompliance'}</label>
+                </p>
+            </div>
+        {/if}
+
             <div class="tnc_box">
                 <p class="checkbox">
                     <input type="checkbox" name="cgv" id="cgv" value="1" {if isset($checkedTOS) && $checkedTOS}checked="checked"{/if}/>
@@ -56,16 +66,6 @@
                             {l s='I agree to the terms of service and to the terms of revocation and will adhere to them unconditionally' mod='advancedeucompliance'}
                         </label>
                     {/if}
-                </p>
-            </div>
-        {/if}
-
-
-        {if $has_virtual_product}
-            <div class="tnc_box">
-                <p class="checkbox">
-                    <input type="checkbox" name="revocation_vp_terms_agreed" id="revocation_vp_terms_agreed" value="1"/>
-                    <label for="revocation_vp_terms_agreed">{l s='I agree that the digital products in my cart can not be returned or refunded due to the nature of such products.' mod='advancedeucompliance'}</label>
                 </p>
             </div>
         {/if}
