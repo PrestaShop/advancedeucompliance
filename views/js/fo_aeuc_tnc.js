@@ -35,7 +35,7 @@ $(document).ready(function(){
         });
     }
 
-    $('button[name="processCarrier"]').click(function(event){
+    $('button[name="processPayment"]').click(function(event){
         /* Avoid any further action */
         event.preventDefault();
         event.stopPropagation();
