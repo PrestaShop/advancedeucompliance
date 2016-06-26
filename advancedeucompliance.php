@@ -411,14 +411,10 @@ class Advancedeucompliance extends Module
         $legacyOptions = Hook::exec('displayPaymentEU', array(), null, true);
         $newOptions = array();
 
-        Media::addJsDef(array('aeuc_tos_err_str' => Tools::htmlentitiesUTF8($this->l('You must agree to our Terms of Service before going any further!',
-                                                                                     'advancedeucompliance'))));
-        Media::addJsDef(array('aeuc_submit_err_str' => Tools::htmlentitiesUTF8($this->l('Something went wrong. If the problem persists, please contact us.',
-                                                                                        'advancedeucompliance'))));
-        Media::addJsDef(array('aeuc_no_pay_err_str' => Tools::htmlentitiesUTF8($this->l('Select a payment option first.',
-                                                                                        'advancedeucompliance'))));
-        Media::addJsDef(array('aeuc_virt_prod_err_str' => Tools::htmlentitiesUTF8($this->l('Please check "Revocation of virtual products" box first !',
-                                                                                           'advancedeucompliance'))));
+       Media::addJsDef(array('aeuc_tos_err_str' => Tools::htmlentitiesUTF8($this->l('You must agree to our Terms of Service before going any further.', 'advancedeucompliance'))));
+        Media::addJsDef(array('aeuc_submit_err_str' => Tools::htmlentitiesUTF8($this->l('Something went wrong. If the problem persists, please contact us.', 'advancedeucompliance'))));
+        Media::addJsDef(array('aeuc_no_pay_err_str' => Tools::htmlentitiesUTF8($this->l('Select a payment option first.', 'advancedeucompliance'))));
+        Media::addJsDef(array('aeuc_virt_prod_err_str' => Tools::htmlentitiesUTF8($this->l('Please check "Revocation of virtual products" box first!', 'advancedeucompliance'))));
         if ($legacyOptions) {
             foreach ($legacyOptions as $module_name => $legacyOption) {
 
