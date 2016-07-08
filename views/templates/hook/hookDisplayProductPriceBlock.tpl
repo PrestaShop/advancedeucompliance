@@ -22,7 +22,7 @@
  *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  *  International Registered Trademark & Property of PrestaShop SA
  *}
-
+{nocache}
 {if isset($smartyVars)}
     {* "From" Price Hook templating *}
     {if isset($smartyVars.before_price) && isset($smartyVars.before_price.from_str_i18n)}
@@ -73,3 +73,4 @@
         </div>
     {/if}
 {/if}
+{/nocache}
