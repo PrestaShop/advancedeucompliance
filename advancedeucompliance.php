@@ -382,8 +382,17 @@ class Advancedeucompliance extends Module
             $customer_default_group_id = (int)$this->context->customer->id_default_group;
             $customer_default_group = new Group($customer_default_group_id);
 
-            if ((bool)Configuration::get('PS_TAX') === true && $this->context->country->display_tax_label &&
-                !(Validate::isLoadedObject($customer_default_group) && (bool)$customer_default_group->price_display_method === true)) {
+            if (isset($param['smarty'])) {
+                $smarty = $param['smarty'];
+                $totalTax = $smarty->tpl_vars['total_tax']->value;
+            } elseif (isset($param['summary'])) {
+                $totalTax = $param['summary']['total_tax'];
+            }
+
+            $condition = ((bool)Configuration::get('PS_TAX') === true && $this->context->country->display_tax_label &&
+                !(Validate::isLoadedObject($customer_default_group) && (bool)$customer_default_group->price_display_method === true));
+
+            if ($condition && $totalTax > 0) {
                 $smartyVars['price']['tax_str_i18n'] = $this->l('Tax included', 'advancedeucompliance');
             } else {
                 $smartyVars['price']['tax_str_i18n'] = $this->l('Tax excluded', 'advancedeucompliance');
@@ -672,8 +681,11 @@ class Advancedeucompliance extends Module
                 $customer_default_group_id = (int)$this->context->customer->id_default_group;
                 $customer_default_group = new Group($customer_default_group_id);
 
-                if ((bool)Configuration::get('PS_TAX') === true && $this->context->country->display_tax_label &&
-                    !(Validate::isLoadedObject($customer_default_group) && (bool)$customer_default_group->price_display_method === true)) {
+                $taxRate = $product->getTaxesRate();
+                $condition = ((bool)Configuration::get('PS_TAX') === true && $this->context->country->display_tax_label &&
+                    !(Validate::isLoadedObject($customer_default_group) && (bool)$customer_default_group->price_display_method === true));
+
+                if ($condition && (!empty($taxRate))) {
                     $smartyVars['price']['tax_str_i18n'] = $this->l('Tax included', 'advancedeucompliance');
                 } else {
                     $smartyVars['price']['tax_str_i18n'] = $this->l('Tax excluded', 'advancedeucompliance');
