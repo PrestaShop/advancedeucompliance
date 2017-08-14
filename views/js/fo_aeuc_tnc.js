@@ -49,7 +49,7 @@ $(document).ready(function(){
             });
             return;
         }
-        $("#form").submit();
+        $(this).submit();
     });
 
 });
