@@ -49,7 +49,14 @@ $(document).ready(function(){
             });
             return;
         }
-        $(this).submit();
+        $('<input>').attr({
+			type: 'hidden',
+			id: 'processCarrier',
+			name: 'processCarrier',
+			value: '1'
+		}).appendTo('#form');		
+
+        $('#form').submit();
     });
 
 });
