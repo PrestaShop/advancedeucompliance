@@ -1,5 +1,5 @@
 /**
- * 2007-2016 PrestaShop
+ * 2007-2020 PrestaShop
  *
  * NOTICE OF LICENSE
  *
@@ -18,7 +18,7 @@
  * needs please refer to http://www.prestashop.com for more information.
  *
  *  @author 	PrestaShop SA <contact@prestashop.com>
- *  @copyright  2007-2016 PrestaShop SA
+ *  @copyright  2007-2020 PrestaShop SA
  *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  *  International Registered Trademark & Property of PrestaShop SA
  */
@@ -50,11 +50,11 @@ $(document).ready(function(){
             return;
         }
         $('<input>').attr({
-			type: 'hidden',
-			id: 'processCarrier',
-			name: 'processCarrier',
-			value: '1'
-		}).appendTo('#form');		
+            type: 'hidden',
+            id: 'processCarrier',
+            name: 'processCarrier',
+            value: '1'
+        }).appendTo('#form');
 
         $('#form').submit();
     });
